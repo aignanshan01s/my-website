@@ -313,11 +313,11 @@
 
   /* ---------- shell ---------- */
   const NAV = [
-    ['today', '今日', I.today],
-    ['atlas', '圖鑑', I.atlas],
-    ['practice', '練習', I.practice],
+    ['today', '啟程', I.today],
+    ['atlas', '詞庫', I.atlas],
+    ['practice', '試飛', I.practice],
     ['map', '星圖', I.map],
-    ['me', '我的', I.me],
+    ['me', '護照', I.me],
   ];
   const app = document.getElementById('app');
   app.innerHTML = `
@@ -423,11 +423,11 @@
      ====================================================== */
   function greeting() {
     const h = new Date().getHours();
-    if (h < 5) return '夜深了，職人。';
-    if (h < 11) return '早安，職人。';
-    if (h < 14) return '午安，職人。';
-    if (h < 18) return '午後好，職人。';
-    return '晚安，職人。';
+    if (h < 5) return '夜深了，旅人。';
+    if (h < 11) return '早安，旅人。';
+    if (h < 14) return '午安，旅人。';
+    if (h < 18) return '午後好，旅人。';
+    return '晚安，旅人。';
   }
   function viewToday() {
     const now = new Date();
@@ -528,7 +528,7 @@
         </section>
 
         <section class="section">
-          <div class="section-head"><h2>十五個職場場景</h2><a class="more" href="#atlas">打開圖鑑 →</a></div>
+          <div class="section-head"><h2>十五個職場停靠站</h2><a class="more" href="#atlas">打開詞庫 →</a></div>
           <div class="topics">
             ${TOPICS.map((t) => {
               const list = WORDS.filter((w) => w.t === t.k);
@@ -567,8 +567,8 @@
       <div class="wrap">
         <header class="page-head atlas-head">
           <div style="display:grid;gap:10px">
-            <span class="eyebrow">圖鑑 · ${fmt(WORDS.length)} 詞</span>
-            <h1>每個詞，都在一個職場裡。</h1>
+            <span class="eyebrow">詞庫 · ${fmt(WORDS.length)} 詞</span>
+            <h1>每個詞，都停靠在一個職場裡。</h1>
             <p class="sub">${fmt(WORDS.filter((w) => w.ar !== 's').length)} 幅單字插畫 · 美英真人發音 · KK 音標 · 依四段分數與 15 個職場場景整理</p>
           </div>
           <label class="search-field"><span class="sr-only">搜尋單字</span>${I.search}<input id="atlas-q" type="search" placeholder="搜尋英文單字或中文釋義" value="${esc(atlasState.q)}" autocomplete="off"></label>
@@ -922,8 +922,8 @@
     const pool = scopePool(pracState.scope);
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">練習 · 每輪 10 題 · 只有第一次作答計入正確率</span>
-        <h1>考前十題，暖機一下。</h1>
+        <span class="eyebrow">試飛 · 每輪 10 題 · 只有第一次作答計入正確率</span>
+        <h1>正式起飛前，先試飛十題。</h1>
         <p class="sub">題目從你選的範圍隨機抽出，干擾選項取自同一分數段、同詞性的單字，難度貼近正式考試。</p>
       </header>
       <section class="section" style="padding-top:0">
@@ -1111,7 +1111,7 @@
     sfx('done');
     const score = Math.round((right / P.results.length) * 100);
     const mode = MODES.find((m) => m.k === P.mode);
-    const msg = score === 100 ? '全對，這組單字已經穩定。' : score >= 80 ? '表現穩定，把錯的幾個再看一次。' : score >= 50 ? '一半以上答對，錯的字加入收藏，明天再練。' : '先回到圖鑑把這些字看熟，再回來挑戰。';
+    const msg = score === 100 ? '全對，這組單字已經穩定。' : score >= 80 ? '表現穩定，把錯的幾個再看一次。' : score >= 50 ? '一半以上答對，錯的字加入收藏，明天再練。' : '先回到詞庫把這些字看熟，再回來挑戰。';
     view.innerHTML = `<div class="wrap"><div class="quiz">
       <div class="done">
         <img src="assets/brand/${score >= 80 ? 'done' : 'night'}.webp" alt="" width="480" height="480">
@@ -1156,7 +1156,7 @@
     const all = counts();
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">星圖 · 15 個場景星座</span>
+        <span class="eyebrow">星圖 · 夜航靠的 15 個星座</span>
         <h1>每學會一個字，就點亮一顆星。</h1>
         <p class="sub">1,000 顆星依職場場景聚成星座。灰色是還沒學的字，帶顏色的是學習中，發光的是已熟。點一顆星就能打開詞卡。</p>
       </header>
@@ -1353,8 +1353,8 @@
     const lvl = (v) => (v === 0 ? '' : v < 10 ? 'h1' : v < 30 ? 'h2' : 'h3');
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">我的 · 學習紀錄</span>
-        <h1>你的飛行里程。</h1>
+        <span class="eyebrow">護照 · 學習紀錄</span>
+        <h1>你的旅行護照。</h1>
         <p class="sub">所有進度只存在這台裝置的瀏覽器裡，不需要註冊。換裝置或清除瀏覽資料前，記得先匯出備份。</p>
       </header>
       <div class="me-grid">
