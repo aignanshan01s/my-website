@@ -1,4 +1,4 @@
-/* 職光 TOEIC Atlas — app
+/* 多益詞旅 TOEIC Voyage — app
    Vanilla JS, no build step. Views: today / atlas / learn / practice / map / me (hash routed). */
 (() => {
   'use strict';
@@ -110,7 +110,7 @@
   const posOf = (w) => w.s[0][0];
 
   /* ---------- storage ---------- */
-  const KEY = 'toeic-atlas-v1';
+  const KEY = 'toeic-atlas-v1'; // kept from the first release so saved progress survives the rename
   const DEFAULT_SET = { goal: 10, start: 400, accent: 'us', rate: 0.9, sfx: true, theme: 'system' };
   function fresh() { return { v: 1, cards: {}, days: {}, stars: [], set: { ...DEFAULT_SET }, onboarded: false }; }
   function load() {
@@ -322,7 +322,7 @@
   const app = document.getElementById('app');
   app.innerHTML = `
     <header class="top"><div class="wrap">
-      <a class="brand" href="#today" aria-label="職光 TOEIC Atlas 首頁">${LOGO}<span class="brand-zh">職光</span><span class="brand-en">TOEIC Atlas</span></a>
+      <a class="brand" href="#today" aria-label="多益詞旅 TOEIC Voyage 首頁">${LOGO}<span class="brand-zh">多益詞旅</span><span class="brand-en">TOEIC Voyage</span></a>
       <nav class="nav" aria-label="主要頁面">${NAV.map(([k, t]) => `<a href="#${k}" data-nav="${k}">${t}</a>`).join('')}</nav>
       <div class="top-tools">
         <button class="search-btn" id="open-search" aria-label="搜尋單字">${I.search}<span>搜尋單字或中文</span><kbd>⌘K</kbd></button>
@@ -332,7 +332,7 @@
     </div></header>
     <main id="view" tabindex="-1"></main>
     <footer class="foot"><div class="wrap">
-      <span>職光 TOEIC Atlas · 1,000 個多益必備單字 · 學習進度只存在你的瀏覽器</span>
+      <span>多益詞旅 TOEIC Voyage · 1,000 個多益必備單字 · 學習進度只存在你的瀏覽器</span>
       <span>致敬開源專案 <a href="https://github.com/designfuchen/word-atlas" target="_blank" rel="noopener">詞光 Word Atlas</a></span>
     </div></footer>
     <nav class="tabbar" aria-label="主要頁面">${NAV.map(([k, t, ic]) => `<a href="#${k}" data-nav="${k}">${ic}<span>${t}</span></a>`).join('')}</nav>`;
@@ -700,7 +700,7 @@
         </div>
         <div class="entry-main">
           <div class="entry-meta">${lvBadge(w.lv, true)}<span class="badge plain">${TP[w.t].zh}</span></div>
-          <div class="entry-no"><span>№ ${pad(w.id, 4)}</span><i></i><span>TOEIC ATLAS</span></div>
+          <div class="entry-no"><span>№ ${pad(w.id, 4)}</span><i></i><span>TOEIC VOYAGE</span></div>
           <h2 class="entry-word">${esc(w.w)}</h2>
           ${pron(w)}
           <div class="senses">${sensesByPos(w).map(([pos, zh]) => `<div class="sense"><i>${pos}<small>${POS_ZH[pos] || ''}</small></i><b>${esc(zh)}</b></div>`).join('')}</div>
@@ -1415,7 +1415,7 @@
           <p>本站把 1,000 個字依難度分成 400、600、800、990 四段航程，每段 250 字，由淺入深。</p>
         </article>
         <article class="card panel">
-          <h2>關於職光</h2>
+          <h2>關於多益詞旅</h2>
           <ul>
             <li>每個字的分詞性釋義、近似詞、相反詞、日常例句、多益例句、中文翻譯與常用搭配，皆由本站以台灣用語原創撰寫。</li>
             <li>KK 音標依 CMU Pronouncing Dictionary 自動轉寫並人工校對常見多音字；15 個職場場景與 ${WORDS.filter((w) => w.tip).length} 則「多益考點」由本站編輯整理。</li>
@@ -1449,7 +1449,7 @@
         try {
           const a = document.createElement('a');
           a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-          a.download = `toeic-atlas-${ymd()}.json`;
+          a.download = `toeic-voyage-${ymd()}.json`;
           document.body.appendChild(a); a.click(); a.remove();
         } catch (e) { toast('這個環境無法下載檔案，請改用「複製到剪貼簿」。'); }
       });
@@ -1461,7 +1461,7 @@
         S = { ...fresh(), ...raw, set: { ...DEFAULT_SET, ...(raw.set || {}) } };
         save(); applyTheme(); paintTools(); viewMe();
         toast(`已還原：${Object.keys(S.cards).length} 個單字的紀錄`);
-      } catch (e) { toast('這不是職光的備份資料，請確認貼上的是完整的 JSON。'); }
+      } catch (e) { toast('這不是多益詞旅的備份資料，請確認貼上的是完整的 JSON。'); }
     };
     $('#import').addEventListener('click', () => {
       box.hidden = false; acts.hidden = false;
@@ -1513,7 +1513,7 @@
         <div class="dialog-body">
         <span class="eyebrow">WELCOME ABOARD · 歡迎登機</span>
         <h2>先決定你的起飛點。</h2>
-        <p class="sub">職光把 1,000 個多益單字分成四段航程。選一個你現在的程度，新詞會從那一段開始。</p>
+        <p class="sub">多益詞旅把 1,000 個多益單字分成四段航程。選一個你現在的程度，新詞會從那一段開始。</p>
         <div class="pick">${LEVELS.map((l) => `<button class="lv-${l.lv}" data-s="${l.lv}" aria-pressed="${start === l.lv}"><b>${l.lv}</b><strong style="font-size:15px">${l.name} · ${l.en}</strong><span>${l.desc}</span></button>`).join('')}</div>
         <div style="display:grid;gap:10px"><span class="eyebrow">每天想學幾個新詞</span><div class="chips">${[5, 10, 15, 20, 30].map((n) => `<button class="chip" data-g="${n}" aria-pressed="${goal === n}">${n} 個${n === 10 ? '（建議）' : ''}</button>`).join('')}</div></div>
         <div class="dialog-foot"><button class="btn" data-go>出發 ${I.arrow}</button></div>

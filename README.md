@@ -1,7 +1,7 @@
 # my-website
 我的個人網頁
 
-## 職光 TOEIC Atlas
+## 多益詞旅 TOEIC Voyage
 
 一個給繁體中文使用者的多益單字網站，致敬開源雅思單字專案 [詞光 Word Atlas](https://github.com/designfuchen/word-atlas)。
 

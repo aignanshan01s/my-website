@@ -1,4 +1,4 @@
-/* 職光 TOEIC Atlas — design system
+/* 多益詞旅 TOEIC Voyage — design system
    Layout: an illustrated field guide. Ivory paper, ink, four field-guide pigments (one per score leg:
    400 terra · 600 sage · 800 sky · 990 ochre), painted plates in rounded frames, risograph grain over everything. */
 
@@ -276,7 +276,9 @@ main { display: block; padding-bottom: 72px; }
 .chip:hover { border-color: var(--ink-3); }
 .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .chip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; background: var(--lc, var(--ink-3)); }
-.seg { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--paper-2); gap: 2px; }
+.seg { display: inline-flex; max-width: 100%; overflow-x: auto; scrollbar-width: none; padding: 4px; border-radius: 999px; background: var(--paper-2); gap: 2px; }
+.seg::-webkit-scrollbar { display: none; }
+@media (max-width: 520px) { .seg button { padding: 6px 12px; font-size: 14px; } .filter-bar .chips { min-width: 0; } }
 .seg button { padding: 7px 18px; border-radius: 999px; font-size: 15px; color: var(--ink-3); white-space: nowrap; }
 .seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); font-weight: 600; box-shadow: var(--shadow-sm); }
 .badge {
@@ -461,6 +463,7 @@ main { display: block; padding-bottom: 72px; }
 }
 .search-field input:focus { outline: none; border-color: var(--ink-3); box-shadow: 0 0 0 4px var(--mark); }
 .filters { display: grid; gap: 14px; padding-bottom: 26px; }
+.filters > * { min-width: 0; }
 .filter-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .filter-bar .count { font-size: 15px; color: var(--ink-3); }
 .filter-right { display: flex; align-items: center; gap: 14px; }
