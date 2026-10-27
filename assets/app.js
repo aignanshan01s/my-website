@@ -34,6 +34,7 @@
     { k: 'core', zh: '通用核心', en: 'Core' },
   ];
   const TP = Object.fromEntries(TOPICS.map((t) => [t.k, t]));
+  const STATUS_ZH = { new: '未學', learning: '學習中', mastered: '已熟' };
   const POS_ZH = { 'n.': '名詞', 'v.': '動詞', 'adj.': '形容詞', 'adv.': '副詞', 'prep.': '介系詞' };
 
   /* ---------- icons ---------- */
@@ -58,32 +59,39 @@
     map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></svg>',
     me: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     listen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg>',
-    pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4"/></svg>',
-    blank: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h18M3 16h5M16 16h5M10 17h4"/></svg>',
-    swap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/></svg>',
-    zh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 7 8M11 5c0 4-3 7-7 8M13 21l4-9 4 9M14.5 18h5"/></svg>',
   };
-  const LOGO = '<svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="2"/><circle cx="20" cy="20" r="12.5" stroke="currentColor" stroke-width="1" stroke-dasharray="2 3" opacity=".55"/><path d="M8 25c6-1 16-6 24-15" stroke="var(--signal)" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 4"/><path d="M27.5 9.5 33 8l-1.6 5.4-2.1-1.8-3 .8 1.2-2.9Z" fill="var(--signal)"/><path d="M14 27.5h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  const LOGO = '<svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="2"/><circle cx="20" cy="20" r="12.5" stroke="currentColor" stroke-width="1" stroke-dasharray="2 3" opacity=".55"/><path d="M8 25c6-1 16-6 24-15" stroke="var(--ochre)" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 4"/><path d="M27.5 9.5 33 8l-1.6 5.4-2.1-1.8-3 .8 1.2-2.9Z" fill="var(--ochre)"/><path d="M14 27.5h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
-  /* Topic vignettes: flat, few shapes, stroke in the topic hue. */
-  const TOPIC_SVG = {
-    off: '<rect x="14" y="10" width="36" height="46" rx="4" fill="var(--card)" stroke="currentColor" stroke-width="3"/><rect x="24" y="6" width="16" height="9" rx="3" fill="currentColor"/><path d="M21 26h22M21 34h22M21 42h14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="46" cy="48" r="8" fill="var(--signal)"/><path d="m42.5 48 2.5 2.5 4.5-5" stroke="var(--card)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-    hr: '<rect x="12" y="14" width="40" height="40" rx="6" fill="var(--card)" stroke="currentColor" stroke-width="3"/><path d="M26 8h12v10H26z" fill="currentColor"/><circle cx="32" cy="31" r="7" fill="currentColor" opacity=".85"/><path d="M20 48c2-7 7-9 12-9s10 2 12 9" fill="currentColor" opacity=".85"/>',
-    fin: '<ellipse cx="24" cy="46" rx="12" ry="5" fill="var(--signal)"/><path d="M12 46v-6c0 2.8 5.4 5 12 5s12-2.2 12-5v6" fill="var(--signal)" opacity=".75"/><ellipse cx="24" cy="40" rx="12" ry="5" fill="var(--signal)" stroke="currentColor" stroke-width="2"/><ellipse cx="24" cy="32" rx="12" ry="5" fill="var(--card)" stroke="currentColor" stroke-width="2.5"/><path d="M36 30l7-8 6 5 7-11" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 15h7v7" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
-    mkt: '<path d="M12 28v10h8l18 10V18L20 28h-8Z" fill="var(--card)" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M20 38l3 12h6l-2-10" fill="currentColor"/><path d="M45 26c3 2 3 10 0 12M50 21c6 5 6 17 0 22" stroke="var(--signal)" stroke-width="3" fill="none" stroke-linecap="round"/>',
-    biz: '<rect x="14" y="14" width="22" height="42" fill="var(--card)" stroke="currentColor" stroke-width="3"/><rect x="36" y="26" width="16" height="30" fill="currentColor" opacity=".85"/><path d="M20 22h4M28 22h2M20 30h4M28 30h2M20 38h4M28 38h2M20 46h4M28 46h2" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M40 33h8M40 40h8M40 47h8" stroke="var(--card)" stroke-width="2.5" stroke-linecap="round"/><path d="M8 56h48" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="46" cy="14" r="5" fill="var(--signal)"/>',
-    law: '<path d="M32 10v40M20 54h24" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><path d="M14 18h36" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M14 18 8 34h12l-6-16ZM50 18l-6 16h12l-6-16Z" fill="var(--card)" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M8 34a6 4 0 0 0 12 0M44 34a6 4 0 0 0 12 0" fill="var(--signal)"/><circle cx="32" cy="12" r="4" fill="var(--signal)"/>',
-    ops: '<path d="M10 24 32 14l22 10v24L32 58 10 48V24Z" fill="var(--card)" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M10 24l22 10 22-10M32 34v24" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="m21 19 22 10v8" stroke="var(--signal)" stroke-width="4" fill="none" stroke-linejoin="round"/>',
-    tech: '<rect x="12" y="14" width="40" height="28" rx="3" fill="var(--card)" stroke="currentColor" stroke-width="3"/><path d="M6 48h52l-4 6H10l-4-6Z" fill="currentColor"/><path d="m25 24-5 4 5 4M39 24l5 4-5 4M34 22l-4 12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="50" cy="12" r="5" fill="var(--signal)"/>',
-    evt: '<rect x="10" y="14" width="44" height="40" rx="5" fill="var(--card)" stroke="currentColor" stroke-width="3"/><path d="M10 25h44" stroke="currentColor" stroke-width="3"/><path d="M22 9v10M42 9v10" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/><rect x="18" y="31" width="7" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="28.5" y="31" width="7" height="6" rx="1.5" fill="var(--signal)"/><rect x="39" y="31" width="7" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="18" y="41" width="7" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="28.5" y="41" width="7" height="6" rx="1.5" fill="currentColor" opacity=".5"/>',
-    trv: '<path d="M8 50c10-4 22-4 48 0" stroke="currentColor" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round" fill="none"/><path d="M14 34 50 18c3-1 6 1 5 3-1 2-3 3-5 4L40 30l-4 16-5 2-1-13-10 4-2 6-4 1 1-8-6-2 5-2Z" fill="var(--card)" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><circle cx="14" cy="16" r="6" fill="var(--signal)"/>',
-    hos: '<path d="M14 26h30v14a12 12 0 0 1-12 12h-6a12 12 0 0 1-12-12V26Z" fill="var(--card)" stroke="currentColor" stroke-width="3"/><path d="M44 30h4a6 6 0 0 1 0 12h-5" stroke="currentColor" stroke-width="3" fill="none"/><path d="M8 56h44" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 10c-3 4 3 6 0 10M30 8c-3 4 3 7 0 12M38 10c-3 4 3 6 0 10" stroke="var(--signal)" stroke-width="3" fill="none" stroke-linecap="round"/>',
-    shop: '<path d="M12 22h40l-3 34H15l-3-34Z" fill="var(--card)" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M23 28v-8a9 9 0 0 1 18 0v8" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M26 40h12v10H26z" fill="var(--signal)"/><circle cx="23" cy="28" r="2.5" fill="currentColor"/><circle cx="41" cy="28" r="2.5" fill="currentColor"/>',
-    home: '<path d="M8 30 32 10l24 20" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 26v28h36V26" fill="var(--card)" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><rect x="27" y="38" width="10" height="16" fill="currentColor"/><rect x="18" y="32" width="6" height="6" fill="var(--signal)"/><rect x="40" y="32" width="6" height="6" fill="var(--signal)"/>',
-    med: '<rect x="10" y="16" width="44" height="36" rx="7" fill="var(--card)" stroke="currentColor" stroke-width="3"/><path d="M24 16v-4h16v4" stroke="currentColor" stroke-width="3" fill="none"/><path d="M28 24h8v6h6v8h-6v6h-8v-6h-6v-8h6v-6Z" fill="currentColor"/><circle cx="50" cy="48" r="7" fill="var(--signal)"/>',
-    core: '<path d="M32 18c-6-5-14-6-22-5v36c8-1 16 0 22 5 6-5 14-6 22-5V13c-8-1-16 0-22 5Z" fill="var(--card)" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M32 18v36" stroke="currentColor" stroke-width="3"/><path d="M16 22c4 0 8 1 11 3M16 30c4 0 8 1 11 3M37 25c3-2 7-3 11-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".6"/><path d="M42 30l2 5 5 .5-4 3.5 1.2 5L42 41l-4.2 3 1.2-5-4-3.5 5-.5 2-5Z" fill="var(--signal)"/>',
-  };
-  const topicSvg = (k) => `<svg viewBox="0 0 64 64" aria-hidden="true">${TOPIC_SVG[k] || TOPIC_SVG.core}</svg>`;
+  /* Painted plates live in sprite atlases: one request per 100 thumbnails, one per 25 full plates. */
+  const SP = window.TOEIC_SPRITE || { thumb: { cols: 10 }, full: { cols: 5 }, covers: {} };
+  function spriteCss(idx, kind) {
+    const s = SP[kind];
+    const per = s.cols * s.cols;
+    const i = idx % per;
+    const pos = (v) => `${((v / (s.cols - 1)) * 100).toFixed(3)}%`;
+    return `background-image:url(assets/img/${kind}-${Math.floor(idx / per)}.webp);background-size:${s.cols * 100}% ${s.cols * 100}%;background-position:${pos(i % s.cols)} ${pos(Math.floor(i / s.cols))}`;
+  }
+  const coverIdx = (t) => SP.covers[t];
+  function art(w, opt = {}) {
+    const idx = typeof w === 'number' ? w : w.i;
+    const tag = opt.tag && typeof w === 'object' && w.ar === 's' ? `<span class="art-tag">${TP[w.t].zh} · 場景插畫</span>` : '';
+    return `<div class="art ${opt.cls || ''}" style="${spriteCss(idx, 'thumb')}" role="img" aria-label="${typeof w === 'object' ? esc(w.w) + ' 插畫' : '場景插畫'}">${opt.full ? `<div class="art-full" data-full="${idx}"></div>` : ''}${tag}</div>`;
+  }
+  const sheetCache = new Map();
+  function loadFull(root = document) {
+    root.querySelectorAll('[data-full]:not(.is-in)').forEach((el) => {
+      const idx = +el.dataset.full;
+      const per = SP.full.cols * SP.full.cols;
+      const url = `assets/img/full-${Math.floor(idx / per)}.webp`;
+      let p = sheetCache.get(url);
+      if (!p) {
+        p = new Promise((res, rej) => { const im = new Image(); im.onload = res; im.onerror = rej; im.src = url; });
+        sheetCache.set(url, p);
+      }
+      el.setAttribute('style', spriteCss(idx, 'full'));
+      p.then(() => el.classList.add('is-in'), () => {});
+    });
+  }
 
   /* ---------- helpers ---------- */
   const $ = (s, r = document) => r.querySelector(s);
@@ -242,6 +250,34 @@
       speechSynthesis.speak(u);
     } catch (e) { toast('語音朗讀暫時無法使用。'); }
   }
+  /* Recorded pronunciations: one audio sprite per accent, seek to [start, duration]. */
+  const tracks = {};
+  let clip = null;
+  function playWord(w, accent = S.set.accent, rate = S.set.rate) {
+    const seg = w[accent === 'uk' ? 'k' : 'u'];
+    if (!seg) { speak(w.w, accent, rate); return; }
+    try {
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      let a = tracks[accent];
+      if (!a) {
+        a = tracks[accent] = new Audio(`assets/audio/${accent}.mp3`);
+        a.preload = 'auto';
+        a.addEventListener('timeupdate', () => { if (clip && clip.a === a && a.currentTime >= clip.end) { a.pause(); clip = null; } });
+        a.addEventListener('error', () => { a.broken = true; });
+      }
+      if (a.broken) { speak(w.w, accent, rate); return; }
+      if (clip) { clip.a.pause(); clearTimeout(clip.t); }
+      const end = seg[0] + seg[1] + 0.06;
+      clip = { a, end };
+      a.playbackRate = Math.max(0.75, Math.min(1.1, rate / 0.9));
+      a.currentTime = Math.max(0, seg[0] - 0.02);
+      const started = a.play();
+      const c = clip;
+      const arm = () => { if (clip === c) c.t = setTimeout(() => { if (clip === c) { a.pause(); clip = null; } }, ((end - a.currentTime) / a.playbackRate) * 1000 + 40); };
+      if (started && started.then) started.then(arm, () => { clip = null; speak(w.w, accent, rate); });
+      else arm();
+    } catch (e) { speak(w.w, accent, rate); }
+  }
   let actx = null;
   function sfx(kind) {
     if (!S.set.sfx) return;
@@ -346,12 +382,11 @@
   window.addEventListener('hashchange', render);
 
   /* ---------- shared fragments ---------- */
-  const stamp = (w, extra = '') => `<div class="stamp tp-${w.t} ${extra}"><span class="stamp-letter">${esc(w.w[0].toUpperCase())}</span><span class="stamp-lv">${w.lv}</span>${topicSvg(w.t)}<span class="stamp-topic">${TP[w.t].en}</span></div>`;
   const lvBadge = (lv, withName) => `<span class="badge lv-${lv}">${lv}${withName ? ` · ${LV[lv].name}` : ''}</span>`;
   const pron = (w) => `
     <div class="prons">
-      <button class="pron" data-say="${esc(w.w)}" data-accent="us"><span class="spk">${I.speaker}</span><small>美</small><b>${kkHtml(w)}</b></button>
-      <button class="pron" data-say="${esc(w.w)}" data-accent="uk"><span class="spk">${I.speaker}</span><small>英</small><b>英式發音</b></button>
+      <button class="pron" data-word="${w.id}" data-accent="us"><span class="spk">${I.speaker}</span><small>美</small><b>${kkHtml(w)}</b></button>
+      <button class="pron" data-word="${w.id}" data-accent="uk"><span class="spk">${I.speaker}</span><small>英</small><b>${w.k ? '英式真人發音' : '英式發音'}</b></button>
     </div>`;
   function markSentence(w) {
     const s = w.en;
@@ -363,6 +398,13 @@
   document.addEventListener('click', (e) => {
     const say = e.target.closest('[data-say]');
     if (say) { e.preventDefault(); e.stopPropagation(); speak(say.dataset.say, say.dataset.accent || S.set.accent, say.dataset.slow ? 0.8 : S.set.rate); return; }
+    const wd = e.target.closest('[data-word]');
+    if (wd) {
+      e.preventDefault(); e.stopPropagation();
+      playWord(BY_ID.get(+wd.dataset.word), wd.dataset.accent || S.set.accent, wd.dataset.slow ? 0.8 : S.set.rate);
+      if (wd.classList.contains('pron')) { wd.classList.add('is-playing'); setTimeout(() => wd.classList.remove('is-playing'), 900); }
+      return;
+    }
     const open = e.target.closest('[data-open]');
     if (open) { e.preventDefault(); const list = open.closest('[data-list]'); openEntry(+open.dataset.open, list ? listContext : null); }
   });
@@ -387,14 +429,12 @@
     const mins = Math.max(1, Math.round(pendingNew.length * 0.8 + due.length * 0.3));
     const d = today();
     const wotd = WORDS[hash(ymd()) % WORDS.length];
-    const startLv = S.set.start;
-    const levelNow = LEVELS.find((l) => l.lv >= startLv) || LEVELS[0];
+    const levelNow = LEVELS.find((l) => l.lv >= S.set.start) || LEVELS[0];
+    const nextLv = LEVELS[Math.min(3, LEVELS.indexOf(levelNow) + 1)];
     const flight = `TA${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
     const doneToday = total === 0;
-    const preview = pendingNew.slice(0, 6).map((id) => BY_ID.get(id).w);
-    const target = LEVELS[Math.min(3, LEVELS.indexOf(levelNow) + 1)];
+    const faces = (pendingNew.length ? pendingNew : due).slice(0, 5).map((id) => BY_ID.get(id));
 
-    // week bars
     const days = [];
     for (let i = 6; i >= 0; i--) {
       const dd = new Date(now); dd.setDate(now.getDate() - i);
@@ -402,84 +442,60 @@
       days.push({ d: dd, v: r ? r.n + r.r + r.q : 0, today: i === 0 });
     }
     const maxV = Math.max(10, ...days.map((x) => x.v));
-    const todayCount = d.n + d.r;
     const goal = S.set.goal;
     const ringPct = Math.min(1, d.n / goal);
-    const C = 2 * Math.PI * 50;
+    const C = 2 * Math.PI * 52;
     const acc = d.q ? Math.round((d.c / d.q) * 100) : null;
-    const allC = counts();
 
     view.innerHTML = `
       <div class="wrap">
         <header class="page-head">
-          <span class="eyebrow">${now.getMonth() + 1} 月 ${now.getDate()} 日 · 星期${WEEK[now.getDay()]}</span>
+          <span class="eyebrow">${now.getMonth() + 1}月${now.getDate()}日 · 星期${WEEK[now.getDay()]}</span>
           <h1>${greeting()}</h1>
         </header>
 
-        <section class="pass" aria-label="今日學習計畫">
-          <div class="pass-main">
-            <div class="pass-row">
-              <div><div class="pass-label">Boarding pass · 今日航班</div><div class="pass-val">${flight} · ${levelNow.en.toUpperCase()}</div></div>
-              <div style="text-align:right"><div class="pass-label">Passenger</div><div class="pass-val">職人 / TOEIC ${target.lv}</div></div>
-            </div>
-            <div class="route">
-              <div class="route-end"><b>${levelNow.lv}</b><span>${levelNow.name} · 出發</span></div>
-              <div class="route-line" aria-hidden="true">
-                <svg viewBox="0 0 200 40" preserveAspectRatio="none"><path d="M2 32 Q100 -12 198 32" fill="none" stroke="rgba(241,240,232,.45)" stroke-width="1.5" stroke-dasharray="3 5" vector-effect="non-scaling-stroke"/></svg>
-              </div>
-              <div class="route-end to"><b>${target.lv === levelNow.lv ? 990 : target.lv}</b><span>${target.lv === levelNow.lv ? '滿分' : target.name} · 目的地</span></div>
-            </div>
-            <div class="pass-title">
-              ${doneToday
-                ? `<h2>今日航程完成</h2><p>新詞 ${d.n} 個、複習 ${d.r} 次。明天同一時間見。</p>`
-                : `<h2>新詞<em>${pendingNew.length}</em>${due.length ? ` 複習<em>${due.length}</em>` : ''}</h2><p>約 ${mins} 分鐘。先複習，再起飛。</p>`}
-            </div>
-            ${preview.length ? `<div class="pass-words" aria-label="今天會遇見的單字">${preview.map((w) => `<span>${esc(w)}</span>`).join('')}${pendingNew.length > 6 ? `<span>+${pendingNew.length - 6}</span>` : ''}</div>` : ''}
-            <div class="pass-cta">
+        <section class="hero" aria-label="今日學習計畫">
+          <img class="hero-img" src="assets/brand/hero.webp" alt="" width="1800" height="1200">
+          <div class="hero-body">
+            <span class="hero-flight">FLIGHT ${flight} · ${levelNow.lv} → ${levelNow.lv === 990 ? '990' : nextLv.lv} · 今日航程</span>
+            ${doneToday
+              ? `<h2>今日航程完成</h2><p>新詞 ${d.n} 個、複習 ${d.r} 次。明天同一時間，我們再出發。</p>`
+              : `<h2>新詞<em class="num">${pendingNew.length}</em>${due.length ? `<small>複習 ${due.length}</small>` : ''}</h2><p>約 ${mins} 分鐘。先溫故，再知新。</p>`}
+            ${faces.length ? `<div class="faces"><div class="faces-stack">${faces.map((w) => art(w)).join('')}</div><span>${doneToday ? '' : '今天會遇見它們'}</span></div>` : ''}
+            <div class="hero-cta">
               ${doneToday
                 ? `<button class="btn" id="extra">再加 5 個新詞 ${I.arrow}</button><a class="btn ghost" href="#practice">去練習</a>`
-                : `<a class="btn" href="#learn">開始今天的航程 ${I.arrow}</a><a class="btn ghost" href="#practice">先做練習題</a>`}
+                : `<a class="btn" href="#learn">開始今天的航程 ${I.arrow}</a>`}
             </div>
           </div>
-          <aside class="pass-stub" aria-label="航班資訊">
-            <div class="stub-grid">
-              <div><div class="pass-label">Gate</div><div class="pass-val">${levelNow.lv}</div></div>
-              <div><div class="pass-label">Seat</div><div class="pass-val">${goal}/日</div></div>
-              <div><div class="pass-label">Streak</div><div class="pass-val">${streak()} 天</div></div>
-              <div><div class="pass-label">Miles</div><div class="pass-val">${fmt(allC.learning + allC.mastered)}</div></div>
-            </div>
-            <div class="barcode" aria-hidden="true"></div>
-            <div class="barcode-num" aria-hidden="true">${flight} ${pad(allC.mastered, 4)} ${pad(d.n + d.r, 3)}</div>
-          </aside>
         </section>
 
         <section class="section">
           <div class="today-grid">
             <article class="card wotd">
-              <button data-open="${wotd.id}" aria-label="打開 ${esc(wotd.w)} 詞卡" style="display:block">${stamp(wotd)}</button>
+              <button data-open="${wotd.id}" aria-label="打開 ${esc(wotd.w)} 詞卡">${art(wotd, { tag: true })}</button>
               <div class="wotd-body">
-                <span class="eyebrow">今日一詞 · Word of the day</span>
-                <div style="display:flex;gap:8px;align-items:center">${lvBadge(wotd.lv, true)}<span class="badge plain">${TP[wotd.t].zh}</span></div>
-                <button class="wotd-word" data-open="${wotd.id}" style="text-align:left">${esc(wotd.w)}</button>
+                <span class="eyebrow">今日一詞</span>
+                <button class="wotd-word" data-open="${wotd.id}">${esc(wotd.w)}</button>
                 ${pron(wotd)}
                 <p><b>${esc(zhMain(wotd))}</b> <span style="color:var(--ink-3)">${wotd.s.map((s) => s[0]).join(' / ')}</span></p>
-                <p class="wotd-sent">${esc(wotd.en)} <button class="mini-spk" data-say="${esc(wotd.en)}" aria-label="朗讀例句">${I.speaker}</button></p>
+                <p class="wotd-sent">${markSentence(wotd)} <button class="mini-spk" data-say="${esc(wotd.en)}" aria-label="朗讀例句">${I.speaker}</button></p>
                 <p class="wotd-zh">${esc(wotd.zh)}</p>
               </div>
             </article>
             <article class="card week">
-              <div class="week-top"><span class="eyebrow">這一週</span><span class="badge plain" style="--lc:var(--signal)">連續 ${streak()} 天</span></div>
+              <div class="week-top"><span class="eyebrow">這一週</span><span class="badge plain lv-990">連續 ${streak()} 天</span></div>
               <div class="ring-row">
                 <div class="ring" role="img" aria-label="今日新詞 ${d.n} / ${goal}">
-                  <svg viewBox="0 0 116 116"><circle cx="58" cy="58" r="50" fill="none" stroke="var(--paper-2)" stroke-width="10"/><circle cx="58" cy="58" r="50" fill="none" stroke="var(--signal)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - ringPct)}"/></svg>
+                  <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--paper-2)" stroke-width="9"/><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ochre)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - ringPct)}"/></svg>
                   <div class="ring-txt"><b class="num">${d.n}</b><span>/ ${goal} 新詞</span></div>
                 </div>
                 <div class="bars" aria-label="近七天學習量">
-                  ${days.map((x) => `<div class="bar ${x.today ? 'is-today' : ''}" title="${x.d.getMonth() + 1}/${x.d.getDate()}：${x.v}"><i class="${x.v ? 'on' : ''}" style="height:${Math.max(6, (x.v / maxV) * 92)}px"></i><span>${WEEK[x.d.getDay()]}</span></div>`).join('')}
+                  ${days.map((x) => `<div class="bar ${x.today ? 'is-today' : ''}" title="${x.d.getMonth() + 1}/${x.d.getDate()}：${x.v}"><i class="${x.v ? 'on' : ''}" style="height:${Math.max(7, (x.v / maxV) * 96)}px"></i><span>${WEEK[x.d.getDay()]}</span></div>`).join('')}
                 </div>
               </div>
               <div class="week-stats">
-                <div><b class="num">${todayCount}</b><span>今日學習次數</span></div>
+                <div><b class="num">${d.n + d.r}</b><span>今日學習</span></div>
                 <div><b class="num">${d.q}</b><span>今日答題</span></div>
                 <div><b class="num">${acc === null ? '—' : acc + '%'}</b><span>首答正確率</span></div>
               </div>
@@ -503,12 +519,12 @@
         </section>
 
         <section class="section">
-          <div class="section-head"><h2>15 個職場場景</h2><a class="more" href="#atlas">打開圖鑑 →</a></div>
+          <div class="section-head"><h2>十五個職場場景</h2><a class="more" href="#atlas">打開圖鑑 →</a></div>
           <div class="topics">
             ${TOPICS.map((t) => {
               const list = WORDS.filter((w) => w.t === t.k);
               const c = counts(list);
-              return `<button class="topic tp-${t.k}" data-topic="${t.k}"><span class="t-ico">${topicSvg(t.k)}</span><span><b>${t.zh}</b><span>${c.learning + c.mastered}/${list.length}</span></span></button>`;
+              return `<button class="topic" data-topic="${t.k}">${art(coverIdx(t.k))}<span class="topic-txt"><b>${t.zh}</b><span class="num">${c.learning + c.mastered}/${list.length}</span></span></button>`;
             }).join('')}
           </div>
         </section>
@@ -544,7 +560,7 @@
           <div style="display:grid;gap:10px">
             <span class="eyebrow">圖鑑 · ${fmt(WORDS.length)} 詞</span>
             <h1>每個詞，都在一個職場裡。</h1>
-            <p class="sub">四段分數航程、15 個多益場景，每個字都有 KK 音標、美英發音和一句職場例句。</p>
+            <p class="sub">${fmt(WORDS.filter((w) => w.ar !== 's').length)} 幅單字插畫 · 美英真人發音 · KK 音標 · 依四段分數與 15 個職場場景整理</p>
           </div>
           <label class="search-field"><span class="sr-only">搜尋單字</span>${I.search}<input id="atlas-q" type="search" placeholder="搜尋英文單字或中文釋義" value="${esc(atlasState.q)}" autocomplete="off"></label>
         </header>
@@ -603,27 +619,26 @@
     const shown = list.slice(0, atlasState.limit);
     const box = $('#atlas-results');
     if (!list.length) {
-      box.innerHTML = `<div class="empty"><b>沒有符合的單字</b><span>試試放寬航段、場景或狀態篩選，或換個關鍵字。</span><button class="btn ghost small" id="clear-f">清除所有篩選</button></div>`;
+      box.innerHTML = `<div class="empty"><img src="assets/brand/empty.webp" alt="" width="480" height="480"><b>沒有符合的單字</b><span>試試放寬航段、場景或狀態篩選，或換個關鍵字。</span><button class="btn ghost small" id="clear-f">清除所有篩選</button></div>`;
       $('#clear-f').addEventListener('click', () => { Object.assign(atlasState, { lv: 0, topic: 'all', pos: 'all', st: 'all', q: '', limit: 60 }); viewAtlas(); });
     } else if (atlasState.view === 'grid') {
       box.innerHTML = `<div class="grid">${shown.map((w) => `
         <button class="wcard" data-open="${w.id}">
-          ${stamp(w)}
+          ${art(w, { tag: true })}
           <div class="wcard-body">
-            <div class="wcard-top"><span class="wcard-word">${esc(w.w)}</span><span class="st-dot ${status(w.id)}" title="${{ new: '未學', learning: '學習中', mastered: '已熟' }[status(w.id)]}"></span></div>
-            <span class="wcard-kk">${kkHtml(w)}</span>
+            <div class="wcard-top"><span class="wcard-word">${esc(w.w)}</span><span class="wcard-meta">${lvBadge(w.lv)}<span class="st ${status(w.id)}" title="${STATUS_ZH[status(w.id)]}"></span></span></div>
             <span class="wcard-zh"><i>${w.s[0][0]}</i>${esc(zhMain(w))}</span>
           </div>
         </button>`).join('')}</div>`;
     } else {
       box.innerHTML = `<div class="list">${shown.map((w) => `
         <button class="wrow" data-open="${w.id}">
-          <span class="no">№ ${pad(w.id, 4)}</span>
+          ${art(w)}
           <span class="w">${esc(w.w)}</span>
           <span class="k">${kkHtml(w)}</span>
           <span class="z"><i>${w.s[0][0]}</i>${esc(zhMain(w))}</span>
           ${lvBadge(w.lv)}
-          <span class="st-dot ${status(w.id)}"></span>
+          <span class="st ${status(w.id)}" title="${STATUS_ZH[status(w.id)]}"></span>
         </button>`).join('')}</div>`;
     }
     const more = $('#atlas-more');
@@ -659,23 +674,24 @@
     const idx = entryCtx ? entryCtx.indexOf(id) : -1;
     const prev = idx > 0 ? entryCtx[idx - 1] : null;
     const next = idx >= 0 && idx < entryCtx.length - 1 ? entryCtx[idx + 1] : null;
-    const related = shuffle(WORDS.filter((x) => x.t === w.t && x.id !== id && Math.abs(x.lv - w.lv) <= 200)).slice(0, 6);
+    const pool = WORDS.filter((x) => x.t === w.t && x.id !== id && Math.abs(x.lv - w.lv) <= 200);
+    const related = [...pool.filter((x) => x.ar !== 's'), ...pool.filter((x) => x.ar === 's')].sort((a, b) => (hash(a.w + id) % 97) - (hash(b.w + id) % 97)).slice(0, 6);
     const c = S.cards[id];
     sheet.innerHTML = `
       <button class="sheet-close" aria-label="關閉">${I.close}</button>
       <div class="entry">
         <div class="entry-side">
-          ${stamp(w)}
+          ${art(w, { full: true, tag: true })}
           <div class="entry-actions">
             <button class="btn ghost small" id="e-star" aria-pressed="${starred}">${starred ? I.starOn : I.star}${starred ? '已收藏' : '收藏'}</button>
             ${st === 'mastered' ? '<button class="btn ghost small" id="e-forget">重新學習</button>' : '<button class="btn ghost small" id="e-known">我已經會了</button>'}
           </div>
-          <p style="font-size:13px;color:var(--ink-3)">${st === 'new' ? '還沒學過。加入今天的航程，或直接標為已會。' : st === 'mastered' ? `已熟，下次複習：${new Date(c.due).toLocaleDateString('zh-TW')}` : `學習中，已複習 ${c.reps} 次，下次：${c.due <= Date.now() ? '現在' : ivlLabel(c) + '後'}`}</p>
-          ${entryCtx ? `<div class="entry-nav"><button class="btn ghost small" id="e-prev" ${prev ? '' : 'disabled'}>${I.left}上一個</button><span class="mono" style="font-size:12px;color:var(--ink-3);align-self:center">${idx + 1} / ${entryCtx.length}</span><button class="btn ghost small" id="e-next" ${next ? '' : 'disabled'}>下一個${I.right}</button></div>` : ''}
+          <p class="entry-state">${st === 'new' ? '還沒學過。加入今天的航程，或直接標為已會。' : st === 'mastered' ? `已熟，下次複習：${new Date(c.due).toLocaleDateString('zh-TW')}` : `學習中，已複習 ${c.reps} 次，下次：${c.due <= Date.now() ? '現在' : ivlLabel(c) + '後'}`}</p>
+          ${entryCtx ? `<div class="entry-nav"><button class="btn ghost small" id="e-prev" ${prev ? '' : 'disabled'}>${I.left}上一個</button><span>${idx + 1} / ${entryCtx.length}</span><button class="btn ghost small" id="e-next" ${next ? '' : 'disabled'}>下一個${I.right}</button></div>` : ''}
         </div>
         <div class="entry-main">
           <div class="entry-meta">${lvBadge(w.lv, true)}<span class="badge plain">${TP[w.t].zh}</span></div>
-          <div class="entry-no"><span>№ ${pad(w.id, 4)}</span><span>TOEIC ATLAS</span></div>
+          <div class="entry-no"><span>№ ${pad(w.id, 4)}</span><i></i><span>TOEIC ATLAS</span></div>
           <h2 class="entry-word">${esc(w.w)}</h2>
           ${pron(w)}
           <div class="senses">${w.s.map((s) => `<div class="sense"><i>${s[0]}</i><b>${esc(s[1])}</b></div>`).join('')}</div>
@@ -687,11 +703,12 @@
           ${w.tip ? `<div class="tip"><div class="block-label">多益考點</div><p>${esc(w.tip)}</p></div>` : ''}
           <div>
             <div class="block-label">同場景單字 · ${TP[w.t].zh}</div>
-            <div class="related">${related.map((r) => `<button data-open="${r.id}"><b>${esc(r.w)}</b><span>${esc(r.s[0][1])}</span></button>`).join('')}</div>
+            <div class="related">${related.map((r) => `<button data-open="${r.id}">${art(r)}<span style="min-width:0"><b>${esc(r.w)}</b><span>${esc(r.s[0][1])}</span></span></button>`).join('')}</div>
           </div>
         </div>
       </div>`;
     sheet.scrollTop = 0;
+    loadFull(sheet);
     sheet.querySelector('.sheet-close').addEventListener('click', closeEntry);
     $('#e-star').addEventListener('click', () => { const on = toggleStar(id); toast(on ? `已收藏 ${w.w}` : `已取消收藏 ${w.w}`); openEntry(id); refreshUnder(); });
     const kn = $('#e-known');
@@ -748,7 +765,7 @@
       }
       sel = Math.min(sel, Math.max(0, res.length - 1));
       listEl.innerHTML = res.length
-        ? (q ? '' : '<div class="eyebrow" style="padding:8px 14px">附多益考點的字</div>') + res.map((w, i) => `<button class="pal-item" role="option" data-i="${i}" aria-selected="${i === sel}"><span><b>${esc(w.w)}</b><span>${esc(zhShort(w))}</span></span>${lvBadge(w.lv)}</button>`).join('')
+        ? (q ? '' : '<div class="eyebrow" style="padding:8px 14px">附多益考點的字</div>') + res.map((w, i) => `<button class="pal-item" role="option" data-i="${i}" aria-selected="${i === sel}">${art(w)}<span><b>${esc(w.w)}</b><span>${esc(zhShort(w))}</span></span>${lvBadge(w.lv)}</button>`).join('')
         : '<div class="empty" style="padding:30px"><span>找不到這個字。1,000 字詞庫以講義收錄為準。</span></div>';
     };
     const close = () => { ov.remove(); if (!$('.overlay')) document.documentElement.classList.remove('is-locked'); };
@@ -804,13 +821,15 @@
       const d = today();
       view.innerHTML = `<div class="wrap"><div class="learn">
         <div class="done">
-          <div class="stamp-ok">本日<br>航程完成</div>
-          <h2>${s.total ? '今天的單字都降落了。' : '今天沒有待學的單字。'}</h2>
-          <p style="color:var(--ink-2)">${s.total ? `這一輪：記得 ${s.tally[3] + s.tally[4]} 次、模糊 ${s.tally[2]} 次、忘了 ${s.tally[1]} 次。` : '新詞與複習都完成了。'}今天累計新詞 ${d.n} 個、複習 ${d.r} 次。</p>
-          <div class="row-btns" style="justify-content:center">
-            <a class="btn" href="#practice">用練習題鞏固 ${I.arrow}</a>
-            <button class="btn ghost" id="more5">再學 5 個新詞</button>
-            <a class="btn ghost" href="#today">回到今日</a>
+          <img src="assets/brand/done.webp" alt="" width="480" height="480">
+          <div class="done-body">
+            <span class="eyebrow">本日航程完成</span>
+            <h2>${s.total ? '今天的單字都平安降落了。' : '今天沒有待學的單字。'}</h2>
+            <p style="color:var(--ink-2)">${s.total ? `這一輪記得 ${s.tally[3] + s.tally[4]} 次、模糊 ${s.tally[2]} 次、忘了 ${s.tally[1]} 次。` : '新詞與複習都完成了。'}今天累計新詞 ${d.n} 個、複習 ${d.r} 次。</p>
+            <div class="row-btns">
+              <a class="btn" href="#practice">用練習題鞏固 ${I.arrow}</a>
+              <button class="btn ghost" id="more5">再學 5 個新詞</button>
+            </div>
           </div>
         </div></div></div>`;
       $('#more5').addEventListener('click', () => { S.set.goal += 5; save(); plan(); session = null; viewLearn(); });
@@ -826,19 +845,22 @@
         <div class="meter" role="progressbar" aria-valuenow="${Math.round(pct)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
         <span class="count num">${s.done} / ${s.total}</span>
       </div>
-      <article class="flash">
-        <div class="flash-head">
-          <div style="display:flex;gap:8px">${lvBadge(w.lv, true)}<span class="badge plain">${TP[w.t].zh}</span></div>
-          <span class="badge plain" style="--lc:${isNew ? 'var(--l800)' : 'var(--signal)'}">${isNew ? '新詞' : '複習'}</span>
+      <article class="flash ${s.revealed ? '' : 'is-front'}">
+        ${art(w, { full: true, tag: true })}
+        <div class="flash-body">
+          <div class="flash-head">
+            <div style="display:flex;gap:8px">${lvBadge(w.lv, true)}<span class="badge plain">${TP[w.t].zh}</span></div>
+            <span class="badge plain ${isNew ? 'lv-800' : 'lv-990'}">${isNew ? '新詞' : '複習'}</span>
+          </div>
+          <div class="flash-word">${esc(w.w)}</div>
+          ${pron(w)}
+          ${s.revealed ? `
+            <div class="flash-back">
+              <div class="senses">${w.s.map((x) => `<div class="sense"><i>${x[0]}</i><b>${esc(x[1])}</b></div>`).join('')}</div>
+              <div class="example"><p class="en-line">${markSentence(w)} <button class="mini-spk" data-say="${esc(w.en)}" aria-label="朗讀例句">${I.speaker}</button></p><p class="zh-line">${esc(w.zh)}</p></div>
+              ${w.tip ? `<div class="tip"><div class="block-label">多益考點</div><p>${esc(w.tip)}</p></div>` : ''}
+            </div>` : `<p class="flash-hint">看著畫面，先在心裡說出中文意思，再翻面確認。</p>`}
         </div>
-        <div class="flash-word">${esc(w.w)}</div>
-        ${pron(w)}
-        ${s.revealed ? `
-          <div class="flash-back">
-            <div class="senses" style="border:0;padding:0">${w.s.map((x) => `<div class="sense"><i>${x[0]}</i><b>${esc(x[1])}</b></div>`).join('')}</div>
-            <div class="example"><p class="en-line">${markSentence(w)} <button class="mini-spk" data-say="${esc(w.en)}" aria-label="朗讀例句">${I.speaker}</button></p><p class="zh-line">${esc(w.zh)}</p></div>
-            ${w.tip ? `<div class="tip"><div class="block-label">多益考點</div><p>${esc(w.tip)}</p></div>` : ''}
-          </div>` : `<p class="flash-hint">先在心裡說出中文意思，再翻面確認。</p>`}
       </article>
       ${s.revealed ? `
         <div class="rates">
@@ -847,24 +869,26 @@
           <button class="rate r3" data-g="3">記得<small>${opts[2]}</small></button>
           <button class="rate r4" data-g="4">很簡單<small>${opts[3]}</small></button>
         </div>
-        <p class="kbd-hint">鍵盤：<kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> 評分　按鈕下方是下次複習的時間</p>`
-      : `<button class="btn" id="reveal" style="justify-self:center;min-width:220px">翻面看答案</button><p class="kbd-hint">鍵盤：<kbd>Space</kbd> 翻面</p>`}
+        <p class="kbd-hint">鍵盤 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> 評分　按鈕下方是下次複習的時間</p>`
+      : `<button class="btn reveal-btn" id="reveal">翻面看答案</button><p class="kbd-hint">鍵盤 <kbd>Space</kbd> 翻面</p>`}
     </div></div>`;
+    loadFull(view);
     const rv = $('#reveal');
     if (rv) rv.addEventListener('click', reveal);
     view.querySelectorAll('[data-g]').forEach((b) => b.addEventListener('click', () => rate(+b.dataset.g)));
-    if (isNew && !s.seen.has(w.id) && !s.revealed) { s.seen.add(w.id); }
+    if (!s.revealed && !s.seen.has(w.id)) { s.seen.add(w.id); if (s.interacted) playWord(w); }
+    s.interacted = true;
   }
 
   /* ======================================================
      PRACTICE
      ====================================================== */
   const MODES = [
-    { k: 'cloze', part: 'Part 5 句子填空', zh: '例句填空', desc: '例句挖空，四個同詞性選項選一個，跟多益 Part 5 詞彙題同樣的考法。', ico: I.blank },
-    { k: 'zh2en', part: 'Meaning → Word', zh: '看義選詞', desc: '看中文釋義，從四個英文單字裡選出正確的那一個。', ico: I.zh },
-    { k: 'en2zh', part: 'Word → Meaning', zh: '看詞選義', desc: '看英文單字與 KK 音標，選出正確的中文意思。', ico: I.swap },
-    { k: 'listen', part: 'Part 1–2 聽力暖身', zh: '聽音辨詞', desc: '只聽發音，選出你聽到的單字。訓練多益聽力的字音反射。', ico: I.listen },
-    { k: 'spell', part: 'Spelling', zh: '拼字挑戰', desc: '看中文與例句提示，把單字完整拼出來。', ico: I.pen },
+    { k: 'cloze', part: 'Part 5 句子填空', zh: '例句填空', desc: '例句挖空，四個同詞性選項選一個，跟多益 Part 5 詞彙題同樣的考法。', img: 'data' },
+    { k: 'zh2en', part: 'Meaning → Word', zh: '看義選詞', desc: '看插畫與中文釋義，從四個英文單字裡選出正確的那一個。', img: 'topic-education' },
+    { k: 'en2zh', part: 'Word → Meaning', zh: '看詞選義', desc: '看英文單字與 KK 音標，選出正確的中文意思。', img: 'topic-thinking' },
+    { k: 'listen', part: 'Part 1–2 聽力暖身', zh: '聽音辨詞', desc: '只聽真人發音，選出你聽到的單字，練多益聽力的字音反射。', img: 'listen' },
+    { k: 'spell', part: 'Spelling', zh: '拼字挑戰', desc: '看中文與例句提示，把單字完整拼出來。', img: 'typing' },
   ];
   const pracState = { scope: 'all', mode: null, qs: [], i: 0, answered: false, results: [] };
   function scopePool(scope) {
@@ -878,12 +902,12 @@
     const pool = scopePool(pracState.scope);
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">練習 · 只有第一次作答計入正確率</span>
+        <span class="eyebrow">練習 · 每輪 10 題 · 只有第一次作答計入正確率</span>
         <h1>考前十題，暖機一下。</h1>
-        <p class="sub">每輪 10 題。題目從你選的範圍隨機抽出，干擾選項取自同一分數段、同詞性的單字，難度貼近正式考試。</p>
+        <p class="sub">題目從你選的範圍隨機抽出，干擾選項取自同一分數段、同詞性的單字，難度貼近正式考試。</p>
       </header>
       <section class="section" style="padding-top:0">
-        <div class="scope">
+        <div style="display:grid;gap:12px">
           <span class="eyebrow">出題範圍</span>
           <div class="chips">
             ${[['all', '全部 1,000 詞'], ...LEVELS.map((l) => [String(l.lv), `${l.lv} ${l.name}`]), ['learning', '我學過的'], ['star', '我的收藏']].map(([v, t]) => `<button class="chip" data-scope="${v}" aria-pressed="${pracState.scope === v}">${t}</button>`).join('')}
@@ -893,7 +917,7 @@
       </section>
       <section class="section">
         <div class="modes">
-          ${MODES.map((m) => `<button class="mode" data-mode="${m.k}" ${pool.length < 4 ? 'disabled' : ''}><span class="m-ico">${m.ico}</span><span class="m-part">${m.part}</span><h3>${m.zh}</h3><p>${m.desc}</p></button>`).join('')}
+          ${MODES.map((m) => `<button class="mode" data-mode="${m.k}" ${pool.length < 4 ? 'disabled' : ''}><img src="assets/brand/${m.img}.webp" alt="" width="480" height="480" loading="lazy"><span class="mode-txt"><span class="m-part">${m.part}</span><h3>${m.zh}</h3><p>${m.desc}</p></span></button>`).join('')}
         </div>
       </section>
     </div>`;
@@ -935,7 +959,8 @@
     const pool = scopePool(pracState.scope);
     if (pool.length < 4) return;
     // prefer words that are due or learning, then the rest
-    const picks = shuffle(pool).slice(0, 10);
+    const voiced = pool.filter((w) => w.u);
+    const picks = shuffle(mode === 'listen' && voiced.length >= 10 ? voiced : pool).slice(0, 10);
     pracState.mode = mode;
     pracState.qs = picks.map((w) => {
       const q = { id: w.id };
@@ -977,14 +1002,14 @@
       body = `<p class="q-sent">${esc(before)}<span class="blank" id="blank">${P.answered ? esc(w.f) : '&nbsp;'}</span>${esc(after)}</p>
         ${P.answered ? `<p class="q-sub" style="text-align:left">${esc(w.zh)}</p>` : ''}`;
     } else if (P.mode === 'zh2en') {
-      body = `<p class="q-prompt zh">${esc(zhMain(w))}</p><p class="q-sub">${w.s.map((s) => `${POS_ZH[s[0]] || s[0]}`).join('／')}</p>`;
+      body = `<div class="q-hero">${art(w, { tag: true })}<div style="display:grid;gap:8px"><p class="q-prompt zh">${esc(zhMain(w))}</p><p class="q-sub">${w.s.map((s) => `${POS_ZH[s[0]] || s[0]}`).join('／')}</p></div></div>`;
     } else if (P.mode === 'en2zh') {
-      body = `<p class="q-prompt">${esc(w.w)}</p><p class="q-sub">${kkHtml(w)} <button class="mini-spk" data-say="${esc(w.w)}" aria-label="朗讀">${I.speaker}</button></p>`;
+      body = `<div style="display:grid;gap:10px"><p class="q-prompt">${esc(w.w)}</p><p class="q-sub">${kkHtml(w)} <button class="mini-spk" data-word="${w.id}" aria-label="播放發音">${I.speaker}</button></p></div>`;
     } else if (P.mode === 'listen') {
-      body = `<button class="big-listen" data-say="${esc(w.w)}" aria-label="再聽一次">${I.listen}</button><p class="q-sub">點擊播放，可重複聆聽。${P.answered ? '' : '<button class="btn ghost small" data-say="' + esc(w.w) + '" data-slow="1">慢速</button>'}</p>`;
+      body = `<div class="listen-stage"><img src="assets/brand/listen.webp" alt="" width="480" height="480"><button class="big-listen" data-word="${w.id}" aria-label="再聽一次">${I.listen}</button><p class="q-sub">點擊播放，可重複聆聽。${P.answered ? '' : ` <button class="btn ghost small" data-word="${w.id}" data-slow="1">慢速</button>`}</p></div>`;
     } else if (P.mode === 'spell') {
       const hint = w.f[0] + w.f.slice(1).replace(/[A-Za-zÀ-ÿ]/g, '_');
-      body = `<p class="q-prompt zh">${esc(zhMain(w))}</p>
+      body = `<div class="q-hero">${art(w, { tag: true })}<p class="q-prompt zh">${esc(zhMain(w))}</p></div>
         <p class="q-sent" style="font-size:19px">${esc(w.en.slice(0, w.a))}<span class="blank">${P.answered ? esc(w.f) : esc(hint)}</span>${esc(w.en.slice(w.a + w.f.length))}</p>
         <form class="spell" id="spell-form" autocomplete="off"><label class="sr-only" for="spell-in">輸入單字</label><input id="spell-in" type="text" autocapitalize="off" spellcheck="false" placeholder="輸入空格裡的單字" ${P.answered ? 'disabled' : ''}><button class="btn" type="submit" ${P.answered ? 'disabled' : ''}>確認</button></form>`;
     }
@@ -997,9 +1022,12 @@
     }).join('')}</div>` : '';
     const ok = q.ok;
     const fb = P.answered ? `<div class="feedback">
-        <span class="fb-title ${ok ? 'ok' : 'no'}">${ok ? '答對了' : `正確答案：${esc(P.mode === 'cloze' || P.mode === 'spell' ? w.f : w.w)}`}</span>
-        <span><button class="link-btn" data-open="${w.id}" style="font:500 19px var(--serif-en);text-decoration:underline;text-underline-offset:3px">${esc(w.w)}</button> ${kkHtml(w)} · ${esc(zhMain(w))}</span>
-        ${w.tip && !ok ? `<span style="font-size:14px;color:var(--ink-2)">考點：${esc(w.tip)}</span>` : ''}
+        <button data-open="${w.id}" aria-label="打開 ${esc(w.w)} 詞卡">${art(w)}</button>
+        <div style="display:grid;gap:4px;min-width:0">
+          <span class="fb-title ${ok ? 'ok' : 'no'}">${ok ? '答對了' : `正確答案：${esc(P.mode === 'cloze' || P.mode === 'spell' ? w.f : w.w)}`}</span>
+          <span><button data-open="${w.id}" style="font:600 19px var(--serif);text-decoration:underline;text-underline-offset:3px">${esc(w.w)}</button> ${kkHtml(w)} · ${esc(zhMain(w))}</span>
+          ${w.tip && !ok ? `<span class="fb-tip">考點：${esc(w.tip)}</span>` : ''}
+        </div>
       </div>
       <button class="btn" id="q-next" style="justify-self:end">${P.i === P.qs.length - 1 ? '看結果' : '下一題'} ${I.arrow}</button>` : '';
     view.innerHTML = `<div class="wrap"><div class="quiz">
@@ -1014,7 +1042,7 @@
         ${opts}
       </article>
       ${fb}
-      ${!P.answered && q.opts ? '<p class="kbd-hint">鍵盤：<kbd>1</kbd>–<kbd>4</kbd> 或 <kbd>A</kbd>–<kbd>D</kbd> 作答</p>' : ''}
+      ${!P.answered && q.opts ? '<p class="kbd-hint">鍵盤 <kbd>1</kbd>–<kbd>4</kbd> 或 <kbd>A</kbd>–<kbd>D</kbd> 作答</p>' : ''}
     </div></div>`;
     $('#q-exit').addEventListener('click', () => { P.mode = null; P.qs = []; viewPractice(); });
     view.querySelectorAll('[data-o]').forEach((b) => b.addEventListener('click', () => answer(+b.dataset.o)));
@@ -1030,12 +1058,12 @@
         q.ok = good;
         P.answered = true;
         recordAnswer(w.id, good);
-        if (good) speak(w.w);
+        if (good) playWord(w);
         paintQuiz();
       });
       if (!P.answered) $('#spell-in').focus({ preventScroll: true });
     }
-    if (P.mode === 'listen' && !P.answered && !q.played) { q.played = true; setTimeout(() => speak(w.w), 250); }
+    if (P.mode === 'listen' && !P.answered && !q.played) { q.played = true; setTimeout(() => playWord(w), 250); }
   }
   function answer(oid) {
     const P = pracState;
@@ -1046,7 +1074,7 @@
     P.answered = true;
     recordAnswer(q.id, q.ok);
     const w = BY_ID.get(q.id);
-    if (P.mode === 'cloze' || P.mode === 'zh2en' || P.mode === 'listen') speak(P.mode === 'cloze' ? w.en : w.w);
+    if (P.mode === 'cloze') speak(w.en); else if (P.mode === 'zh2en' || P.mode === 'listen') playWord(w);
     paintQuiz();
   }
   function nextQ() { pracState.i++; pracState.answered = false; paintQuiz(); }
@@ -1056,21 +1084,26 @@
     const wrong = P.results.filter((r) => !r.ok).map((r) => BY_ID.get(r.id));
     sfx('done');
     const score = Math.round((right / P.results.length) * 100);
+    const mode = MODES.find((m) => m.k === P.mode);
     const msg = score === 100 ? '全對，這組單字已經穩定。' : score >= 80 ? '表現穩定，把錯的幾個再看一次。' : score >= 50 ? '一半以上答對，錯的字加入收藏，明天再練。' : '先回到圖鑑把這些字看熟，再回來挑戰。';
     view.innerHTML = `<div class="wrap"><div class="quiz">
-      <div class="done" style="padding-bottom:12px">
-        <div class="stamp-ok" style="font-family:var(--serif-en);font-size:34px">${right}/${P.results.length}</div>
-        <h2>${msg}</h2>
+      <div class="done">
+        <img src="assets/brand/${score >= 80 ? 'done' : 'night'}.webp" alt="" width="480" height="480">
+        <div class="done-body">
+          <span class="eyebrow">${mode.part} · ${mode.zh}</span>
+          <span class="score num">${right}<small style="font-size:28px;color:var(--ink-3)"> / ${P.results.length}</small></span>
+          <h2>${msg}</h2>
+          <div class="row-btns">
+            <button class="btn" id="again">再來一輪 ${I.arrow}</button>
+            <button class="btn ghost" id="other">換個題型</button>
+          </div>
+        </div>
       </div>
       ${wrong.length ? `<div class="result-list" data-list>
         <span class="eyebrow">答錯的單字</span>
-        ${wrong.map((w) => `<button class="result-row" data-open="${w.id}"><b>${esc(w.w)}</b><span>${esc(zhShort(w))}</span></button>`).join('')}
+        ${wrong.map((w) => `<button class="result-row" data-open="${w.id}">${art(w)}<b>${esc(w.w)}</b><span>${esc(zhShort(w))}</span></button>`).join('')}
         <button class="btn ghost small" id="star-wrong" style="justify-self:start">${I.star}把答錯的字加入收藏</button>
       </div>` : ''}
-      <div class="row-btns" style="justify-content:center">
-        <button class="btn" id="again">再來一輪 ${I.arrow}</button>
-        <button class="btn ghost" id="other">換個題型</button>
-      </div>
     </div></div>`;
     listContext = wrong.map((w) => w.id);
     $('#again').addEventListener('click', () => startQuiz(P.mode));
@@ -1107,7 +1140,7 @@
       </div>
       <div class="map-wrap" id="map-wrap">
         <canvas id="map" role="img" aria-label="千詞星圖：已學 ${all.learning + all.mastered} 個，已熟 ${all.mastered} 個"></canvas>
-        <div class="map-legend"><span><i style="background:rgba(200,210,230,.45)"></i>未學</span><span><i style="background:#e2a51f"></i>學習中</span><span><i style="background:#fff;box-shadow:0 0 8px #ffe08a"></i>已熟</span></div>
+        <div class="map-legend"><span><i style="background:rgba(214,220,240,.5)"></i>未學</span><span><i style="background:rgb(240,196,100);box-shadow:0 0 6px rgb(240,196,100)"></i>學習中（依分數段著色）</span><span><i style="background:#fff8e8;box-shadow:0 0 8px #ffe0a0"></i>已熟</span></div>
       </div>
       <section class="section">
         <div class="map-stats">
@@ -1140,11 +1173,11 @@
       mapState.hover = best;
       if (best) {
         const w = BY_ID.get(best.id);
-        tip.innerHTML = `<b>${esc(w.w)}</b>${esc(w.s[0][1])} · ${w.lv}`;
+        tip.innerHTML = `${art(w)}<span><b>${esc(w.w)}</b>${esc(w.s[0][1])} · ${w.lv}</span>`;
         tip.hidden = false;
         const r = cv.getBoundingClientRect();
-        tip.style.left = `${Math.min(x + 14, r.width - tip.offsetWidth - 8)}px`;
-        tip.style.top = `${Math.max(8, y - 44)}px`;
+        tip.style.left = `${Math.max(8, Math.min(x + 16, r.width - tip.offsetWidth - 8))}px`;
+        tip.style.top = `${Math.max(8, Math.min(y - 70, r.height - tip.offsetHeight - 8))}px`;
         cv.style.cursor = 'pointer';
       } else { tip.hidden = true; cv.style.cursor = 'crosshair'; }
     });
@@ -1162,6 +1195,7 @@
     const cv = $('#map');
     if (!cv) return;
     const r = cv.getBoundingClientRect();
+    if (!r.width) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     cv.width = Math.round(r.width * dpr);
     cv.height = Math.round(r.height * dpr);
@@ -1174,76 +1208,100 @@
     const centers = { core: [cx, cy] };
     ring.forEach((t, i) => {
       const a = (i / ring.length) * Math.PI * 2 - Math.PI / 2;
-      const rx = W * (portrait ? 0.36 : 0.4);
-      const ry = H * (portrait ? 0.4 : 0.36);
-      centers[t.k] = [cx + Math.cos(a) * rx, cy + Math.sin(a) * ry];
+      centers[t.k] = [cx + Math.cos(a) * W * (portrait ? 0.35 : 0.41), cy + Math.sin(a) * H * (portrait ? 0.4 : 0.37)];
     });
-    const unit = Math.min(W, H) / 108;
+    const unit = Math.min(W, H) / 112;
     const idx = {};
     mapState.stars = WORDS.map((w) => {
       const i = (idx[w.t] = (idx[w.t] || 0) + 1);
       const [ox, oy] = centers[w.t];
-      const spread = w.t === 'core' ? 1.05 : 1.25;
-      const rr = Math.sqrt(i) * unit * spread;
-      const a = i * 2.39996 + (hash(w.w) % 100) / 100;
-      return { id: w.id, lv: w.lv, t: w.t, x: ox + Math.cos(a) * rr, y: oy + Math.sin(a) * rr * (w.t === 'core' ? 0.8 : 1), tw: (hash(w.w) % 628) / 100, st: status(w.id) };
+      const h = hash(w.w);
+      const rr = Math.sqrt(i) * unit * (w.t === 'core' ? 1.08 : 1.3) * (0.9 + (h % 20) / 100);
+      const a = i * 2.39996 + (h % 100) / 60;
+      return { id: w.id, lv: w.lv, t: w.t, x: ox + Math.cos(a) * rr, y: oy + Math.sin(a) * rr * (w.t === 'core' ? 0.78 : 1), tw: (h % 628) / 100, sz: 0.7 + (h % 9) / 10, st: status(w.id) };
     });
-    mapState.centers = centers;
+    // static layer: sky, dust, nebulae, constellation labels
+    const bg = document.createElement('canvas');
+    bg.width = cv.width; bg.height = cv.height;
+    const g = bg.getContext('2d');
+    g.scale(dpr, dpr);
+    const sky = g.createRadialGradient(cx, cy * 0.9, 0, cx, cy, Math.max(W, H) * 0.75);
+    sky.addColorStop(0, '#18213d'); sky.addColorStop(0.55, '#0d1326'); sky.addColorStop(1, '#05080f');
+    g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    g.globalCompositeOperation = 'lighter';
+    for (const t of TOPICS) {
+      const [x, y] = centers[t.k];
+      const rgb = NEBULA[t.k];
+      const n = WORDS.filter((w) => w.t === t.k).length;
+      const rad = Math.sqrt(n) * unit * (t.k === 'core' ? 1.25 : 1.6) + 30;
+      const neb = g.createRadialGradient(x, y, 0, x, y, rad);
+      neb.addColorStop(0, `rgba(${rgb},0.20)`); neb.addColorStop(0.6, `rgba(${rgb},0.06)`); neb.addColorStop(1, `rgba(${rgb},0)`);
+      g.fillStyle = neb; g.beginPath(); g.arc(x, y, rad, 0, 6.283); g.fill();
+    }
+    let seed = 7;
+    const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let i = 0; i < 520; i++) {
+      g.fillStyle = `rgba(230,225,255,${0.05 + rnd() * 0.22})`;
+      g.beginPath(); g.arc(rnd() * W, rnd() * H, rnd() * 0.9 + 0.2, 0, 6.283); g.fill();
+    }
+    g.globalCompositeOperation = 'source-over';
+    g.textAlign = 'center';
+    for (const tp of TOPICS) {
+      const [x, y] = centers[tp.k];
+      const list = mapState.stars.filter((s) => s.t === tp.k);
+      const lit = list.filter((s) => s.st !== 'new').length;
+      const off = Math.sqrt(list.length) * unit * (tp.k === 'core' ? 0.9 : 1.3) + 18;
+      g.fillStyle = 'rgba(242,235,221,0.86)';
+      g.font = `700 ${Math.max(12, Math.min(15, W / 64))}px "Noto Serif TC", serif`;
+      g.fillText(tp.zh, x, y + off);
+      g.fillStyle = 'rgba(242,235,221,0.42)';
+      g.font = `400 ${Math.max(10, Math.min(12, W / 90))}px ui-monospace, monospace`;
+      g.fillText(`${lit} / ${list.length}`, x, y + off + 17);
+    }
+    mapState.bg = bg;
     mapState.dpr = dpr;
     mapState.size = [W, H];
     paintStars(performance.now());
   }
-  const LV_RGB = { 400: [236, 138, 90], 600: [121, 187, 141], 800: [127, 169, 222], 990: [240, 196, 90] };
+  const LV_RGB = { 400: '229,124,90', 600: '151,184,142', 800: '143,178,204', 990: '240,196,100' };
+  const NEBULA = { off: '95,136,168', hr: '196,87,58', fin: '203,146,44', mkt: '154,98,131', biz: '80,110,170', law: '120,120,170',
+    ops: '160,120,80', tech: '100,110,200', evt: '106,140,99', trv: '70,150,190', hos: '210,130,70', shop: '196,86,110',
+    home: '130,150,70', med: '60,150,140', core: '150,140,190' };
   function paintStars(t) {
     const cv = $('#map');
-    if (!cv || !mapState.size) return;
+    if (!cv || !mapState.bg) return;
     const ctx = cv.getContext('2d');
-    const [W, H] = mapState.size;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(mapState.bg, 0, 0);
     ctx.setTransform(mapState.dpr, 0, 0, mapState.dpr, 0, 0);
-    const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
-    g.addColorStop(0, '#16223f');
-    g.addColorStop(1, '#070c18');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-    // constellation labels
-    ctx.textAlign = 'center';
-    for (const tp of TOPICS) {
-      const [x, y] = mapState.centers[tp.k];
-      const list = mapState.stars.filter((s) => s.t === tp.k);
-      const lit = list.filter((s) => s.st !== 'new').length;
-      ctx.fillStyle = 'rgba(241,240,232,0.78)';
-      ctx.font = `700 ${Math.max(11, Math.min(14, W / 70))}px "Noto Sans TC", sans-serif`;
-      const off = Math.sqrt(list.length) * (Math.min(W, H) / 108) * (tp.k === 'core' ? 0.85 : 1.25) + 14;
-      ctx.fillText(tp.zh, x, y + off + 4);
-      ctx.fillStyle = 'rgba(241,240,232,0.45)';
-      ctx.font = `400 ${Math.max(10, Math.min(12, W / 85))}px "JetBrains Mono", monospace`;
-      ctx.fillText(`${lit}/${list.length}`, x, y + off + 20);
-    }
+    ctx.globalCompositeOperation = 'lighter';
     for (const s of mapState.stars) {
       const dim = mapState.lv && s.lv !== mapState.lv;
-      const rgb = LV_RGB[s.lv];
-      const tw = 0.75 + 0.25 * Math.sin(t / 700 + s.tw);
+      const tw = 0.72 + 0.28 * Math.sin(t / 900 + s.tw);
       if (s.st === 'new') {
-        ctx.fillStyle = `rgba(200,210,230,${dim ? 0.08 : 0.32})`;
-        ctx.beginPath(); ctx.arc(s.x, s.y, 1.3, 0, 6.283); ctx.fill();
-      } else if (s.st === 'learning') {
-        ctx.fillStyle = `rgba(${rgb.join(',')},${dim ? 0.18 : 0.9})`;
-        ctx.beginPath(); ctx.arc(s.x, s.y, 2.2, 0, 6.283); ctx.fill();
+        ctx.fillStyle = `rgba(214,220,240,${dim ? 0.06 : 0.22 + 0.16 * tw})`;
+        ctx.beginPath(); ctx.arc(s.x, s.y, 0.9 * s.sz, 0, 6.283); ctx.fill();
       } else {
-        const a = dim ? 0.2 : tw;
-        const gg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, 9);
-        gg.addColorStop(0, `rgba(${rgb.join(',')},${0.55 * a})`);
-        gg.addColorStop(1, `rgba(${rgb.join(',')},0)`);
-        ctx.fillStyle = gg;
-        ctx.beginPath(); ctx.arc(s.x, s.y, 9, 0, 6.283); ctx.fill();
-        ctx.fillStyle = `rgba(255,250,235,${a})`;
-        ctx.beginPath(); ctx.arc(s.x, s.y, 2.3, 0, 6.283); ctx.fill();
+        const rgb = LV_RGB[s.lv];
+        const strong = s.st === 'mastered';
+        const a = dim ? 0.15 : strong ? tw : 0.75;
+        const halo = strong ? 11 : 6;
+        const gg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, halo);
+        gg.addColorStop(0, `rgba(${rgb},${0.65 * a})`); gg.addColorStop(1, `rgba(${rgb},0)`);
+        ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(s.x, s.y, halo, 0, 6.283); ctx.fill();
+        ctx.fillStyle = strong ? `rgba(255,248,232,${a})` : `rgba(${rgb},${a})`;
+        ctx.beginPath(); ctx.arc(s.x, s.y, strong ? 1.9 : 1.5, 0, 6.283); ctx.fill();
+        if (strong && !dim) {
+          ctx.strokeStyle = `rgba(255,240,210,${0.35 * tw})`; ctx.lineWidth = 0.7;
+          ctx.beginPath(); ctx.moveTo(s.x - 6, s.y); ctx.lineTo(s.x + 6, s.y); ctx.moveTo(s.x, s.y - 6); ctx.lineTo(s.x, s.y + 6); ctx.stroke();
+        }
       }
     }
+    ctx.globalCompositeOperation = 'source-over';
     const h = mapState.hover;
     if (h) {
-      ctx.strokeStyle = 'rgba(241,240,232,0.9)';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(242,235,221,0.95)';
+      ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.arc(h.x, h.y, 7, 0, 6.283); ctx.stroke();
     }
   }
@@ -1284,7 +1342,7 @@
             </div>
             <div>
               <div class="heat" aria-label="近 18 週學習熱度">${cells.map((c) => `<i class="${lvl(c.v)}" title="${c.k}：${c.v}"></i>`).join('')}</div>
-              <div class="heat-foot"><span>18 週前</span><span>少 <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--paper-2)"></i> <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--signal)"></i> 多</span><span>今天</span></div>
+              <div class="heat-foot"><span>18 週前</span><span>少 <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--paper-2)"></i> <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--ochre)"></i> 多</span><span>今天</span></div>
             </div>
           </section>
           <section class="card panel">
@@ -1298,11 +1356,12 @@
           <h2>設定</h2>
           <div class="setting"><span class="lab">每日新詞</span><div class="chips">${[5, 10, 15, 20, 30].map((n) => `<button class="chip" data-goal="${n}" aria-pressed="${S.set.goal === n}">${n} 個</button>`).join('')}</div></div>
           <div class="setting"><span class="lab">新詞從哪一段開始</span><div class="chips">${LEVELS.map((l) => `<button class="chip lv-${l.lv}" data-start="${l.lv}" aria-pressed="${S.set.start === l.lv}"><span class="dot"></span>${l.lv} ${l.name}</button>`).join('')}</div><span class="hint">這一段學完後，會自動接著下一段。</span></div>
-          <div class="setting"><span class="lab">預設發音</span><div class="seg">${[['us', '美式'], ['uk', '英式']].map(([v, t]) => `<button data-accent-set="${v}" aria-pressed="${S.set.accent === v}">${t}</button>`).join('')}</div><span class="hint">多益聽力包含美、英、加、澳四種口音，兩種都聽熟最保險。發音使用裝置內建語音。</span></div>
+          <div class="setting"><span class="lab">預設發音</span><div class="seg">${[['us', '美式'], ['uk', '英式']].map(([v, t]) => `<button data-accent-set="${v}" aria-pressed="${S.set.accent === v}">${t}</button>`).join('')}</div><span class="hint">多益聽力包含美、英、加、澳四種口音，兩種都聽熟最保險。</span></div>
           <div class="setting"><label for="rate">朗讀速度 <span class="num" id="rate-v">${S.set.rate.toFixed(2)}×</span></label><input id="rate" type="range" min="0.6" max="1.2" step="0.05" value="${S.set.rate}"></div>
           <div class="setting"><span class="lab">外觀</span><div class="seg">${[['system', '跟隨系統'], ['light', '淺色'], ['dark', '深色']].map(([v, t]) => `<button data-theme-set="${v}" aria-pressed="${S.set.theme === v}">${t}</button>`).join('')}</div></div>
           <div class="setting">
             <span class="lab">備份與還原</span>
+            <div class="backup"><img src="assets/brand/data.webp" alt="" width="480" height="480" loading="lazy"><span class="hint">進度只存在這個瀏覽器。匯出後貼到記事本或雲端硬碟保存，換裝置時再貼回來還原。</span></div>
             <div class="row-btns">
               <button class="btn ghost small" id="export">匯出進度</button>
               <button class="btn ghost small" id="import">貼上備份還原</button>
@@ -1334,6 +1393,7 @@
           <ul>
             <li>1,000 個單字、中文釋義與例句出自「衝 400／600／800／990 分必備單字」講義，依原順序收錄；修正了講義中 aprove、nconvenience、ompulsory 三處拼字。</li>
             <li>KK 音標依 CMU Pronouncing Dictionary 自動轉寫並人工校對常見多音字；15 個職場場景與 ${WORDS.filter((w) => w.tip).length} 則「多益考點」由本站編輯整理。</li>
+            <li>單字插畫、場景插畫與美英發音錄音取自 Word Atlas（Word Atlas contributors，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>），本站已縮放並合併成圖集與音訊檔。${fmt(WORDS.filter((w) => w.ar === 'w').length)} 個字使用原字插畫、${WORDS.filter((w) => w.ar === 'r').length} 個字使用同字根插畫，其餘以所屬職場場景的插畫代替；有真人錄音的字共 ${fmt(WORDS.filter((w) => w.u).length)} 個，其餘使用裝置內建語音。</li>
             <li>複習排程採 SM-2 式間隔重複：答「記得」的字間隔會逐次拉長，連續記得到 21 天以上視為「已熟」。</li>
             <li>介面與學習流程致敬開源雅思單字專案 <a href="https://github.com/designfuchen/word-atlas" target="_blank" rel="noopener">詞光 Word Atlas</a>（MIT 授權），本站為獨立實作的多益版本。</li>
           </ul>
@@ -1342,7 +1402,7 @@
     </div>`;
     view.querySelectorAll('[data-goal]').forEach((b) => b.addEventListener('click', () => { S.set.goal = +b.dataset.goal; save(); plan(); viewMe(); toast(`每日新詞改為 ${S.set.goal} 個`); }));
     view.querySelectorAll('[data-start]').forEach((b) => b.addEventListener('click', () => { S.set.start = +b.dataset.start; const d = today(); d.plan = (d.plan || []).filter((id) => S.cards[id]); save(); plan(); viewMe(); toast(`新詞改從 ${S.set.start} 分段開始`); }));
-    view.querySelectorAll('[data-accent-set]').forEach((b) => b.addEventListener('click', () => { S.set.accent = b.dataset.accentSet; save(); viewMe(); speak('Welcome aboard.'); }));
+    view.querySelectorAll('[data-accent-set]').forEach((b) => b.addEventListener('click', () => { S.set.accent = b.dataset.accentSet; save(); viewMe(); playWord(BY_ID.get(1)); }));
     view.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => { S.set.theme = b.dataset.themeSet; save(); applyTheme(); paintTools(); viewMe(); }));
     const rate = $('#rate');
     rate.addEventListener('input', () => { S.set.rate = +rate.value; $('#rate-v').textContent = `${S.set.rate.toFixed(2)}×`; });
@@ -1404,7 +1464,7 @@
     ov.className = 'overlay';
     ov.setAttribute('role', 'alertdialog');
     ov.setAttribute('aria-modal', 'true');
-    ov.innerHTML = `<div class="dialog" style="width:min(460px,100%)"><h2 style="font-size:24px">${esc(title)}</h2><p class="sub">${esc(body)}</p><div class="dialog-foot"><button class="btn ghost" data-x>取消</button><button class="btn" data-ok style="background:var(--bad);color:#fff">${esc(okText)}</button></div></div>`;
+    ov.innerHTML = `<div class="dialog" style="width:min(460px,100%)"><div class="dialog-body"><h2 style="font-size:24px">${esc(title)}</h2><p class="sub">${esc(body)}</p><div class="dialog-foot"><button class="btn ghost" data-x>取消</button><button class="btn" data-ok style="background:var(--bad);color:var(--card)">${esc(okText)}</button></div></div></div>`;
     document.body.appendChild(ov);
     const close = () => ov.remove();
     ov._close = close;
@@ -1423,12 +1483,15 @@
     let goal = S.set.goal;
     const paint = () => {
       ov.innerHTML = `<div class="dialog">
-        <span class="eyebrow">Welcome aboard · 歡迎登機</span>
+        <div class="dialog-art" style="background-image:url(assets/brand/og.webp)" role="img" aria-label="攤開的書頁上浮現一座島嶼地圖"></div>
+        <div class="dialog-body">
+        <span class="eyebrow">WELCOME ABOARD · 歡迎登機</span>
         <h2>先決定你的起飛點。</h2>
         <p class="sub">職光把 1,000 個多益單字分成四段航程。選一個你現在的程度，新詞會從那一段開始。</p>
         <div class="pick">${LEVELS.map((l) => `<button class="lv-${l.lv}" data-s="${l.lv}" aria-pressed="${start === l.lv}"><b>${l.lv}</b><strong style="font-size:15px">${l.name} · ${l.en}</strong><span>${l.desc}</span></button>`).join('')}</div>
         <div style="display:grid;gap:10px"><span class="eyebrow">每天想學幾個新詞</span><div class="chips">${[5, 10, 15, 20, 30].map((n) => `<button class="chip" data-g="${n}" aria-pressed="${goal === n}">${n} 個${n === 10 ? '（建議）' : ''}</button>`).join('')}</div></div>
         <div class="dialog-foot"><button class="btn" data-go>出發 ${I.arrow}</button></div>
+        </div>
       </div>`;
       ov.querySelectorAll('[data-s]').forEach((b) => b.addEventListener('click', () => { start = +b.dataset.s; paint(); }));
       ov.querySelectorAll('[data-g]').forEach((b) => b.addEventListener('click', () => { goal = +b.dataset.g; paint(); }));
