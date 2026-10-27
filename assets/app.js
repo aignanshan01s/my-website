@@ -388,10 +388,19 @@
       <button class="pron" data-word="${w.id}" data-accent="us"><span class="spk">${I.speaker}</span><small>美</small><b>${kkHtml(w)}</b></button>
       <button class="pron" data-word="${w.id}" data-accent="uk"><span class="spk">${I.speaker}</span><small>英</small><b>${w.k ? '英式真人發音' : '英式發音'}</b></button>
     </div>`;
-  function markSentence(w) {
-    const s = w.en;
-    const a = w.a;
-    const f = w.f;
+  const BY_WORD = new Map(WORDS.map((w) => [fold(w.w), w]));
+  const wordLink = (t) => { const hit = BY_WORD.get(fold(t)); return hit ? `<button class="nym-chip is-link" data-open="${hit.id}">${esc(t)}</button>` : `<span class="nym-chip">${esc(t)}</span>`; };
+  function sensesByPos(w) {
+    const out = [];
+    for (const [pos, zh] of w.s) { const last = out[out.length - 1]; if (last && last[0] === pos) last[1] += '；' + zh; else out.push([pos, zh]); }
+    return out;
+  }
+  const dailyEx = (w) => w.ex.find((e) => e.k === 'd') || w.ex[0];
+  const toeicEx = (w) => w.ex.find((e) => e.k === 't') || w.ex[0];
+  function markSentence(ex) {
+    const s = ex.en;
+    const a = ex.a;
+    const f = ex.f;
     if (s.substr(a, f.length) !== f) return esc(s);
     return `${esc(s.slice(0, a))}<mark>${esc(f)}</mark>${esc(s.slice(a + f.length))}`;
   }
@@ -479,8 +488,8 @@
                 <button class="wotd-word" data-open="${wotd.id}">${esc(wotd.w)}</button>
                 ${pron(wotd)}
                 <p><b>${esc(zhMain(wotd))}</b> <span style="color:var(--ink-3)">${wotd.s.map((s) => s[0]).join(' / ')}</span></p>
-                <p class="wotd-sent">${markSentence(wotd)} <button class="mini-spk" data-say="${esc(wotd.en)}" aria-label="朗讀例句">${I.speaker}</button></p>
-                <p class="wotd-zh">${esc(wotd.zh)}</p>
+                <p class="wotd-sent">${markSentence(dailyEx(wotd))} <button class="mini-spk" data-say="${esc(dailyEx(wotd).en)}" aria-label="朗讀例句">${I.speaker}</button></p>
+                <p class="wotd-zh">${esc(dailyEx(wotd).zh)}</p>
               </div>
             </article>
             <article class="card week">
@@ -694,11 +703,21 @@
           <div class="entry-no"><span>№ ${pad(w.id, 4)}</span><i></i><span>TOEIC ATLAS</span></div>
           <h2 class="entry-word">${esc(w.w)}</h2>
           ${pron(w)}
-          <div class="senses">${w.s.map((s) => `<div class="sense"><i>${s[0]}</i><b>${esc(s[1])}</b></div>`).join('')}</div>
-          <div class="example">
-            <div class="block-label">職場例句</div>
-            <p class="en-line">${markSentence(w)} <button class="mini-spk" data-say="${esc(w.en)}" aria-label="朗讀例句">${I.speaker}</button></p>
-            <p class="zh-line">${esc(w.zh)}</p>
+          <div class="senses">${sensesByPos(w).map(([pos, zh]) => `<div class="sense"><i>${pos}<small>${POS_ZH[pos] || ''}</small></i><b>${esc(zh)}</b></div>`).join('')}</div>
+          ${w.syn.length || w.ant.length ? `<div class="nyms">
+            ${w.syn.length ? `<div class="nym"><span class="block-label">近似詞</span><div class="nym-list">${w.syn.map(wordLink).join('')}</div></div>` : ''}
+            ${w.ant.length ? `<div class="nym"><span class="block-label">相反詞</span><div class="nym-list">${w.ant.map(wordLink).join('')}</div></div>` : ''}
+          </div>` : ''}
+          <div class="examples">
+            ${[dailyEx(w), toeicEx(w)].map((ex) => `<div class="example">
+              <span class="ex-tag ${ex.k === 't' ? 'is-toeic' : ''}">${ex.k === 't' ? '多益例句' : '日常例句'}</span>
+              <p class="en-line">${markSentence(ex)} <button class="mini-spk" data-say="${esc(ex.en)}" aria-label="朗讀例句">${I.speaker}</button></p>
+              <p class="zh-line">${esc(ex.zh)}</p>
+            </div>`).join('')}
+          </div>
+          <div>
+            <div class="block-label">常用搭配</div>
+            <div class="cols">${w.col.map((c) => `<div class="col"><b>${esc(c[0])}</b><span>${esc(c[1])}</span></div>`).join('')}</div>
           </div>
           ${w.tip ? `<div class="tip"><div class="block-label">多益考點</div><p>${esc(w.tip)}</p></div>` : ''}
           <div>
@@ -766,7 +785,7 @@
       sel = Math.min(sel, Math.max(0, res.length - 1));
       listEl.innerHTML = res.length
         ? (q ? '' : '<div class="eyebrow" style="padding:8px 14px">附多益考點的字</div>') + res.map((w, i) => `<button class="pal-item" role="option" data-i="${i}" aria-selected="${i === sel}">${art(w)}<span><b>${esc(w.w)}</b><span>${esc(zhShort(w))}</span></span>${lvBadge(w.lv)}</button>`).join('')
-        : '<div class="empty" style="padding:30px"><span>找不到這個字。1,000 字詞庫以講義收錄為準。</span></div>';
+        : '<div class="empty" style="padding:30px"><span>找不到這個字。目前詞庫收錄 1,000 個多益常考字。</span></div>';
     };
     const close = () => { ov.remove(); if (!$('.overlay')) document.documentElement.classList.remove('is-locked'); };
     const pick = (i) => { const w = res[i]; if (!w) return; close(); openEntry(w.id, res.map((x) => x.id)); };
@@ -856,8 +875,9 @@
           ${pron(w)}
           ${s.revealed ? `
             <div class="flash-back">
-              <div class="senses">${w.s.map((x) => `<div class="sense"><i>${x[0]}</i><b>${esc(x[1])}</b></div>`).join('')}</div>
-              <div class="example"><p class="en-line">${markSentence(w)} <button class="mini-spk" data-say="${esc(w.en)}" aria-label="朗讀例句">${I.speaker}</button></p><p class="zh-line">${esc(w.zh)}</p></div>
+              <div class="senses">${sensesByPos(w).map((x) => `<div class="sense"><i>${x[0]}</i><b>${esc(x[1])}</b></div>`).join('')}</div>
+              <div class="example"><span class="ex-tag">多益例句</span><p class="en-line">${markSentence(toeicEx(w))} <button class="mini-spk" data-say="${esc(toeicEx(w).en)}" aria-label="朗讀例句">${I.speaker}</button></p><p class="zh-line">${esc(toeicEx(w).zh)}</p></div>
+              <div class="cols compact">${w.col.slice(0, 2).map((c) => `<div class="col"><b>${esc(c[0])}</b><span>${esc(c[1])}</span></div>`).join('')}</div>
               ${w.tip ? `<div class="tip"><div class="block-label">多益考點</div><p>${esc(w.tip)}</p></div>` : ''}
             </div>` : `<p class="flash-hint">看著畫面，先在心裡說出中文意思，再翻面確認。</p>`}
         </div>
@@ -926,12 +946,16 @@
   }
 
   // English inflection for distractors, mirroring the answer's form.
-  const isCVC = (w) => /^[^aeiou]*[aeiou][bdgklmnprt]$/.test(w);
+  // Final-stress verbs that double their last consonant, and irregular past forms used in the word list.
+  const DOUBLE = new Set(['permit', 'transfer', 'occur', 'submit', 'commit', 'deter', 'incur', 'offset', 'admit', 'refer', 'prefer', 'control', 'regret']);
+  const IRREG_ED = { seek: 'sought', draw: 'drawn', bear: 'borne', withdraw: 'withdrawn', rise: 'risen', undertake: 'undertaken', oversee: 'overseen',
+    withhold: 'withheld', shrink: 'shrunk', offset: 'offset', forecast: 'forecast', broadcast: 'broadcast', strike: 'struck', fit: 'fit', lead: 'led', pay: 'paid', buy: 'bought' };
+  const isCVC = (w) => /^[^aeiou]*[aeiou][bdgklmnprt]$/.test(w) || DOUBLE.has(w);
   function inflS(w) { if (/(s|x|z|ch|sh)$/.test(w)) return w + 'es'; if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + 'ies'; return w + 's'; }
-  function inflEd(w) { if (/e$/.test(w)) return w + 'd'; if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + 'ied'; if (isCVC(w)) return w + w.slice(-1) + 'ed'; return w + 'ed'; }
+  function inflEd(w) { if (IRREG_ED[w]) return IRREG_ED[w]; if (/e$/.test(w)) return w + 'd'; if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + 'ied'; if (isCVC(w)) return w + w.slice(-1) + 'ed'; return w + 'ed'; }
   function inflIng(w) { if (/ie$/.test(w)) return w.slice(0, -2) + 'ying'; if (/[^e]e$/.test(w)) return w.slice(0, -1) + 'ing'; if (isCVC(w)) return w + w.slice(-1) + 'ing'; return w + 'ing'; }
   function formKind(w) {
-    const f = w.f.toLowerCase();
+    const f = toeicEx(w).f.toLowerCase();
     const b = w.w.toLowerCase();
     if (f === b) return '';
     if (f.endsWith('ing')) return 'ing';
@@ -968,8 +992,9 @@
       const ds = distractors(w, 3, pool);
       if (mode === 'cloze') {
         const kind = formKind(w);
-        const cap = w.a === 0;
-        q.opts = shuffle([{ id: w.id, t: w.f }, ...ds.map((d) => ({ id: d.id, t: applyForm(d.w, kind, cap) }))]);
+        const X = toeicEx(w);
+        const cap = X.a === 0;
+        q.opts = shuffle([{ id: w.id, t: X.f }, ...ds.map((d) => ({ id: d.id, t: applyForm(d.w, kind, cap) }))]);
       } else {
         q.opts = shuffle([w, ...ds].map((x) => ({ id: x.id })));
       }
@@ -995,12 +1020,13 @@
     const q = P.qs[P.i];
     const w = BY_ID.get(q.id);
     const pct = (P.i / P.qs.length) * 100;
+    const X = toeicEx(w);
     let body = '';
     if (P.mode === 'cloze') {
-      const before = w.en.slice(0, w.a);
-      const after = w.en.slice(w.a + w.f.length);
-      body = `<p class="q-sent">${esc(before)}<span class="blank" id="blank">${P.answered ? esc(w.f) : '&nbsp;'}</span>${esc(after)}</p>
-        ${P.answered ? `<p class="q-sub" style="text-align:left">${esc(w.zh)}</p>` : ''}`;
+      const before = X.en.slice(0, X.a);
+      const after = X.en.slice(X.a + X.f.length);
+      body = `<p class="q-sent">${esc(before)}<span class="blank" id="blank">${P.answered ? esc(X.f) : '&nbsp;'}</span>${esc(after)}</p>
+        ${P.answered ? `<p class="q-sub" style="text-align:left">${esc(X.zh)}</p>` : ''}`;
     } else if (P.mode === 'zh2en') {
       body = `<div class="q-hero">${art(w, { tag: true })}<div style="display:grid;gap:8px"><p class="q-prompt zh">${esc(zhMain(w))}</p><p class="q-sub">${w.s.map((s) => `${POS_ZH[s[0]] || s[0]}`).join('／')}</p></div></div>`;
     } else if (P.mode === 'en2zh') {
@@ -1008,9 +1034,9 @@
     } else if (P.mode === 'listen') {
       body = `<div class="listen-stage"><img src="assets/brand/listen.webp" alt="" width="480" height="480"><button class="big-listen" data-word="${w.id}" aria-label="再聽一次">${I.listen}</button><p class="q-sub">點擊播放，可重複聆聽。${P.answered ? '' : ` <button class="btn ghost small" data-word="${w.id}" data-slow="1">慢速</button>`}</p></div>`;
     } else if (P.mode === 'spell') {
-      const hint = w.f[0] + w.f.slice(1).replace(/[A-Za-zÀ-ÿ]/g, '_');
+      const hint = X.f[0] + X.f.slice(1).replace(/[A-Za-zÀ-ÿ]/g, '_');
       body = `<div class="q-hero">${art(w, { tag: true })}<p class="q-prompt zh">${esc(zhMain(w))}</p></div>
-        <p class="q-sent" style="font-size:19px">${esc(w.en.slice(0, w.a))}<span class="blank">${P.answered ? esc(w.f) : esc(hint)}</span>${esc(w.en.slice(w.a + w.f.length))}</p>
+        <p class="q-sent" style="font-size:19px">${esc(X.en.slice(0, X.a))}<span class="blank">${P.answered ? esc(X.f) : esc(hint)}</span>${esc(X.en.slice(X.a + X.f.length))}</p>
         <form class="spell" id="spell-form" autocomplete="off"><label class="sr-only" for="spell-in">輸入單字</label><input id="spell-in" type="text" autocapitalize="off" spellcheck="false" placeholder="輸入空格裡的單字" ${P.answered ? 'disabled' : ''}><button class="btn" type="submit" ${P.answered ? 'disabled' : ''}>確認</button></form>`;
     }
     const opts = q.opts ? `<div class="opts">${q.opts.map((o, i) => {
@@ -1024,7 +1050,7 @@
     const fb = P.answered ? `<div class="feedback">
         <button data-open="${w.id}" aria-label="打開 ${esc(w.w)} 詞卡">${art(w)}</button>
         <div style="display:grid;gap:4px;min-width:0">
-          <span class="fb-title ${ok ? 'ok' : 'no'}">${ok ? '答對了' : `正確答案：${esc(P.mode === 'cloze' || P.mode === 'spell' ? w.f : w.w)}`}</span>
+          <span class="fb-title ${ok ? 'ok' : 'no'}">${ok ? '答對了' : `正確答案：${esc(P.mode === 'cloze' || P.mode === 'spell' ? X.f : w.w)}`}</span>
           <span><button data-open="${w.id}" style="font:600 19px var(--serif);text-decoration:underline;text-underline-offset:3px">${esc(w.w)}</button> ${kkHtml(w)} · ${esc(zhMain(w))}</span>
           ${w.tip && !ok ? `<span class="fb-tip">考點：${esc(w.tip)}</span>` : ''}
         </div>
@@ -1054,7 +1080,7 @@
         e.preventDefault();
         const v = fold($('#spell-in').value.trim());
         if (!v) return;
-        const good = v === fold(w.f) || v === fold(w.w);
+        const good = v === fold(X.f) || v === fold(w.w);
         q.ok = good;
         P.answered = true;
         recordAnswer(w.id, good);
@@ -1074,7 +1100,7 @@
     P.answered = true;
     recordAnswer(q.id, q.ok);
     const w = BY_ID.get(q.id);
-    if (P.mode === 'cloze') speak(w.en); else if (P.mode === 'zh2en' || P.mode === 'listen') playWord(w);
+    if (P.mode === 'cloze') speak(toeicEx(w).en); else if (P.mode === 'zh2en' || P.mode === 'listen') playWord(w);
     paintQuiz();
   }
   function nextQ() { pracState.i++; pracState.answered = false; paintQuiz(); }
@@ -1386,12 +1412,12 @@
             <div class="band"><i style="background:#8a5a3c"></i><b>220–465</b><span>棕色證書，具備基本溝通能力</span></div>
             <div class="band"><i style="background:#d9752f"></i><b>10–215</b><span>橘色證書，入門階段</span></div>
           </div>
-          <p>本站的四段航程對應講義的「衝 400／600／800／990 分」單元，各 250 字。</p>
+          <p>本站把 1,000 個字依難度分成 400、600、800、990 四段航程，每段 250 字，由淺入深。</p>
         </article>
         <article class="card panel">
           <h2>關於職光</h2>
           <ul>
-            <li>1,000 個單字、中文釋義與例句出自「衝 400／600／800／990 分必備單字」講義，依原順序收錄；修正了講義中 aprove、nconvenience、ompulsory 三處拼字。</li>
+            <li>每個字的分詞性釋義、近似詞、相反詞、日常例句、多益例句、中文翻譯與常用搭配，皆由本站以台灣用語原創撰寫。</li>
             <li>KK 音標依 CMU Pronouncing Dictionary 自動轉寫並人工校對常見多音字；15 個職場場景與 ${WORDS.filter((w) => w.tip).length} 則「多益考點」由本站編輯整理。</li>
             <li>單字插畫、場景插畫與美英發音錄音取自 Word Atlas（Word Atlas contributors，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>），本站已縮放並合併成圖集與音訊檔。${fmt(WORDS.filter((w) => w.ar === 'w').length)} 個字使用原字插畫、${WORDS.filter((w) => w.ar === 'r').length} 個字使用同字根插畫，其餘以所屬職場場景的插畫代替；有真人錄音的字共 ${fmt(WORDS.filter((w) => w.u).length)} 個，其餘使用裝置內建語音。</li>
             <li>複習排程採 SM-2 式間隔重複：答「記得」的字間隔會逐次拉長，連續記得到 21 天以上視為「已熟」。</li>
