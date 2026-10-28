@@ -5,6 +5,8 @@
 
   const WORDS = window.TOEIC_WORDS || [];
   const BY_ID = new Map(WORDS.map((w) => [w.id, w]));
+  const STORY = window.TOEIC_STORIES || { series: {}, chapters: [] };
+  const CH = STORY.chapters;
   const DAY = 864e5;
   const MIN = 6e4;
 
@@ -59,6 +61,7 @@
     practice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>',
     map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></svg>',
     me: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+    book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5 7.2 4.5 3.5 5v13c3.7-.5 6.5 0 8.5 1.5 2-1.5 4.8-2 8.5-1.5V5c-3.7-.5-6.5 0-8.5 1.5ZM12 6.5v13"/></svg>',
     listen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></svg>',
   };
   const LOGO = '<svg class="brand-mark" viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="2"/><circle cx="20" cy="20" r="12.5" stroke="currentColor" stroke-width="1" stroke-dasharray="2 3" opacity=".55"/><path d="M8 25c6-1 16-6 24-15" stroke="var(--ochre)" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 4"/><path d="M27.5 9.5 33 8l-1.6 5.4-2.1-1.8-3 .8 1.2-2.9Z" fill="var(--ochre)"/><path d="M14 27.5h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -113,11 +116,11 @@
   /* ---------- storage ---------- */
   const KEY = 'toeic-atlas-v1'; // kept from the first release so saved progress survives the rename
   const DEFAULT_SET = { goal: 10, start: 400, accent: 'us', rate: 0.9, sfx: true, theme: 'system', amb: 'night', ambVol: 0.45, splash: true };
-  function fresh() { return { v: 1, cards: {}, days: {}, stars: [], set: { ...DEFAULT_SET }, onboarded: false }; }
+  function fresh() { return { v: 1, cards: {}, days: {}, stars: [], story: { read: {}, best: {} }, set: { ...DEFAULT_SET }, onboarded: false }; }
   function load() {
     try {
       const raw = JSON.parse(localStorage.getItem(KEY));
-      if (raw && raw.v === 1) return { ...fresh(), ...raw, set: { ...DEFAULT_SET, ...(raw.set || {}) } };
+      if (raw && raw.v === 1) return { ...fresh(), ...raw, story: { read: {}, best: {}, ...(raw.story || {}) }, set: { ...DEFAULT_SET, ...(raw.set || {}) } };
     } catch (e) { /* storage unavailable */ }
     return fresh();
   }
@@ -166,7 +169,11 @@
   }
   function newOrder() {
     const start = S.set.start;
-    return WORDS.filter((w) => w.lv >= start).concat(WORDS.filter((w) => w.lv < start));
+    // story words come first, chapter by chapter, so each day's new words match the next chapter
+    const told = CH.flatMap((c) => c.words).map((id) => BY_ID.get(id)).filter((w) => w && w.lv >= start);
+    const toldIds = new Set(told.map((w) => w.id));
+    const rest = WORDS.filter((w) => !toldIds.has(w.id));
+    return told.concat(rest.filter((w) => w.lv >= start), rest.filter((w) => w.lv < start));
   }
   function plan() {
     const d = today();
@@ -440,6 +447,7 @@
   /* ---------- shell ---------- */
   const NAV = [
     ['today', '啟程', I.today],
+    ['story', '故事', I.book],
     ['atlas', '詞庫', I.atlas],
     ['practice', '試飛', I.practice],
     ['map', '星圖', I.map],
@@ -542,10 +550,10 @@
     if (el) { el.classList.remove('vt-fallback'); void el.offsetWidth; el.classList.add('vt-fallback'); }
     if (after) after();
   }
-  const NAV_ORDER = ['today', 'learn', 'atlas', 'practice', 'map', 'me'];
+  const NAV_ORDER = ['today', 'learn', 'story', 'atlas', 'practice', 'map', 'me'];
 
   /* ---------- router ---------- */
-  const route = { name: 'today' };
+  const route = { name: 'today', sub: 0, hash: 'today' };
   let cleanup = null;
   function go(name) { if (location.hash !== `#${name}`) location.hash = name; else render(); }
   function render() {
@@ -553,16 +561,22 @@
     let name = raw;
     let wordId = null;
     const m = raw.match(/^word-(\d+)$/);
-    if (m) { wordId = +m[1]; name = route.name && route.name !== 'word' ? route.name : 'atlas'; }
+    let sub = 0;
+    if (m) { wordId = +m[1]; name = route.name && route.name !== 'word' ? route.name : 'atlas'; sub = route.sub; }
+    const sm = raw.match(/^story-(\d+)$/);
+    if (sm) { name = 'story'; sub = +sm[1]; }
     if (!VIEWS[name]) name = 'today';
     if (cleanup) { cleanup(); cleanup = null; }
     const prevRoute = route.name;
-    const changed = route.name !== name || !view.innerHTML;
+    const prevSub = route.sub;
+    const changed = route.name !== name || route.sub !== sub || !view.innerHTML;
     if (changed && view.innerHTML && SND.armed) sfx('page');
     route.name = name;
+    route.sub = sub;
+    if (!wordId) route.hash = raw;
     $$('[data-nav]').forEach((a) => a.setAttribute('aria-current', a.dataset.nav === name || (name === 'learn' && a.dataset.nav === 'today') ? 'page' : 'false'));
     if (changed || !wordId) {
-      const from = NAV_ORDER.indexOf(prevRoute); const to = NAV_ORDER.indexOf(name);
+      const from = NAV_ORDER.indexOf(prevRoute) * 100 + (prevRoute === name ? prevSub : 0); const to = NAV_ORDER.indexOf(name) * 100 + sub;
       const doIt = () => { VIEWS[name](); if (!wordId) window.scrollTo(0, 0); };
       if (changed && view.dataset.ready) vt(to >= from ? 'page-fwd' : 'page-back', doIt); else doIt();
       view.dataset.ready = '1';
@@ -606,6 +620,8 @@
       if (wd.classList.contains('pron')) { wd.classList.add('is-playing'); setTimeout(() => wd.classList.remove('is-playing'), 900); }
       return;
     }
+    const tale = e.target.closest('[data-story]');
+    if (tale) { e.preventDefault(); const ov = $('.overlay.is-entry'); if (ov) closeEntryNow(ov); go(`story-${tale.dataset.story}`); return; }
     const open = e.target.closest('[data-open]');
     if (open) { e.preventDefault(); const list = open.closest('[data-list]'); openEntry(+open.dataset.open, list ? listContext : null, false, open); }
   });
@@ -670,6 +686,8 @@
             </div>
           </div>
         </section>
+
+        ${storyFeature()}
 
         <section class="section">
           <div class="today-grid">
@@ -923,6 +941,7 @@
               <p class="en-line">${markSentence(ex)} <button class="mini-spk" data-say="${esc(ex.en)}" aria-label="朗讀例句">${I.speaker}</button></p>
               <p class="zh-line">${esc(ex.zh)}</p>
             </div>`).join('')}
+            ${storyCue(w)}
           </div>
           <div>
             <div class="block-label">常用搭配</div>
@@ -965,7 +984,7 @@
     ov.remove();
     entryCtx = null;
     if (!$('.overlay')) document.documentElement.classList.remove('is-locked');
-    try { history.replaceState(null, '', `#${route.name}`); } catch (e) { /* sandboxed */ }
+    try { history.replaceState(null, '', `#${route.hash || route.name}`); } catch (e) { /* sandboxed */ }
     if (back && back.focus) back.focus({ preventScroll: true });
   }
   function refreshUnder() {
@@ -1063,15 +1082,19 @@
           <img src="assets/brand/done.webp" alt="" width="480" height="480">
           <div class="done-body">
             <span class="eyebrow">本日航程完成</span>
-            <h2>${s.total ? '今天的單字都平安降落了。' : '今天沒有待學的單字。'}</h2>
+            <h2>${s.story ? `第 ${s.story} 章的單字都學過一輪了。` : s.total ? '今天的單字都平安降落了。' : '今天沒有待學的單字。'}</h2>
             <p style="color:var(--ink-2)">${s.total ? `這一輪記得 ${s.tally[3] + s.tally[4]} 次、模糊 ${s.tally[2]} 次、忘了 ${s.tally[1]} 次。` : '新詞與複習都完成了。'}今天累計新詞 ${d.n} 個、複習 ${d.r} 次。</p>
             <div class="row-btns">
-              <a class="btn" href="#practice">用練習題鞏固 ${I.arrow}</a>
-              <button class="btn ghost" id="more5">再學 5 個新詞</button>
+              ${s.story
+                ? `<button class="btn" data-cloze="${s.story}">用故事填空驗收 ${I.arrow}</button><button class="btn ghost" data-story="${s.story}">回到第 ${s.story} 章</button>`
+                : `<a class="btn" href="#practice">用練習題鞏固 ${I.arrow}</a>${nextChapter() && nextChapter().words.some((id) => S.cards[id]) ? `<button class="btn ghost" data-story="${nextChapter().no}">讀故事第 ${nextChapter().no} 章</button>` : ''}<button class="btn ghost" id="more5">再學 5 個新詞</button>`}
             </div>
           </div>
         </div></div></div>`;
-      $('#more5').addEventListener('click', () => { S.set.goal += 5; save(); plan(); session = null; viewLearn(); });
+      const m5 = $('#more5');
+      if (m5) m5.addEventListener('click', () => { S.set.goal += 5; save(); plan(); session = null; viewLearn(); });
+      const cz = view.querySelector('[data-cloze]');
+      if (cz) cz.addEventListener('click', () => { const no = +cz.dataset.cloze; session = null; storyState.cloze = { no, pending: true }; go(`story-${no}`); });
       return;
     }
     const w = BY_ID.get(s.queue[0]);
@@ -1096,6 +1119,7 @@
           ${s.revealed ? `
             <div class="flash-back">
               <div class="senses">${sensesByPos(w).map((x) => `<div class="sense"><i>${x[0]}</i><b>${esc(x[1])}</b></div>`).join('')}</div>
+              ${storyCue(w, true)}
               <div class="example"><span class="ex-tag">多益例句</span><p class="en-line">${markSentence(toeicEx(w))} <button class="mini-spk" data-say="${esc(toeicEx(w).en)}" aria-label="朗讀例句">${I.speaker}</button></p><p class="zh-line">${esc(toeicEx(w).zh)}</p></div>
               <div class="cols compact">${w.col.slice(0, 2).map((c) => `<div class="col"><b>${esc(c[0])}</b><span>${esc(c[1])}</span></div>`).join('')}</div>
               ${w.tip ? `<div class="tip"><div class="block-label">多益考點</div><p>${esc(w.tip)}</p></div>` : ''}
@@ -1373,6 +1397,388 @@
       if (i >= 0 && q.opts[i]) { e.preventDefault(); answer(q.opts[i].id); }
     } else if (pracState.answered && e.key === 'Enter' && document.activeElement?.id !== 'q-next') { e.preventDefault(); nextQ(); }
   });
+
+  /* ======================================================
+     STORY — a serialized novel whose chapters carry the word list
+     ====================================================== */
+  const MARK_RE = /\[\[(\d+):([^\]]+)\]\]/g;
+  const plainTale = (t) => t.replace(MARK_RE, '$2');
+  const blockLines = (b) => (b.k === 'sms' ? b.en.split('\n').map((l) => l.split('|')[1]) : b.k === 'doc' ? b.en.split('\n') : [b.en]);
+  // word id -> the sentence where it first appears in the story
+  const STORY_HIT = new Map();
+  for (const ch of CH) {
+    for (const b of ch.blocks) {
+      for (const line of blockLines(b)) {
+        const sents = [];
+        for (const piece of line.replace(/([.!?]["”]?)\s+(?=["“]?[A-Z])/g, '$1\u0001').split('\u0001')) {
+          if (sents.length && /\b(Ms|Mr|Mrs|Dr|No)\.$/.test(sents[sents.length - 1])) sents[sents.length - 1] += ' ' + piece; else sents.push(piece);
+        }
+        for (const sent of sents) for (const m of sent.matchAll(MARK_RE)) if (!STORY_HIT.has(+m[1])) STORY_HIT.set(+m[1], { no: ch.no, sent });
+      }
+    }
+  }
+  const chapterOf = (no) => CH.find((c) => c.no === no);
+  const nextChapter = () => CH.find((c) => !S.story.read[c.no]) || null;
+  const learnedIn = (ch) => ch.words.filter((id) => S.cards[id]).length;
+  function storyCue(w, compact) {
+    const h = STORY_HIT.get(w.id);
+    if (!h) return '';
+    const sent = esc(h.sent).replace(MARK_RE, (m, id, f) => (+id === w.id ? `<mark>${f}</mark>` : f));
+    return `<button class="story-cue ${compact ? 'is-compact' : ''}" data-story="${h.no}">
+      <span class="ex-tag is-story">${I.book}故事 · 第 ${h.no} 章</span>
+      <span class="story-cue-en">${sent}</span>
+      <span class="story-cue-go">回到《${esc(STORY.series.zh)}》第 ${h.no} 章 ${I.arrow}</span>
+    </button>`;
+  }
+  function storyFeature() {
+    if (!CH.length) return '';
+    const ch = nextChapter() || CH[CH.length - 1];
+    const prev = chapterOf(ch.no - 1);
+    const n = learnedIn(ch);
+    return `<section class="section">
+      <div class="section-head"><h2>航程故事</h2><a class="more" href="#story">全部章節 →</a></div>
+      <a class="tale-feature" href="#story-${ch.no}">
+        ${art(ch.cover, { full: true })}
+        <div class="tale-feature-body">
+          <span class="eyebrow mono">${esc(STORY.series.title)} · CHAPTER ${pad(ch.no)}</span>
+          <h3>${esc(ch.zh)}<small>${esc(ch.title)}</small></h3>
+          <p>${esc(prev ? prev.next : STORY.series.blurb)}</p>
+          <div class="tale-feature-foot"><span>本章 ${ch.words.length} 個單字 · 已學 ${n}</span><span class="btn small">${S.story.read[ch.no] ? '重讀' : n ? '讀下去' : '先讀故事'} ${I.arrow}</span></div>
+        </div>
+      </a>
+    </section>`;
+  }
+
+  const storyState = { cloze: null };
+  function viewStory() {
+    const no = route.sub;
+    const ch = chapterOf(no);
+    if (!ch) return paintTaleList();
+    if (storyState.cloze && storyState.cloze.no === no && storyState.cloze.pending) return startCloze(ch);
+    storyState.cloze = null;
+    paintChapter(ch);
+  }
+  function paintTaleList() {
+    const total = CH.reduce((a, c) => a + c.words.length, 0);
+    const learned = CH.reduce((a, c) => a + learnedIn(c), 0);
+    view.innerHTML = `<div class="wrap">
+      <header class="page-head">
+        <span class="eyebrow">航程故事 · 400 起飛段 · 試讀五章</span>
+        <h1>${esc(STORY.series.zh)}</h1>
+        <p class="sub">${esc(STORY.series.blurb)}</p>
+      </header>
+      <div class="tale-how">
+        <div><b>1</b><span><strong>讀故事</strong>每章把 9–10 個 400 分段單字藏進劇情，點亮的字一按就打開詞卡。</span></div>
+        <div><b>2</b><span><strong>學單字</strong>每天的新詞會照章節順序排，今天學的字，就是下一章會遇見的字。</span></div>
+        <div><b>3</b><span><strong>故事填空</strong>用多益 Part 6 的考法，把字放回劇情裡。記住情節，就記住了字。</span></div>
+      </div>
+      <section class="section">
+        <div class="section-head"><h2>章節</h2><span class="more">已學 ${learned} / ${total} 個故事單字</span></div>
+        <div class="tale-list">
+          ${CH.map((c) => {
+            const n = learnedIn(c);
+            const best = S.story.best[c.no];
+            return `<a class="tale-row" href="#story-${c.no}">
+              ${art(c.cover)}
+              <div class="tale-row-body">
+                <span class="eyebrow mono">CHAPTER ${pad(c.no)} · ${esc(c.genre)}</span>
+                <b>${esc(c.zh)}</b>
+                <span class="tale-row-en">${esc(c.title)}</span>
+                <div class="meter"><i class="m-mastered" style="width:${(n / c.words.length) * 100}%"></i></div>
+              </div>
+              <div class="tale-row-state">
+                ${S.story.read[c.no] ? '<span class="badge plain lv-600">已讀</span>' : c === nextChapter() ? '<span class="badge plain lv-800">下一章</span>' : ''}
+                ${best != null ? `<span class="num">填空 ${best}/${c.words.length}</span>` : `<span class="num">${n}/${c.words.length} 字</span>`}
+              </div>
+            </a>`;
+          }).join('')}
+          <div class="tale-row is-soon">
+            <div class="art tale-soon-art">${I.book}</div>
+            <div class="tale-row-body">
+              <span class="eyebrow mono">CHAPTER 06 · 600 爬升段</span>
+              <b>目的地那一欄，為什麼是空白的？</b>
+              <span class="tale-row-en">To be continued</span>
+            </div>
+            <div class="tale-row-state"><span class="badge plain">即將啟航</span></div>
+          </div>
+        </div>
+      </section>
+    </div>`;
+  }
+
+  function taleInline(t) {
+    return esc(t).replace(MARK_RE, (m, id, f) => `<button class="tw st-${status(+id)}" data-open="${id}">${f}</button>`);
+  }
+  function blockHtml(b, i) {
+    const say = esc(blockLines(b).map(plainTale).join(' '));
+    let en;
+    let zh;
+    if (b.k === 'sms') {
+      const zl = b.zh.split('\n').map((l) => l.split('|'));
+      en = `<div class="st-sms">${b.en.split('\n').map((l, j) => { const [who, txt] = l.split('|'); return `<div class="bubble ${who === 'Jun' ? 'is-me' : ''}"><small>${esc(who)}</small><span>${taleInline(txt)}</span></div>`; }).join('')}</div>`;
+      zh = zl.map(([who, txt]) => `${esc(who)}：${esc(txt)}`).join('<br>');
+    } else if (b.k === 'doc') {
+      en = `<div class="st-paper">${b.en.split('\n').map((l, j) => (l ? `<div class="${j === 0 ? 'st-paper-head' : ''}">${taleInline(l)}</div>` : '<div class="gap"></div>')).join('')}</div>`;
+      zh = b.zh.split('\n').map((l) => esc(l)).join('<br>');
+    } else {
+      en = `<p class="st-en">${taleInline(b.en)}</p>`;
+      zh = esc(b.zh);
+    }
+    return `<div class="st-block st-${b.k}" data-i="${i}">
+      ${en}
+      <p class="st-zh">${zh}</p>
+      <div class="st-tools"><button class="mini-spk" data-say="${say}" aria-label="朗讀這段">${I.speaker}</button><button class="st-tr" aria-label="顯示這段的中文">譯</button></div>
+    </div>`;
+  }
+  function paintChapter(ch) {
+    const next = chapterOf(ch.no + 1);
+    const todo = ch.words.filter((id) => status(id) !== 'mastered').length;
+    const showZh = !!S.set.storyZh;
+    listContext = ch.words.slice();
+    view.innerHTML = `<div class="wrap tale">
+      <div class="tale-bar">
+        <a class="icon-btn" href="#story" aria-label="回到章節列表">${I.left}</a>
+        <span class="eyebrow">《${esc(STORY.series.zh)}》 · 第 ${ch.no} / ${CH.length} 章</span>
+        <span class="tale-bar-tools">
+          <button class="btn ghost small" id="tale-read">${I.speaker}<span>朗讀全章</span></button>
+          <button class="btn ghost small" id="tale-zh" aria-pressed="${showZh}">中文${showZh ? '開' : '關'}</button>
+        </span>
+      </div>
+      <header class="tale-head">
+        ${art(ch.cover, { full: true })}
+        <div class="tale-head-txt">
+          <span class="eyebrow mono">CHAPTER ${pad(ch.no)} · ${esc(ch.genre)}</span>
+          <h1>${esc(ch.title)}</h1>
+          <p>${esc(ch.zh)}</p>
+        </div>
+      </header>
+      <div class="tale-words" data-list>
+        <span class="block-label">本章單字 · 點字看詞卡</span>
+        <div class="tale-chips">${ch.words.map((id) => { const w = BY_ID.get(id); return `<button class="tale-chip st-${status(id)}" data-open="${id}"><b>${esc(w.w)}</b><span>${esc(w.s[0][1])}</span></button>`; }).join('')}</div>
+      </div>
+      <article class="tale-body ${showZh ? 'show-zh' : ''}" data-list>
+        ${ch.blocks.map(blockHtml).join('')}
+        <p class="tale-end">— 第 ${ch.no} 章 完 —</p>
+      </article>
+      <aside class="tale-next">
+        <span class="eyebrow">${next ? '下一章預告' : '未完待續'}</span>
+        <p>${esc(ch.next)}</p>
+      </aside>
+      <div class="tale-actions">
+        <button class="btn" id="tale-cloze">故事填空 · Part 6 ${I.arrow}</button>
+        ${todo ? `<button class="btn ghost" id="tale-learn">學這章的 ${todo} 個字</button>` : '<span class="tale-done">本章單字都已熟 ✓</span>'}
+        ${next ? `<a class="btn ghost" href="#story-${next.no}">第 ${next.no} 章 ${I.right}</a>` : ''}
+      </div>
+    </div>`;
+    loadFull(view);
+    $('#tale-zh').addEventListener('click', (e) => {
+      S.set.storyZh = !S.set.storyZh; save();
+      e.currentTarget.setAttribute('aria-pressed', S.set.storyZh);
+      e.currentTarget.textContent = `中文${S.set.storyZh ? '開' : '關'}`;
+      $('.tale-body').classList.toggle('show-zh', S.set.storyZh);
+      $$('.st-block.is-zh').forEach((b) => b.classList.remove('is-zh'));
+    });
+    view.querySelectorAll('.st-tr').forEach((b) => b.addEventListener('click', () => { sfx('tap'); b.closest('.st-block').classList.toggle('is-zh'); }));
+    $('#tale-read').addEventListener('click', (e) => readTale($$('.st-block', view), e.currentTarget));
+    $('#tale-cloze').addEventListener('click', () => { storyState.cloze = { no: ch.no }; vt('page-fwd', () => { startCloze(ch); window.scrollTo(0, 0); }); });
+    const tl = $('#tale-learn');
+    if (tl) tl.addEventListener('click', () => learnChapter(ch));
+    const end = $('.tale-next');
+    const markRead = () => { if (!S.story.read[ch.no]) { S.story.read[ch.no] = Date.now(); save(); } };
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting)) { markRead(); io.disconnect(); } });
+      io.observe(end);
+      cleanup = () => { io.disconnect(); stopTale(); };
+    } else { markRead(); cleanup = stopTale; }
+  }
+  let taleBtn = null;
+  function stopTale() {
+    if (!taleBtn) return;
+    taleBtn.classList.remove('is-on');
+    taleBtn = null;
+    $$('.st-block.is-reading').forEach((x) => x.classList.remove('is-reading'));
+    try { speechSynthesis.cancel(); } catch (e) { /* ignore */ }
+    duck(false);
+  }
+  function readTale(blocks, btn) {
+    if (taleBtn) { stopTale(); return; }
+    if (!('speechSynthesis' in window)) { toast('這個瀏覽器不支援語音朗讀，請改用 Chrome、Edge 或 Safari。'); return; }
+    speechSynthesis.cancel();
+    taleBtn = btn;
+    btn.classList.add('is-on');
+    duck(true, 600000);
+    const lang = S.set.accent === 'uk' ? 'en-GB' : 'en-US';
+    const v = pickVoice(lang);
+    blocks.forEach((el, i) => {
+      const u = new SpeechSynthesisUtterance(el.querySelector('[data-say]').dataset.say);
+      u.lang = lang;
+      if (v) u.voice = v;
+      u.rate = S.set.rate;
+      u.onstart = () => {
+        if (taleBtn !== btn) return;
+        blocks.forEach((x) => x.classList.toggle('is-reading', x === el));
+        el.scrollIntoView({ block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth' });
+      };
+      if (i === blocks.length - 1) u.onend = () => { if (taleBtn === btn) stopTale(); };
+      speechSynthesis.speak(u);
+    });
+  }
+  function learnChapter(ch) {
+    const ids = ch.words.filter((id) => status(id) !== 'mastered');
+    session = { queue: ids, total: ids.length, done: 0, revealed: false, tally: { 1: 0, 2: 0, 3: 0, 4: 0 }, seen: new Set(), story: ch.no };
+    sfx('start');
+    go('learn');
+  }
+
+  /* Part 6 style: every target word becomes a numbered blank in the running text. */
+  function blankKind(f, base) {
+    const a = f.toLowerCase();
+    if (a === base) return '';
+    if (a.endsWith('ing') && !base.endsWith('ing')) return 'ing';
+    if (a.endsWith('s') && !base.endsWith('s')) return 's';
+    if (a.endsWith('d') && !base.endsWith('d')) return 'ed';
+    return '';
+  }
+  function startCloze(ch) {
+    const seen = new Set();
+    const blanks = [];
+    ch.blocks.forEach((b) => { for (const m of b.en.matchAll(MARK_RE)) { const id = +m[1]; if (!seen.has(id)) { seen.add(id); blanks.push({ id, f: m[2] }); } } });
+    const lv = BY_ID.get(ch.words[0]).lv;
+    for (const q of blanks) {
+      const w = BY_ID.get(q.id);
+      const kind = blankKind(q.f, w.w.toLowerCase());
+      const cap = /^[A-Z]/.test(q.f) && !/^[A-Z]/.test(w.w);
+      const mates = shuffle(ch.words.filter((id) => id !== q.id).map((id) => BY_ID.get(id)).filter((x) => posOf(x) === posOf(w)));
+      const more = distractors(w, 6, WORDS.filter((x) => x.lv === lv));
+      const used = new Set([fold(q.f)]);
+      const opts = [{ id: w.id, t: q.f }];
+      for (const d of [...mates, ...more]) {
+        if (opts.length === 4) break;
+        const t = applyForm(d.w, kind, cap);
+        if (used.has(fold(t))) continue;
+        used.add(fold(t));
+        opts.push({ id: d.id, t });
+      }
+      q.opts = shuffle(opts);
+    }
+    storyState.cloze = { no: ch.no, blanks, i: 0, answered: false, right: 0 };
+    paintCloze(ch);
+  }
+  function paintCloze(ch) {
+    const C = storyState.cloze;
+    if (C.i >= C.blanks.length) return paintClozeResult(ch);
+    const q = C.blanks[C.i];
+    const order = new Map(C.blanks.map((b, k) => [b.id, k]));
+    const done = new Set();
+    const inline = (t) => esc(t).replace(MARK_RE, (m, id, f) => {
+      id = +id;
+      const k = order.get(id);
+      if (k == null || done.has(id)) return f;
+      done.add(id);
+      const b = C.blanks[k];
+      if (k < C.i || (k === C.i && C.answered)) return `<span class="cz-blank is-filled ${b.ok ? 'ok' : 'no'}">${f}</span>`;
+      return `<span class="cz-blank ${k === C.i ? 'is-cur' : ''}" ${k === C.i ? 'id="cz-cur"' : ''}>(${k + 1})</span>`;
+    });
+    const passage = ch.blocks.map((b) => {
+      if (b.k === 'sms') return `<div class="st-sms">${b.en.split('\n').map((l) => { const [who, txt] = l.split('|'); return `<div class="bubble ${who === 'Jun' ? 'is-me' : ''}"><small>${esc(who)}</small><span>${inline(txt)}</span></div>`; }).join('')}</div>`;
+      if (b.k === 'doc') return `<div class="st-paper">${b.en.split('\n').map((l, j) => (l ? `<div class="${j === 0 ? 'st-paper-head' : ''}">${inline(l)}</div>` : '<div class="gap"></div>')).join('')}</div>`;
+      return `<p class="st-en">${inline(b.en)}</p>`;
+    }).join('');
+    const w = BY_ID.get(q.id);
+    view.innerHTML = `<div class="wrap tale cz">
+      <div class="learn-top">
+        <button class="icon-btn" id="cz-exit" aria-label="結束填空">${I.close}</button>
+        <div class="meter"><i style="width:${(C.i / C.blanks.length) * 100}%"></i></div>
+        <span class="count num">${C.i + 1} / ${C.blanks.length}</span>
+      </div>
+      <article class="tale-body cz-passage">
+        <span class="eyebrow mono">PART 6 · CHAPTER ${pad(ch.no)} · ${esc(ch.title)}</span>
+        ${passage}
+      </article>
+      <div class="cz-panel q-card">
+        <div class="flash-head"><span class="eyebrow">第 (${C.i + 1}) 格該填哪個字？</span>${lvBadge(w.lv)}</div>
+        <div class="opts">${q.opts.map((o, k) => {
+          let cls = '';
+          if (C.answered) { if (o.id === q.id) cls = 'ok'; else if (o.id === q.picked) cls = 'no'; }
+          return `<button class="opt ${cls}" data-o="${k}" ${C.answered ? 'disabled' : ''}><span class="k">${'ABCD'[k]}</span><span class="t en">${esc(o.t)}</span></button>`;
+        }).join('')}</div>
+        ${C.answered ? `<div class="cz-fb">
+          <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? '答對了' : `正確答案：${esc(q.f)}`}</span>
+          <span><button data-open="${w.id}" class="cz-word">${esc(w.w)}</button> ${kkHtml(w)} · ${esc(zhMain(w))}</span>
+          <button class="btn" id="cz-next">${C.i === C.blanks.length - 1 ? '看結果' : '下一格'} ${I.arrow}</button>
+        </div>` : '<p class="kbd-hint">鍵盤 <kbd>1</kbd>–<kbd>4</kbd> 或 <kbd>A</kbd>–<kbd>D</kbd> 作答</p>'}
+      </div>
+    </div>`;
+    $('#cz-exit').addEventListener('click', () => { storyState.cloze = null; paintChapter(ch); window.scrollTo(0, 0); });
+    view.querySelectorAll('[data-o]').forEach((b) => b.addEventListener('click', () => clozeAnswer(ch, +b.dataset.o)));
+    const nx = $('#cz-next');
+    if (nx) { nx.addEventListener('click', () => clozeNext(ch)); nx.focus({ preventScroll: true }); }
+    const cur = $('#cz-cur') || view.querySelectorAll('.cz-blank.is-filled')[C.i];
+    if (cur && C.i > 0) cur.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' });
+    const onKey = (e) => {
+      if ($('.overlay') || e.target.matches('input, textarea')) return;
+      if (!C.answered) {
+        const k = e.key.toLowerCase();
+        const i = '1234'.indexOf(k) >= 0 ? '1234'.indexOf(k) : 'abcd'.indexOf(k);
+        if (i >= 0 && q.opts[i]) { e.preventDefault(); clozeAnswer(ch, i); }
+      } else if (e.key === 'Enter' && document.activeElement?.id !== 'cz-next') { e.preventDefault(); clozeNext(ch); }
+    };
+    if (cleanup) cleanup();
+    document.addEventListener('keydown', onKey);
+    cleanup = () => document.removeEventListener('keydown', onKey);
+  }
+  function clozeAnswer(ch, k) {
+    const C = storyState.cloze;
+    if (C.answered) return;
+    const q = C.blanks[C.i];
+    q.picked = q.opts[k].id;
+    q.ok = q.picked === q.id;
+    C.answered = true;
+    if (q.ok) C.right++;
+    const d = today();
+    d.q++;
+    if (q.ok) d.c++;
+    save();
+    sfx(q.ok ? 'correct' : 'wrong');
+    playWord(BY_ID.get(q.id));
+    paintCloze(ch);
+    if (q.ok) burstFrom($('.opt.ok'), 26, 0.8);
+  }
+  function clozeNext(ch) { const C = storyState.cloze; C.i++; C.answered = false; vt('card', () => paintCloze(ch)); }
+  function paintClozeResult(ch) {
+    const C = storyState.cloze;
+    const n = C.blanks.length;
+    const wrong = C.blanks.filter((b) => !b.ok).map((b) => BY_ID.get(b.id));
+    S.story.best[ch.no] = Math.max(S.story.best[ch.no] || 0, C.right);
+    S.story.read[ch.no] = S.story.read[ch.no] || Date.now();
+    save();
+    sfx('complete');
+    if (C.right / n >= 0.8) setTimeout(() => burst(innerWidth / 2, innerHeight * 0.35, 70, 1.4), 120);
+    const next = chapterOf(ch.no + 1);
+    const msg = C.right === n ? '全部填回原位。這一章的字，已經和劇情綁在一起了。' : C.right / n >= 0.7 ? '大部分都放對了，錯的字回到故事裡再讀一次。' : '先回去重讀這一章，留意亮起來的字，再挑戰一次。';
+    view.innerHTML = `<div class="wrap"><div class="quiz">
+      <div class="done">
+        <img src="assets/brand/${C.right / n >= 0.8 ? 'done' : 'night'}.webp" alt="" width="480" height="480">
+        <div class="done-body">
+          <span class="eyebrow">故事填空 · 第 ${ch.no} 章 ${esc(ch.zh)}</span>
+          <span class="score num">${C.right}<small style="font-size:28px;color:var(--ink-3)"> / ${n}</small></span>
+          <h2>${msg}</h2>
+          <div class="row-btns">
+            ${next ? `<a class="btn" href="#story-${next.no}">讀第 ${next.no} 章 ${I.arrow}</a>` : `<a class="btn" href="#story">回到章節列表 ${I.arrow}</a>`}
+            <button class="btn ghost" id="cz-again">再填一次</button>
+            <button class="btn ghost" data-story="${ch.no}">重讀本章</button>
+          </div>
+        </div>
+      </div>
+      ${wrong.length ? `<div class="result-list" data-list>
+        <span class="eyebrow">填錯的單字</span>
+        ${wrong.map((w) => `<button class="result-row" data-open="${w.id}">${art(w)}<b>${esc(w.w)}</b><span>${esc(zhShort(w))}</span></button>`).join('')}
+      </div>` : ''}
+    </div></div>`;
+    listContext = wrong.map((w) => w.id);
+    if (cleanup) { cleanup(); cleanup = null; }
+    $('#cz-again').addEventListener('click', () => vt('card', () => startCloze(ch)));
+  }
 
   /* ======================================================
      MAP (thousand-star chart)
@@ -1943,6 +2349,7 @@
           <h2>關於多益詞旅</h2>
           <ul>
             <li>每個字的分詞性釋義、近似詞、相反詞、日常例句、多益例句、中文翻譯與常用搭配，皆由本站以台灣用語原創撰寫。</li>
+            <li>航程故事《NS-014 號航班》是本站原創的連載小說，人物、情節與中文翻譯皆為原創；每章收錄 9–10 個同分數段的單字，並避開意思相近的字放在同一章，減少混淆。</li>
             <li>KK 音標依 CMU Pronouncing Dictionary 自動轉寫並人工校對常見多音字；15 個職場場景與 ${WORDS.filter((w) => w.tip).length} 則「多益考點」由本站編輯整理。</li>
             <li>單字插畫、場景插畫與美英發音錄音取自 Word Atlas（Word Atlas contributors，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>），本站已縮放並合併成圖集與音訊檔。${fmt(WORDS.filter((w) => w.ar === 'w').length)} 個字使用原字插畫、${WORDS.filter((w) => w.ar === 'r').length} 個字使用同字根插畫，其餘以所屬職場場景的插畫代替；有真人錄音的字共 ${fmt(WORDS.filter((w) => w.u).length)} 個，其餘使用裝置內建語音。</li>
             <li>複習排程採 SM-2 式間隔重複：答「記得」的字間隔會逐次拉長，連續記得到 21 天以上視為「已熟」。</li>
@@ -2196,7 +2603,7 @@
   });
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => paintTools());
 
-  const VIEWS = { today: viewToday, atlas: viewAtlas, learn: viewLearn, practice: viewPractice, map: viewMap, me: viewMe };
+  const VIEWS = { today: viewToday, story: viewStory, atlas: viewAtlas, learn: viewLearn, practice: viewPractice, map: viewMap, me: viewMe };
 
   applyTheme();
   render();
