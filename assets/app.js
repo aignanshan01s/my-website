@@ -39,6 +39,7 @@
 
   /* ---------- icons ---------- */
   const I = {
+    wave: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h2M7 8v8M11 5v14M15 9v6M19 7v10M21 12h0"/></svg>',
     search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
     sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
     moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>',
@@ -111,7 +112,7 @@
 
   /* ---------- storage ---------- */
   const KEY = 'toeic-atlas-v1'; // kept from the first release so saved progress survives the rename
-  const DEFAULT_SET = { goal: 10, start: 400, accent: 'us', rate: 0.9, sfx: true, theme: 'system' };
+  const DEFAULT_SET = { goal: 10, start: 400, accent: 'us', rate: 0.9, sfx: true, theme: 'system', amb: 'night', ambVol: 0.45 };
   function fresh() { return { v: 1, cards: {}, days: {}, stars: [], set: { ...DEFAULT_SET }, onboarded: false }; }
   function load() {
     try {
@@ -238,6 +239,106 @@
     for (const p of pref) { const v = list.find((x) => x.name.includes(p)); if (v) return v; }
     return list[0] || null;
   }
+  /* ---------- sound: cues, ambience, ducking (Web Audio) ---------- */
+  const AMBS = [
+    { k: 'night', zh: '夜航配樂', note: '溫暖電鋼琴與長音鋪底，陪你慢慢背', len: 96 },
+    { k: 'cabin', zh: '機艙巡航', note: '平穩的引擎低鳴，像長途航班上', len: 64 },
+    { k: 'sea', zh: '港邊浪聲', note: '一波波拍上堤岸的海浪', len: 66 },
+    { k: 'rain', zh: '窗邊雨聲', note: '細雨打在窗上，適合專心', len: 60 },
+  ];
+  const CUE_GAIN = { tap: 0.35, key: 0.3, page: 0.4, flip: 0.5, correct: 0.6, wrong: 0.5, streak: 0.55, start: 0.6, ignite: 0.55, complete: 0.65 };
+  const SND = { ctx: null, master: null, bufs: new Map(), amb: null, ducked: false, armed: false };
+  function audioCtx() {
+    if (!SND.ctx) {
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return null;
+      SND.ctx = new C();
+      SND.master = SND.ctx.createGain();
+      SND.master.connect(SND.ctx.destination);
+    }
+    if (SND.ctx.state === 'suspended' && SND.armed && !document.hidden) SND.ctx.resume().catch(() => {});
+    return SND.ctx;
+  }
+  function loadSound(file) {
+    let p = SND.bufs.get(file);
+    if (!p) {
+      const c = audioCtx();
+      p = c
+        ? fetch(`assets/sound/${file}`).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(r.status))))
+          .then((b) => new Promise((res, rej) => c.decodeAudioData(b, res, rej))).catch(() => null)
+        : Promise.resolve(null);
+      SND.bufs.set(file, p);
+    }
+    return p;
+  }
+  async function sfx(name) {
+    if (!S.set.sfx) return;
+    const c = audioCtx();
+    if (!c) return;
+    const buf = await loadSound(`${name}.mp3`);
+    if (!buf) return;
+    const src = c.createBufferSource();
+    const g = c.createGain();
+    g.gain.value = CUE_GAIN[name] || 0.4;
+    src.buffer = buf;
+    src.connect(g).connect(SND.master);
+    src.start();
+  }
+  const ambLevel = () => S.set.ambVol * (SND.ducked ? 0.3 : 1);
+  function rampTo(g, v, sec) {
+    const t = SND.ctx.currentTime;
+    g.gain.cancelScheduledValues(t);
+    g.gain.setValueAtTime(g.gain.value, t);
+    g.gain.linearRampToValueAtTime(v, t + sec);
+  }
+  async function setAmbience(id) {
+    const c = audioCtx();
+    if (!c) return;
+    if (SND.amb && SND.amb.id === id) { rampTo(SND.amb.gain, ambLevel(), 0.4); return; }
+    const old = SND.amb;
+    SND.amb = null;
+    if (old) { rampTo(old.gain, 0, 1.4); old.src.stop(c.currentTime + 1.5); }
+    paintAmb();
+    const meta = AMBS.find((a) => a.k === id);
+    if (!meta) return;
+    const buf = await loadSound(`amb-${id}.mp3`);
+    if (!buf || SND.amb || S.set.amb !== id) return;
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    // Files carry 2 s of the loop's head after the end, so [1, 1 + len] is seamless whatever the decoder pads.
+    src.loopStart = 1;
+    src.loopEnd = Math.min(buf.duration, 1 + meta.len);
+    const gain = c.createGain();
+    gain.gain.value = 0;
+    src.connect(gain).connect(SND.master);
+    src.start(0, 1);
+    SND.amb = { id, src, gain };
+    rampTo(gain, ambLevel(), 2.5);
+    paintAmb();
+  }
+  let duckTimer = 0;
+  function duck(on, ms) {
+    clearTimeout(duckTimer);
+    SND.ducked = on;
+    if (SND.amb) rampTo(SND.amb.gain, ambLevel(), on ? 0.15 : 0.8);
+    if (on && ms) duckTimer = setTimeout(() => duck(false), ms);
+  }
+  function armAudio() {
+    if (SND.armed) return;
+    SND.armed = true;
+    const c = audioCtx();
+    if (c && c.state === 'suspended') c.resume().catch(() => {});
+    Object.keys(CUE_GAIN).forEach((k) => loadSound(`${k}.mp3`));
+    if (S.set.amb !== 'off') setAmbience(S.set.amb);
+  }
+  window.addEventListener('pointerdown', armAudio, { once: true });
+  window.addEventListener('keydown', armAudio, { once: true });
+  document.addEventListener('visibilitychange', () => {
+    if (!SND.ctx || !SND.armed) return;
+    if (document.hidden) SND.ctx.suspend().catch(() => {}); else SND.ctx.resume().catch(() => {});
+  });
+
   function speak(text, accent = S.set.accent, rate = S.set.rate) {
     if (!('speechSynthesis' in window)) { toast('這個瀏覽器不支援語音朗讀，請改用 Chrome、Edge 或 Safari。'); return; }
     try {
@@ -247,6 +348,8 @@
       const v = pickVoice(u.lang);
       if (v) u.voice = v;
       u.rate = rate;
+      duck(true, 15000);
+      u.onend = u.onerror = () => duck(false);
       speechSynthesis.speak(u);
     } catch (e) { toast('語音朗讀暫時無法使用。'); }
   }
@@ -271,6 +374,7 @@
       clip = { a, end };
       a.playbackRate = Math.max(0.75, Math.min(1.1, rate / 0.9));
       a.currentTime = Math.max(0, seg[0] - 0.02);
+      duck(true, (seg[1] / a.playbackRate) * 1000 + 450);
       const started = a.play();
       const c = clip;
       const arm = () => { if (clip === c) c.t = setTimeout(() => { if (clip === c) { a.pause(); clip = null; } }, ((end - a.currentTime) / a.playbackRate) * 1000 + 40); };
@@ -278,27 +382,49 @@
       else arm();
     } catch (e) { speak(w.w, accent, rate); }
   }
-  let actx = null;
-  function sfx(kind) {
-    if (!S.set.sfx) return;
-    try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-      const notes = { ok: [660, 990], no: [220, 180], flip: [520], done: [523, 659, 784, 1046] }[kind] || [440];
-      notes.forEach((f, i) => {
-        const o = actx.createOscillator();
-        const g = actx.createGain();
-        const t = actx.currentTime + i * 0.09;
-        o.type = kind === 'no' ? 'triangle' : 'sine';
-        o.frequency.value = f;
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(kind === 'flip' ? 0.05 : 0.12, t + 0.015);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-        o.connect(g).connect(actx.destination);
-        o.start(t);
-        o.stop(t + 0.25);
-      });
-    } catch (e) { /* audio unavailable */ }
+
+  /* Ink-and-gold confetti from a point on screen (correct answers, finished flights). */
+  const burstLayer = { cv: null, parts: [], raf: 0 };
+  function burst(x, y, count = 30, spread = 1) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let cv = burstLayer.cv;
+    if (!cv) { cv = burstLayer.cv = document.createElement('canvas'); cv.className = 'burst-layer'; cv.setAttribute('aria-hidden', 'true'); document.body.appendChild(cv); }
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (cv.width !== Math.round(innerWidth * dpr)) { cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr); }
+    const colors = ['#c4573a', '#cb922c', '#6a8c63', '#5f88a8', '#e8b65a', '#1a2035'];
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = (2.2 + Math.random() * 5.2) * spread;
+      burstLayer.parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2.6 * spread, r: 2 + Math.random() * 3.6, c: colors[i % colors.length], life: 1, rot: Math.random() * 3, vr: (Math.random() - 0.5) * 0.4, star: i % 7 === 0 });
+    }
+    if (!burstLayer.raf) burstLayer.raf = requestAnimationFrame(burstTick);
   }
+  function burstTick() {
+    const cv = burstLayer.cv;
+    const g = cv.getContext('2d');
+    const dpr = cv.width / innerWidth;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, innerWidth, innerHeight);
+    burstLayer.parts = burstLayer.parts.filter((p) => p.life > 0);
+    for (const p of burstLayer.parts) {
+      p.x += p.vx; p.y += p.vy; p.vx *= 0.94; p.vy = p.vy * 0.94 + 0.3; p.rot += p.vr; p.life -= 0.02;
+      g.save();
+      g.globalAlpha = Math.max(0, p.life);
+      g.translate(p.x, p.y);
+      g.rotate(p.rot);
+      g.fillStyle = p.c;
+      if (p.star) {
+        g.beginPath();
+        for (let k = 0; k < 8; k++) { const rr = k % 2 ? p.r * 0.45 : p.r * 1.3; g.lineTo(Math.cos((k * Math.PI) / 4) * rr, Math.sin((k * Math.PI) / 4) * rr); }
+        g.fill();
+      } else if (p.r > 3.6) g.fillRect(-p.r / 2, -p.r / 3, p.r, p.r * 0.6);
+      else { g.beginPath(); g.arc(0, 0, p.r / 2, 0, 6.283); g.fill(); }
+      g.restore();
+    }
+    burstLayer.raf = burstLayer.parts.length ? requestAnimationFrame(burstTick) : 0;
+    if (!burstLayer.raf) g.clearRect(0, 0, innerWidth, innerHeight);
+  }
+  const burstFrom = (el, count, spread) => { if (!el) return; const r = el.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, count, spread); };
 
   /* ---------- theme ---------- */
   function applyTheme() {
@@ -326,6 +452,10 @@
       <nav class="nav" aria-label="主要頁面">${NAV.map(([k, t]) => `<a href="#${k}" data-nav="${k}">${t}</a>`).join('')}</nav>
       <div class="top-tools">
         <button class="search-btn" id="open-search" aria-label="搜尋單字">${I.search}<span>搜尋單字或中文</span><kbd>⌘K</kbd></button>
+        <div class="amb">
+          <button class="icon-btn amb-btn" id="amb-btn" aria-expanded="false" aria-controls="amb-pop" aria-label="環境音" title="環境音">${I.wave}<span class="amb-bars" aria-hidden="true"><i></i><i></i><i></i></span></button>
+          <div class="amb-pop" id="amb-pop" role="dialog" aria-label="環境音" hidden></div>
+        </div>
         <button class="icon-btn" id="toggle-sfx" aria-label="音效"></button>
         <button class="icon-btn" id="toggle-theme" aria-label="切換深淺色"></button>
       </div>
@@ -338,6 +468,40 @@
     <nav class="tabbar" aria-label="主要頁面">${NAV.map(([k, t, ic]) => `<a href="#${k}" data-nav="${k}">${ic}<span>${t}</span></a>`).join('')}</nav>`;
   const view = $('#view');
 
+  function paintAmb() {
+    const btn = $('#amb-btn');
+    if (!btn) return;
+    const playing = !!SND.amb;
+    btn.classList.toggle('is-on', playing);
+    btn.title = playing ? `環境音：${AMBS.find((x) => x.k === SND.amb.id).zh}` : '環境音';
+    const pop = $('#amb-pop');
+    if (pop.hidden) return;
+    pop.innerHTML = `
+      <p class="eyebrow">環境音 · 陪你專心背單字</p>
+      <ul>
+        ${AMBS.map((a) => `<li><button data-amb="${a.k}" aria-pressed="${S.set.amb === a.k}"><b>${a.zh}</b><span>${a.note}</span></button></li>`).join('')}
+        <li><button data-amb="off" aria-pressed="${S.set.amb === 'off'}"><b>關閉</b><span>只保留單字發音與音效</span></button></li>
+      </ul>
+      <label class="amb-vol" for="amb-vol">音量<input id="amb-vol" type="range" min="0" max="1" step="0.05" value="${S.set.ambVol}"></label>
+      <p class="amb-note">唸單字和例句時，環境音會自動降低。</p>`;
+    pop.querySelectorAll('[data-amb]').forEach((b) => b.addEventListener('click', () => {
+      S.set.amb = b.dataset.amb; save();
+      armAudio();
+      setAmbience(S.set.amb === 'off' ? null : S.set.amb);
+      paintAmb();
+    }));
+    const vol = $('#amb-vol');
+    vol.addEventListener('input', () => { S.set.ambVol = +vol.value; if (SND.amb) rampTo(SND.amb.gain, ambLevel(), 0.1); });
+    vol.addEventListener('change', save);
+  }
+  function toggleAmbPop(open) {
+    const pop = $('#amb-pop');
+    const btn = $('#amb-btn');
+    pop.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) paintAmb();
+  }
+  document.addEventListener('pointerdown', (e) => { const pop = $('#amb-pop'); if (pop && !pop.hidden && !e.target.closest('.amb')) toggleAmbPop(false); });
   function paintTools() {
     const s = $('#toggle-sfx');
     s.innerHTML = S.set.sfx ? I.sound : I.mute;
@@ -350,6 +514,7 @@
   $('#toggle-sfx').addEventListener('click', () => { S.set.sfx = !S.set.sfx; save(); paintTools(); sfx('flip'); toast(S.set.sfx ? '音效已開啟' : '音效已關閉'); });
   $('#toggle-theme').addEventListener('click', () => { S.set.theme = isDark() ? 'light' : 'dark'; save(); applyTheme(); paintTools(); if (route.name === 'map') drawMap(); });
   $('#open-search').addEventListener('click', openPalette);
+  $('#amb-btn').addEventListener('click', () => toggleAmbPop($('#amb-pop').hidden));
 
   let toastTimer;
   function toast(msg) {
@@ -373,6 +538,7 @@
     if (!VIEWS[name]) name = 'today';
     if (cleanup) { cleanup(); cleanup = null; }
     const changed = route.name !== name || !view.innerHTML;
+    if (changed && view.innerHTML && SND.armed) sfx('page');
     route.name = name;
     $$('[data-nav]').forEach((a) => a.setAttribute('aria-current', a.dataset.nav === name || (name === 'learn' && a.dataset.nav === 'today') ? 'page' : 'false'));
     if (changed || !wordId) { VIEWS[name](); if (!wordId) window.scrollTo(0, 0); }
@@ -405,6 +571,7 @@
     return `${esc(s.slice(0, a))}<mark>${esc(f)}</mark>${esc(s.slice(a + f.length))}`;
   }
   document.addEventListener('click', (e) => {
+    if (e.target.closest('.chip, .seg button, .pick button, #e-star, .amb-pop button')) sfx('tap');
     const say = e.target.closest('[data-say]');
     if (say) { e.preventDefault(); e.stopPropagation(); speak(say.dataset.say, say.dataset.accent || S.set.accent, say.dataset.slow ? 0.8 : S.set.rate); return; }
     const wd = e.target.closest('[data-word]');
@@ -731,7 +898,7 @@
     sheet.querySelector('.sheet-close').addEventListener('click', closeEntry);
     $('#e-star').addEventListener('click', () => { const on = toggleStar(id); toast(on ? `已收藏 ${w.w}` : `已取消收藏 ${w.w}`); openEntry(id); refreshUnder(); });
     const kn = $('#e-known');
-    if (kn) kn.addEventListener('click', () => { markKnown(id); sfx('ok'); toast(`${w.w} 標為已熟，21 天後再複習`); openEntry(id); refreshUnder(); });
+    if (kn) kn.addEventListener('click', () => { markKnown(id); sfx('ignite'); burstFrom(kn, 26, 0.8); toast(`${w.w} 標為已熟，21 天後再複習`); openEntry(id); refreshUnder(); });
     const fg = $('#e-forget');
     if (fg) fg.addEventListener('click', () => { forget(id); toast(`${w.w} 已重設為未學`); openEntry(id); refreshUnder(); });
     if (prev) $('#e-prev').addEventListener('click', () => openEntry(prev));
@@ -812,7 +979,7 @@
     session = { queue: [...due, ...fresh], total: due.length + fresh.length, done: 0, revealed: false, tally: { 1: 0, 2: 0, 3: 0, 4: 0 }, seen: new Set() };
   }
   function viewLearn() {
-    if (!session || !session.queue.length) startSession();
+    if (!session || !session.queue.length) { startSession(); if (session.queue.length) sfx('start'); }
     paintLearn();
     const onKey = (e) => {
       if ($('.overlay') || !session || e.target.matches('input, textarea')) return;
@@ -824,6 +991,7 @@
   }
   function reveal() { session.revealed = true; sfx('flip'); paintLearn(); }
   function rate(g) {
+    if (g >= 3) { sfx('correct'); burstFrom(view.querySelector(`[data-g="${g}"]`), 18, 0.6); } else sfx('page');
     const id = session.queue.shift();
     const c = grade(id, g);
     session.tally[g]++;
@@ -836,7 +1004,7 @@
     const s = session;
     const pct = s.total ? (s.done / s.total) * 100 : 100;
     if (!s.queue.length) {
-      if (s.total) sfx('done');
+      if (s.total) { sfx('complete'); setTimeout(() => burst(innerWidth / 2, innerHeight * 0.38, 70, 1.4), 120); }
       const d = today();
       view.innerHTML = `<div class="wrap"><div class="learn">
         <div class="done">
@@ -1011,7 +1179,9 @@
     d.q++;
     if (ok) d.c++;
     save();
-    sfx(ok ? 'ok' : 'no');
+    sfx(ok ? 'correct' : 'wrong');
+    pracState.streak = ok ? (pracState.streak || 0) + 1 : 0;
+    if (ok && pracState.streak > 0 && pracState.streak % 3 === 0) setTimeout(() => sfx('streak'), 280);
   }
   function paintQuiz() {
     const P = pracState;
@@ -1086,8 +1256,10 @@
         recordAnswer(w.id, good);
         if (good) playWord(w);
         paintQuiz();
+        if (good) burstFrom($('.spell'), 26, 0.8);
       });
       if (!P.answered) $('#spell-in').focus({ preventScroll: true });
+      $('#spell-in').addEventListener('keydown', (e) => { if (e.key.length === 1 || e.key === 'Backspace') sfx('key'); });
     }
     if (P.mode === 'listen' && !P.answered && !q.played) { q.played = true; setTimeout(() => playWord(w), 250); }
   }
@@ -1102,13 +1274,15 @@
     const w = BY_ID.get(q.id);
     if (P.mode === 'cloze') speak(toeicEx(w).en); else if (P.mode === 'zh2en' || P.mode === 'listen') playWord(w);
     paintQuiz();
+    if (q.ok) burstFrom($('.opt.ok'), 26, 0.8);
   }
   function nextQ() { pracState.i++; pracState.answered = false; paintQuiz(); }
   function paintResult() {
     const P = pracState;
     const right = P.results.filter((r) => r.ok).length;
     const wrong = P.results.filter((r) => !r.ok).map((r) => BY_ID.get(r.id));
-    sfx('done');
+    sfx('complete');
+    if (right / P.results.length >= 0.8) setTimeout(() => burst(innerWidth / 2, innerHeight * 0.35, 70, 1.4), 120);
     const score = Math.round((right / P.results.length) * 100);
     const mode = MODES.find((m) => m.k === P.mode);
     const msg = score === 100 ? '全對，這組單字已經穩定。' : score >= 80 ? '表現穩定，把錯的幾個再看一次。' : score >= 50 ? '一半以上答對，錯的字加入收藏，明天再練。' : '先回到詞庫把這些字看熟，再回來挑戰。';
@@ -1421,6 +1595,7 @@
             <li>KK 音標依 CMU Pronouncing Dictionary 自動轉寫並人工校對常見多音字；15 個職場場景與 ${WORDS.filter((w) => w.tip).length} 則「多益考點」由本站編輯整理。</li>
             <li>單字插畫、場景插畫與美英發音錄音取自 Word Atlas（Word Atlas contributors，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>），本站已縮放並合併成圖集與音訊檔。${fmt(WORDS.filter((w) => w.ar === 'w').length)} 個字使用原字插畫、${WORDS.filter((w) => w.ar === 'r').length} 個字使用同字根插畫，其餘以所屬職場場景的插畫代替；有真人錄音的字共 ${fmt(WORDS.filter((w) => w.u).length)} 個，其餘使用裝置內建語音。</li>
             <li>複習排程採 SM-2 式間隔重複：答「記得」的字間隔會逐次拉長，連續記得到 21 天以上視為「已熟」。</li>
+            <li>背景配樂、三段環境音與所有介面音效，皆為本站以程式原創合成（D 大調電鋼琴、加法合成長音與卷積殘響），可在頂部的環境音選單切換或關閉。</li>
             <li>介面與學習流程致敬開源雅思單字專案 <a href="https://github.com/designfuchen/word-atlas" target="_blank" rel="noopener">詞光 Word Atlas</a>（MIT 授權），本站為獨立實作的多益版本。</li>
           </ul>
         </article>
@@ -1522,6 +1697,7 @@
       ov.querySelectorAll('[data-s]').forEach((b) => b.addEventListener('click', () => { start = +b.dataset.s; paint(); }));
       ov.querySelectorAll('[data-g]').forEach((b) => b.addEventListener('click', () => { goal = +b.dataset.g; paint(); }));
       ov.querySelector('[data-go]').addEventListener('click', () => {
+        sfx('start');
         S.set.start = start; S.set.goal = goal; S.onboarded = true;
         const d = today(); d.plan = (d.plan || []).filter((id) => S.cards[id]);
         save(); ov.remove(); document.documentElement.classList.remove('is-locked'); render();
@@ -1536,6 +1712,7 @@
   /* ---------- global keys ---------- */
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); return; }
+    if (e.key === 'Escape' && !$('#amb-pop').hidden) { toggleAmbPop(false); $('#amb-btn').focus(); return; }
     if (e.key === 'Escape') {
       const top = $$('.overlay').pop();
       if (!top) return;
