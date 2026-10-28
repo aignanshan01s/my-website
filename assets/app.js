@@ -112,7 +112,7 @@
 
   /* ---------- storage ---------- */
   const KEY = 'toeic-atlas-v1'; // kept from the first release so saved progress survives the rename
-  const DEFAULT_SET = { goal: 10, start: 400, accent: 'us', rate: 0.9, sfx: true, theme: 'system', amb: 'night', ambVol: 0.45 };
+  const DEFAULT_SET = { goal: 10, start: 400, accent: 'us', rate: 0.9, sfx: true, theme: 'system', amb: 'night', ambVol: 0.45, splash: true };
   function fresh() { return { v: 1, cards: {}, days: {}, stars: [], set: { ...DEFAULT_SET }, onboarded: false }; }
   function load() {
     try {
@@ -525,6 +525,25 @@
     toastTimer = setTimeout(() => el.remove(), 2400);
   }
 
+  /* ---------- transitions: View Transitions API with a CSS fallback ---------- */
+  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function vt(kind, update, after) {
+    if (reducedMotion()) { update(); if (after) after(); return; }
+    if (document.startViewTransition) {
+      document.documentElement.dataset.vt = kind;
+      const t = document.startViewTransition(update);
+      t.ready.catch(() => {});                 // a newer transition can skip this one; that is fine
+      t.updateCallbackDone.catch(() => {});
+      t.finished.catch(() => {}).finally(() => { if (document.documentElement.dataset.vt === kind) delete document.documentElement.dataset.vt; if (after) after(); });
+      return;
+    }
+    update();
+    const el = kind === 'card' ? view.querySelector('.flash, .q-card') : kind.startsWith('page') ? view : null;
+    if (el) { el.classList.remove('vt-fallback'); void el.offsetWidth; el.classList.add('vt-fallback'); }
+    if (after) after();
+  }
+  const NAV_ORDER = ['today', 'learn', 'atlas', 'practice', 'map', 'me'];
+
   /* ---------- router ---------- */
   const route = { name: 'today' };
   let cleanup = null;
@@ -537,11 +556,17 @@
     if (m) { wordId = +m[1]; name = route.name && route.name !== 'word' ? route.name : 'atlas'; }
     if (!VIEWS[name]) name = 'today';
     if (cleanup) { cleanup(); cleanup = null; }
+    const prevRoute = route.name;
     const changed = route.name !== name || !view.innerHTML;
     if (changed && view.innerHTML && SND.armed) sfx('page');
     route.name = name;
     $$('[data-nav]').forEach((a) => a.setAttribute('aria-current', a.dataset.nav === name || (name === 'learn' && a.dataset.nav === 'today') ? 'page' : 'false'));
-    if (changed || !wordId) { VIEWS[name](); if (!wordId) window.scrollTo(0, 0); }
+    if (changed || !wordId) {
+      const from = NAV_ORDER.indexOf(prevRoute); const to = NAV_ORDER.indexOf(name);
+      const doIt = () => { VIEWS[name](); if (!wordId) window.scrollTo(0, 0); };
+      if (changed && view.dataset.ready) vt(to >= from ? 'page-fwd' : 'page-back', doIt); else doIt();
+      view.dataset.ready = '1';
+    }
     paintTools();
     if (wordId && BY_ID.has(wordId)) openEntry(wordId, null, true);
   }
@@ -582,7 +607,7 @@
       return;
     }
     const open = e.target.closest('[data-open]');
-    if (open) { e.preventDefault(); const list = open.closest('[data-list]'); openEntry(+open.dataset.open, list ? listContext : null); }
+    if (open) { e.preventDefault(); const list = open.closest('[data-list]'); openEntry(+open.dataset.open, list ? listContext : null, false, open); }
   });
 
   /* ======================================================
@@ -827,7 +852,24 @@
      ENTRY (word card)
      ====================================================== */
   let entryCtx = null;
-  function openEntry(id, ctx, fromHash) {
+  let entrySource = null;
+  function openEntry(id, ctx, fromHash, trigger) {
+    const srcArt = trigger && !trigger.closest('.overlay') ? trigger.querySelector('.art') : null;
+    if (srcArt && !$('.overlay.is-entry') && document.startViewTransition && !reducedMotion()) {
+      entrySource = srcArt;
+      srcArt.style.viewTransitionName = 'word-art';
+      vt('modal', () => {
+        srcArt.style.viewTransitionName = '';
+        openEntryNow(id, ctx, fromHash);
+        const art = $('.overlay.is-entry .entry-side > .art');
+        if (art) art.style.viewTransitionName = 'word-art';
+      }, () => { const art = $('.overlay.is-entry .entry-side > .art'); if (art) art.style.viewTransitionName = ''; });
+      return;
+    }
+    if (!$('.overlay.is-entry')) entrySource = srcArt;
+    openEntryNow(id, ctx, fromHash);
+  }
+  function openEntryNow(id, ctx, fromHash) {
     const w = BY_ID.get(id);
     if (!w) return;
     entryCtx = ctx && ctx.length ? ctx : entryCtx && entryCtx.includes(id) ? entryCtx : null;
@@ -909,6 +951,16 @@
   function closeEntry() {
     const ov = $('.overlay.is-entry');
     if (!ov) return;
+    const src = entrySource; entrySource = null;
+    const art = ov.querySelector('.entry-side > .art');
+    if (src && src.isConnected && art && document.startViewTransition && !reducedMotion()) {
+      art.style.viewTransitionName = 'word-art';
+      vt('modal', () => { art.style.viewTransitionName = ''; closeEntryNow(ov); src.style.viewTransitionName = 'word-art'; }, () => { src.style.viewTransitionName = ''; });
+      return;
+    }
+    closeEntryNow(ov);
+  }
+  function closeEntryNow(ov) {
     const back = ov._prevFocus;
     ov.remove();
     entryCtx = null;
@@ -919,7 +971,7 @@
   function refreshUnder() {
     if (route.name === 'atlas') paintAtlas();
     else if (route.name === 'today' || route.name === 'me') VIEWS[route.name]();
-    else if (route.name === 'map') drawMap();
+    else if (route.name === 'map') { if (mapState.galaxy) mapState.galaxy.setStates(); else drawMap(); }
   }
 
   /* ---------- search palette ---------- */
@@ -998,7 +1050,7 @@
     if (c.due - Date.now() < 20 * MIN) session.queue.splice(Math.min(3, session.queue.length), 0, id);
     else session.done++;
     session.revealed = false;
-    paintLearn();
+    vt('card', paintLearn);
   }
   function paintLearn() {
     const s = session;
@@ -1276,7 +1328,7 @@
     paintQuiz();
     if (q.ok) burstFrom($('.opt.ok'), 26, 0.8);
   }
-  function nextQ() { pracState.i++; pracState.answered = false; paintQuiz(); }
+  function nextQ() { pracState.i++; pracState.answered = false; vt('card', paintQuiz); }
   function paintResult() {
     const P = pracState;
     const right = P.results.filter((r) => r.ok).length;
@@ -1325,22 +1377,307 @@
   /* ======================================================
      MAP (thousand-star chart)
      ====================================================== */
-  const mapState = { lv: 0, stars: [], hover: null, raf: 0 };
+  /* ======================================================
+     3D STAR MAP (WebGL): four orbits for the four score legs, one spiral arm per workplace topic
+     ====================================================== */
+  const ARM_TOPICS = TOPICS.filter((t) => t.k !== 'core');
+  const TOPIC_RGB = { off: [127, 178, 230], hr: [239, 143, 107], fin: [242, 196, 109], mkt: [214, 160, 230], biz: [159, 184, 255], law: [180, 170, 240],
+    ops: [216, 190, 150], tech: [130, 200, 255], evt: [155, 227, 143], trv: [127, 214, 230], hos: [255, 179, 138], shop: [255, 159, 168],
+    home: [190, 220, 120], med: [143, 208, 200], core: [210, 214, 235] };
+  const ORBIT_R = { 400: [0.16, 0.32], 600: [0.34, 0.5], 800: [0.52, 0.68], 990: [0.7, 0.88] };
+  function seeded(seed) {
+    let s = seed >>> 0 || 1;
+    return () => { s = (s + 0x6d2b79f5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+  }
+  function galaxyLayout() {
+    const n = WORDS.length;
+    const pos = new Float32Array(n * 3);
+    const col = new Float32Array(n * 3);
+    const seed = new Float32Array(n);
+    const labelAt = {};
+    WORDS.forEach((w, i) => {
+      const r = seeded(hash(w.w) + w.id * 7919);
+      const g = () => (r() + r() + r() - 1.5) / 1.5;
+      const [r0, r1] = ORBIT_R[w.lv];
+      const radius = r0 + r() * (r1 - r0);
+      let angle;
+      if (w.t === 'core') angle = r() * Math.PI * 2;                 // core words drift between the arms
+      else {
+        const arm = ARM_TOPICS.findIndex((t) => t.k === w.t);
+        angle = (arm / ARM_TOPICS.length) * Math.PI * 2 + radius * 2.9 + g() * (0.07 + 0.02 / radius);
+      }
+      const thick = (w.t === 'core' ? 0.03 : 0.045) * (1 - radius * 0.5);
+      pos.set([Math.cos(angle) * radius, g() * thick, Math.sin(angle) * radius], i * 3);
+      col.set(TOPIC_RGB[w.t].map((v) => v / 255), i * 3);
+      seed[i] = r();
+    });
+    ARM_TOPICS.forEach((t, a) => {
+      const radius = 0.94; const angle = (a / ARM_TOPICS.length) * Math.PI * 2 + radius * 2.9;
+      labelAt[t.k] = [Math.cos(angle) * radius, 0, Math.sin(angle) * radius];
+    });
+    // decorative dust: spiral haze plus a far star shell
+    const dn = 2600; const dust = new Float32Array(dn * 3); const dcol = new Float32Array(dn * 3); const dseed = new Float32Array(dn);
+    const r = seeded(424242);
+    for (let i = 0; i < dn; i++) {
+      const g = () => (r() + r() + r() - 1.5) / 1.5;
+      let x, y, z, c;
+      if (i < 2000) {
+        const radius = 0.05 + Math.pow(r(), 0.8) * 1.0; const arm = Math.floor(r() * ARM_TOPICS.length);
+        const ang = (arm / ARM_TOPICS.length) * Math.PI * 2 + radius * 2.9 + g() * 0.22;
+        x = Math.cos(ang) * radius; z = Math.sin(ang) * radius; y = g() * 0.06 * (1 - radius * 0.4);
+        c = TOPIC_RGB[ARM_TOPICS[arm].k].map((v) => (v / 255) * 0.55 + 0.25);
+      } else {
+        const u = r() * 2 - 1; const th = r() * Math.PI * 2; const R = 4 + r() * 3;
+        x = Math.sqrt(1 - u * u) * Math.cos(th) * R; y = u * R; z = Math.sqrt(1 - u * u) * Math.sin(th) * R; c = [0.85, 0.87, 1];
+      }
+      dust.set([x, y, z], i * 3); dcol.set(c, i * 3); dseed[i] = r();
+    }
+    // nebula haze: large, faint sprites along each arm plus a warm core bulge
+    const nn = 420; const neb = new Float32Array(nn * 3); const ncol = new Float32Array(nn * 3); const nseed = new Float32Array(nn);
+    for (let i = 0; i < nn; i++) {
+      const g = () => (r() + r() + r() - 1.5) / 1.5;
+      let x, y, z, c;
+      if (i < 60) { const rr = Math.abs(g()) * 0.12; const a = r() * 6.283; x = Math.cos(a) * rr; z = Math.sin(a) * rr; y = g() * 0.03; c = [1.0, 0.82, 0.55]; }
+      else {
+        const arm = i % ARM_TOPICS.length; const radius = 0.15 + r() * 0.85;
+        const ang = (arm / ARM_TOPICS.length) * Math.PI * 2 + radius * 2.9 + g() * 0.12;
+        x = Math.cos(ang) * radius; z = Math.sin(ang) * radius; y = g() * 0.04; c = TOPIC_RGB[ARM_TOPICS[arm].k].map((v) => v / 255);
+      }
+      neb.set([x, y, z], i * 3); ncol.set(c, i * 3); nseed[i] = r();
+    }
+    return { n, pos, col, seed, labelAt, dust, dcol, dseed, dn, neb, ncol, nseed, nn };
+  }
+
+  const STAR_VS = `
+    attribute vec3 aPos; attribute vec3 aCol; attribute float aSeed; attribute float aState;
+    uniform mat4 uVP; uniform float uTime, uIntro, uScale, uMotion, uDust;
+    varying vec3 vCol; varying float vAlpha; varying float vCore;
+    void main() {
+      float t = clamp((uIntro - aSeed * 0.35) / 0.65, 0.0, 1.0);
+      float e = 1.0 - pow(1.0 - t, 3.0);
+      float ang = atan(aPos.z, aPos.x) + (1.0 - e) * 3.2 * (1.0 - uDust * 0.7);
+      float rad = length(aPos.xz) * mix(2.2, 1.0, e);
+      vec3 p = vec3(cos(ang) * rad, aPos.y * e, sin(ang) * rad);
+      vec4 clip = uVP * vec4(p, 1.0);
+      gl_Position = clip;
+      float tw = mix(1.0, 0.72 + 0.28 * sin(uTime * (0.8 + aSeed * 2.2) + aSeed * 60.0), uMotion);
+      float st = aState;                       // 0 new, 1 learning, 2 mastered, 3 dimmed, 4 hovered
+      float size = 2.6 + aSeed * 1.4; float a = 0.55; float core = 0.0; vec3 c = mix(aCol, vec3(0.82, 0.86, 1.0), 0.35);
+      if (uDust > 1.5) { size = 46.0 + aSeed * 90.0; a = 0.05 + aSeed * 0.03; c = aCol; }
+      else if (uDust > 0.5) { size = 1.6 + aSeed * 1.8; a = 0.3 + aSeed * 0.3; c = aCol; }
+      else if (st > 3.5) { size = 15.0; a = 1.0; core = 1.0; c = vec3(1.0); }
+      else if (st > 2.5) { size = 2.0; a = 0.12; }
+      else if (st > 1.5) { size = 9.5 + aSeed * 3.0; a = 1.0; core = 1.0; c = mix(aCol, vec3(1.0, 0.95, 0.82), 0.35); }
+      else if (st > 0.5) { size = 5.5 + aSeed * 1.5; a = 0.95; c = aCol; }
+      gl_PointSize = size * uScale / clip.w * tw;
+      vCol = c; vAlpha = a * e * tw; vCore = core;
+    }`;
+  const STAR_FS = `
+    precision mediump float;
+    varying vec3 vCol; varying float vAlpha; varying float vCore;
+    void main() {
+      vec2 d = gl_PointCoord - 0.5; float r = length(d) * 2.0;
+      if (r > 1.0) discard;
+      float glow = exp(-r * r * 4.5);
+      float hot = vCore * exp(-r * r * 40.0);
+      gl_FragColor = vec4(vCol * glow + vec3(hot), (glow + hot) * vAlpha);
+    }`;
+  const LINE_VS = `attribute vec3 aPos; uniform mat4 uVP; void main(){ gl_Position = uVP * vec4(aPos, 1.0); }`;
+  const LINE_FS = `precision mediump float; uniform vec4 uColor; void main(){ gl_FragColor = uColor; }`;
+
+  function mat4Perspective(fovy, aspect, near, far) {
+    const f = 1 / Math.tan(fovy / 2); const nf = 1 / (near - far);
+    return [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0];
+  }
+  function mat4LookAt(e, c) {
+    let z = [e[0] - c[0], e[1] - c[1], e[2] - c[2]]; let l = Math.hypot(...z); z = z.map((v) => v / l);
+    let x = [z[2], 0, -z[0]]; l = Math.hypot(...x) || 1; x = x.map((v) => v / l);
+    const y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]];
+    return [x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0,
+      -(x[0] * e[0] + x[1] * e[1] + x[2] * e[2]), -(y[0] * e[0] + y[1] * e[1] + y[2] * e[2]), -(z[0] * e[0] + z[1] * e[1] + z[2] * e[2]), 1];
+  }
+  function mat4Mul(a, b) {
+    const o = new Array(16);
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k]; o[c * 4 + r] = s; }
+    return o;
+  }
+
+  function createGalaxy(wrap) {
+    const cv = document.createElement('canvas');
+    cv.className = 'gx-canvas';
+    const gl = cv.getContext('webgl', { antialias: true, premultipliedAlpha: false, alpha: false });
+    if (!gl) return null;
+    wrap.prepend(cv);
+    const compile = (vs, fs) => {
+      const p = gl.createProgram();
+      [[gl.VERTEX_SHADER, vs], [gl.FRAGMENT_SHADER, fs]].forEach(([type, src]) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); gl.attachShader(p, s); });
+      gl.linkProgram(p);
+      if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+      return p;
+    };
+    let prog, lineProg;
+    try { prog = compile(STAR_VS, STAR_FS); lineProg = compile(LINE_VS, LINE_FS); } catch (e) { cv.remove(); return null; }
+    const L = galaxyLayout();
+    const buf = (data) => { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW); return b; };
+    const B = { pos: buf(L.pos), col: buf(L.col), seed: buf(L.seed), state: gl.createBuffer(), dpos: buf(L.dust), dcol: buf(L.dcol), dseed: buf(L.dseed), dstate: buf(new Float32Array(L.dn)), npos: buf(L.neb), ncol: buf(L.ncol), nseed: buf(L.nseed), nstate: buf(new Float32Array(L.nn)) };
+    // orbit rings at the outer edge of each leg
+    const ringPts = []; const RING_SEG = 160;
+    [0.33, 0.51, 0.69, 0.89].forEach((rr) => { for (let i = 0; i < RING_SEG; i++) { const a = (i / RING_SEG) * Math.PI * 2; ringPts.push(Math.cos(a) * rr, 0, Math.sin(a) * rr); } });
+    B.ring = buf(new Float32Array(ringPts));
+    const loc = (p, names) => Object.fromEntries(names.map((n) => [n, n[0] === 'a' ? gl.getAttribLocation(p, n) : gl.getUniformLocation(p, n)]));
+    const U = loc(prog, ['aPos', 'aCol', 'aSeed', 'aState', 'uVP', 'uTime', 'uIntro', 'uScale', 'uMotion', 'uDust']);
+    const LU = loc(lineProg, ['aPos', 'uVP', 'uColor']);
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cam = { yaw: -0.6, pitch: 0.62, dist: 2.25, vyaw: 0, vpitch: 0, idle: 0 };
+    const G = { cv, gl, L, cam, lv: 0, hover: -1, intro: reduce ? 1 : 0, raf: 0, vp: null, w: 0, h: 0, states: new Float32Array(L.n), proj: new Float32Array(L.n * 3) };
+    G.setStates = () => {
+      WORDS.forEach((w, i) => {
+        const st = status(w.id);
+        let v = st === 'mastered' ? 2 : st === 'learning' ? 1 : 0;
+        if (G.lv && w.lv !== G.lv) v = 3;
+        if (i === G.hover) v = 4;
+        G.states[i] = v;
+      });
+      gl.bindBuffer(gl.ARRAY_BUFFER, B.state); gl.bufferData(gl.ARRAY_BUFFER, G.states, gl.DYNAMIC_DRAW);
+    };
+    G.resize = () => {
+      const r = wrap.getBoundingClientRect(); const dpr = Math.min(2, window.devicePixelRatio || 1);
+      G.w = r.width; G.h = r.height; cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+      cv.style.width = `${r.width}px`; cv.style.height = `${r.height}px`; G.dpr = dpr;
+    };
+    const attrib = (a, b, size) => { gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, size, gl.FLOAT, false, 0, 0); };
+    let last = performance.now(); let t0 = last;
+    const frame = (now) => {
+      const dt = Math.min(50, now - last); last = now;
+      if (!document.hidden) {
+        const c = G.cam;
+        if (!G.dragging) {
+          c.yaw += c.vyaw; c.pitch += c.vpitch; c.vyaw *= 0.94; c.vpitch *= 0.9;
+          c.idle += dt;
+          if (!reduce && c.idle > 2500) c.yaw += 0.00006 * dt;
+        }
+        c.pitch = Math.max(0.12, Math.min(1.35, c.pitch));
+        if (G.intro < 1) G.intro = Math.min(1, G.intro + dt / 2400);
+        const eye = [Math.cos(c.pitch) * Math.cos(c.yaw) * c.dist, Math.sin(c.pitch) * c.dist, Math.cos(c.pitch) * Math.sin(c.yaw) * c.dist];
+        G.vp = mat4Mul(mat4Perspective(0.9, G.w / G.h, 0.05, 30), mat4LookAt(eye, [0, -0.02, 0]));
+        gl.viewport(0, 0, cv.width, cv.height);
+        gl.clearColor(0.027, 0.043, 0.086, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        // orbits
+        gl.useProgram(lineProg); gl.uniformMatrix4fv(LU.uVP, false, G.vp); attrib(LU.aPos, B.ring, 3);
+        [400, 600, 800, 990].forEach((lv, k) => {
+          const on = !G.lv || G.lv === lv;
+          gl.uniform4f(LU.uColor, 0.95, 0.86, 0.62, (on ? 0.16 : 0.05) * G.intro);
+          gl.drawArrays(gl.LINE_LOOP, k * RING_SEG, RING_SEG);
+        });
+        // stars
+        gl.useProgram(prog);
+        gl.uniformMatrix4fv(U.uVP, false, G.vp);
+        gl.uniform1f(U.uTime, (now - t0) / 1000); gl.uniform1f(U.uIntro, G.intro);
+        gl.uniform1f(U.uScale, G.dpr * Math.min(G.w, G.h) / 300); gl.uniform1f(U.uMotion, reduce ? 0 : 1);
+        gl.uniform1f(U.uDust, 2); attrib(U.aPos, B.npos, 3); attrib(U.aCol, B.ncol, 3); attrib(U.aSeed, B.nseed, 1); attrib(U.aState, B.nstate, 1);
+        gl.drawArrays(gl.POINTS, 0, L.nn);
+        gl.uniform1f(U.uDust, 1); attrib(U.aPos, B.dpos, 3); attrib(U.aCol, B.dcol, 3); attrib(U.aSeed, B.dseed, 1); attrib(U.aState, B.dstate, 1);
+        gl.drawArrays(gl.POINTS, 0, L.dn);
+        gl.uniform1f(U.uDust, 0); attrib(U.aPos, B.pos, 3); attrib(U.aCol, B.col, 3); attrib(U.aSeed, B.seed, 1); attrib(U.aState, B.state, 1);
+        gl.drawArrays(gl.POINTS, 0, L.n);
+        G.placeLabels();
+      }
+      G.raf = requestAnimationFrame(frame);
+    };
+    const project = (x, y, z) => {
+      const m = G.vp; const cx = m[0] * x + m[4] * y + m[8] * z + m[12]; const cy = m[1] * x + m[5] * y + m[9] * z + m[13]; const cw = m[3] * x + m[7] * y + m[11] * z + m[15];
+      return [(cx / cw * 0.5 + 0.5) * G.w, (1 - (cy / cw * 0.5 + 0.5)) * G.h, cw];
+    };
+    // floating topic labels and orbit labels
+    const labels = document.createElement('div'); labels.className = 'gx-labels'; wrap.append(labels);
+    const topicEls = ARM_TOPICS.map((t) => { const el = document.createElement('span'); el.className = 'gx-label'; el.textContent = t.zh; labels.append(el); return [t.k, el]; });
+    const orbitEls = [[400, 0.33], [600, 0.51], [800, 0.69], [990, 0.89]].map(([lv, rr]) => { const el = document.createElement('span'); el.className = 'gx-orbit'; el.textContent = `${lv} ${LV[lv].name}`; labels.append(el); return [rr, el, lv]; });
+    G.placeLabels = () => {
+      if (!G.vp) return;
+      topicEls.forEach(([k, el]) => {
+        const [x, y, w] = project(...L.labelAt[k]);
+        const a = Math.max(0, Math.min(1, (3.4 - w) / 1.6)) * G.intro;
+        el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`; el.style.opacity = a.toFixed(2);
+      });
+      orbitEls.forEach(([rr, el, lv]) => {
+        const ang = -G.cam.yaw + Math.PI / 2;                 // keep the orbit label at the front of the ring
+        const [x, y] = project(Math.cos(ang) * rr, 0, Math.sin(ang) * rr);
+        el.style.transform = `translate(${x}px, ${y}px) translate(-50%, 6px)`; el.style.opacity = ((!G.lv || G.lv === lv ? 0.85 : 0.3) * G.intro).toFixed(2);
+      });
+    };
+    G.pick = (mx, my) => {
+      let best = -1; let bd = 18 * 18;
+      for (let i = 0; i < L.n; i++) {
+        if (G.states[i] === 3) continue;
+        const [x, y, w] = project(L.pos[i * 3], L.pos[i * 3 + 1], L.pos[i * 3 + 2]);
+        if (w <= 0) continue;
+        const d = (x - mx) ** 2 + (y - my) ** 2 - (G.states[i] >= 1 ? 40 : 0);
+        if (d < bd) { bd = d; best = i; }
+      }
+      return best;
+    };
+    G.screenOf = (i) => project(L.pos[i * 3], L.pos[i * 3 + 1], L.pos[i * 3 + 2]);
+    // pointer: drag to orbit, wheel / pinch to zoom, tap to open
+    const pts = new Map(); let downAt = null; let pinch0 = 0; let dist0 = 0;
+    cv.addEventListener('pointerdown', (e) => {
+      cv.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
+      downAt = [e.clientX, e.clientY, performance.now()]; G.dragging = true; G.cam.idle = 0; G.cam.vyaw = G.cam.vpitch = 0;
+      if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); dist0 = G.cam.dist; }
+    });
+    cv.addEventListener('pointermove', (e) => {
+      const r = cv.getBoundingClientRect();
+      if (pts.has(e.pointerId)) {
+        const prev = pts.get(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
+        if (pts.size === 2) {
+          const [a, b] = [...pts.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+          G.cam.dist = Math.max(1.05, Math.min(3.4, dist0 * pinch0 / Math.max(1, d)));
+        } else {
+          const dx = e.clientX - prev[0]; const dy = e.clientY - prev[1];
+          G.cam.vyaw = dx * 0.0055; G.cam.vpitch = dy * 0.004;
+          G.cam.yaw += G.cam.vyaw; G.cam.pitch += G.cam.vpitch;
+        }
+        G.onHover(-1);
+      } else G.onHover(G.pick(e.clientX - r.left, e.clientY - r.top), e.clientX - r.left, e.clientY - r.top);
+    });
+    const up = (e) => {
+      pts.delete(e.pointerId);
+      if (!pts.size) {
+        G.dragging = false;
+        if (downAt && Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) < 6 && performance.now() - downAt[2] < 500) {
+          const r = cv.getBoundingClientRect(); const i = G.pick(e.clientX - r.left, e.clientY - r.top);
+          if (i >= 0) G.onOpen(i);
+          G.cam.vyaw = G.cam.vpitch = 0;
+        }
+        downAt = null;
+      }
+    };
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    cv.addEventListener('pointerleave', () => { if (!pts.size) G.onHover(-1); });
+    cv.addEventListener('wheel', (e) => { e.preventDefault(); G.cam.idle = 0; G.cam.dist = Math.max(1.05, Math.min(3.4, G.cam.dist * Math.exp(e.deltaY * 0.0012))); }, { passive: false });
+    cv.addEventListener('dblclick', () => { Object.assign(G.cam, { yaw: -0.6, pitch: 0.62, dist: 2.25, vyaw: 0, vpitch: 0 }); });
+    G.start = () => { G.resize(); G.setStates(); if (!G.raf) G.raf = requestAnimationFrame(frame); };
+    G.stop = () => { cancelAnimationFrame(G.raf); G.raf = 0; };
+    return G;
+  }
+
+  const mapState = { lv: 0, stars: [], hover: null, raf: 0, galaxy: null };
   function viewMap() {
     const all = counts();
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">星圖 · 夜航靠的 15 個星座</span>
+        <span class="eyebrow">星圖 · 四條航道 · 十四條職場旋臂</span>
         <h1>每學會一個字，就點亮一顆星。</h1>
-        <p class="sub">1,000 顆星依職場場景聚成星座。灰色是還沒學的字，帶顏色的是學習中，發光的是已熟。點一顆星就能打開詞卡。</p>
+        <p class="sub">由內到外四條軌道是 400、600、800、990 四段航程，每條旋臂是一個職場場景，通用核心字散布在整片星盤。學習中的字會亮起，已熟的字會燃成金白色。</p>
       </header>
       <div class="chips" style="margin-bottom:16px" role="group" aria-label="分數航段">
         <button class="chip" data-mlv="0" aria-pressed="${mapState.lv === 0}">全部航段</button>
         ${LEVELS.map((l) => `<button class="chip lv-${l.lv}" data-mlv="${l.lv}" aria-pressed="${mapState.lv === l.lv}"><span class="dot"></span>${l.lv} ${l.name}</button>`).join('')}
       </div>
-      <div class="map-wrap" id="map-wrap">
-        <canvas id="map" role="img" aria-label="千詞星圖：已學 ${all.learning + all.mastered} 個，已熟 ${all.mastered} 個"></canvas>
-        <div class="map-legend"><span><i style="background:rgba(214,220,240,.5)"></i>未學</span><span><i style="background:rgb(240,196,100);box-shadow:0 0 6px rgb(240,196,100)"></i>學習中（依分數段著色）</span><span><i style="background:#fff8e8;box-shadow:0 0 8px #ffe0a0"></i>已熟</span></div>
+      <div class="map-wrap" id="map-wrap" role="img" aria-label="千詞星圖：已學 ${all.learning + all.mastered} 個，已熟 ${all.mastered} 個">
+        <canvas id="map"></canvas>
+        <div class="map-legend"><span><i style="background:rgba(214,220,240,.5)"></i>未學</span><span><i style="background:rgb(240,196,100);box-shadow:0 0 6px rgb(240,196,100)"></i>學習中</span><span><i style="background:#fff8e8;box-shadow:0 0 8px #ffe0a0"></i>已熟</span></div>
+        <div class="gx-hint" id="gx-hint"><span class="gx-hint-long">拖曳旋轉 · 滾輪或雙指縮放 · 點星星打開詞卡 · 雙擊回正</span><span class="gx-hint-short">拖曳旋轉 · 雙指縮放 · 點星星看詞卡</span></div>
       </div>
       <section class="section">
         <div class="map-stats">
@@ -1348,48 +1685,61 @@
         </div>
       </section>
     </div>`;
-    view.querySelectorAll('[data-mlv]').forEach((b) => b.addEventListener('click', () => {
-      mapState.lv = +b.dataset.mlv;
-      view.querySelectorAll('[data-mlv]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-      drawMap();
-    }));
-    const cv = $('#map');
     const wrap = $('#map-wrap');
     const tip = document.createElement('div');
     tip.className = 'map-tip';
     tip.hidden = true;
     wrap.appendChild(tip);
-    const find = (e) => {
-      const r = cv.getBoundingClientRect();
-      const x = e.clientX - r.left;
-      const y = e.clientY - r.top;
-      let best = null;
-      let bd = 14 * 14;
-      for (const s of mapState.stars) { const d = (s.x - x) ** 2 + (s.y - y) ** 2; if (d < bd) { bd = d; best = s; } }
-      return { best, x, y };
+    const showTip = (w, x, y) => {
+      if (!w) { tip.hidden = true; return; }
+      tip.innerHTML = `${art(w)}<span><b>${esc(w.w)}</b>${esc(w.s[0][1])} · ${w.lv}</span>`;
+      tip.hidden = false;
+      const r = wrap.getBoundingClientRect();
+      tip.style.left = `${Math.max(8, Math.min(x + 16, r.width - tip.offsetWidth - 8))}px`;
+      tip.style.top = `${Math.max(8, Math.min(y - 70, r.height - tip.offsetHeight - 8))}px`;
     };
-    cv.addEventListener('mousemove', (e) => {
-      const { best, x, y } = find(e);
-      mapState.hover = best;
-      if (best) {
-        const w = BY_ID.get(best.id);
-        tip.innerHTML = `${art(w)}<span><b>${esc(w.w)}</b>${esc(w.s[0][1])} · ${w.lv}</span>`;
-        tip.hidden = false;
-        const r = cv.getBoundingClientRect();
-        tip.style.left = `${Math.max(8, Math.min(x + 16, r.width - tip.offsetWidth - 8))}px`;
-        tip.style.top = `${Math.max(8, Math.min(y - 70, r.height - tip.offsetHeight - 8))}px`;
-        cv.style.cursor = 'pointer';
-      } else { tip.hidden = true; cv.style.cursor = 'crosshair'; }
-    });
-    cv.addEventListener('mouseleave', () => { tip.hidden = true; mapState.hover = null; });
-    cv.addEventListener('click', (e) => { const { best } = find(e); if (best) openEntry(best.id, mapState.stars.map((s) => s.id)); });
-    const ro = 'ResizeObserver' in window ? new ResizeObserver(() => drawMap()) : null;
-    if (ro) ro.observe(wrap); else drawMap();
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let last = 0;
-    const loop = (t) => { mapState.raf = requestAnimationFrame(loop); if (t - last > 60) { last = t; paintStars(t); } };
-    if (!reduce) mapState.raf = requestAnimationFrame(loop);
-    cleanup = () => { cancelAnimationFrame(mapState.raf); if (ro) ro.disconnect(); };
+    const G = createGalaxy(wrap);
+    mapState.galaxy = G;
+    if (G) {
+      $('#map').remove();
+      G.lv = mapState.lv;
+      G.onHover = (i, x, y) => {
+        if (i === G.hover) { if (i >= 0) showTip(WORDS[i], x, y); return; }
+        G.hover = i; G.setStates(); G.cv.style.cursor = i >= 0 ? 'pointer' : 'grab';
+        showTip(i >= 0 ? WORDS[i] : null, x, y);
+        if (i >= 0) sfx('tap');
+      };
+      G.onOpen = (i) => { sfx('ignite'); openEntry(WORDS[i].id, WORDS.map((w) => w.id)); };
+      const ro = 'ResizeObserver' in window ? new ResizeObserver(() => G.resize()) : null;
+      if (ro) ro.observe(wrap);
+      G.start();
+      setTimeout(() => { const h = $('#gx-hint'); if (h) h.classList.add('is-faded'); }, 5000);
+      cleanup = () => { G.stop(); if (ro) ro.disconnect(); mapState.galaxy = null; };
+    } else {
+      $('#gx-hint').remove();
+      const cv = $('#map');
+      const find = (e) => {
+        const r = cv.getBoundingClientRect(); const x = e.clientX - r.left; const y = e.clientY - r.top;
+        let best = null; let bd = 14 * 14;
+        for (const s of mapState.stars) { const d = (s.x - x) ** 2 + (s.y - y) ** 2; if (d < bd) { bd = d; best = s; } }
+        return { best, x, y };
+      };
+      cv.addEventListener('mousemove', (e) => { const { best, x, y } = find(e); mapState.hover = best; showTip(best ? BY_ID.get(best.id) : null, x, y); cv.style.cursor = best ? 'pointer' : 'crosshair'; });
+      cv.addEventListener('mouseleave', () => { tip.hidden = true; mapState.hover = null; });
+      cv.addEventListener('click', (e) => { const { best } = find(e); if (best) openEntry(best.id, mapState.stars.map((s) => s.id)); });
+      const ro = 'ResizeObserver' in window ? new ResizeObserver(() => drawMap()) : null;
+      if (ro) ro.observe(wrap); else drawMap();
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let last = 0;
+      const loop = (t) => { mapState.raf = requestAnimationFrame(loop); if (t - last > 60) { last = t; paintStars(t); } };
+      if (!reduce) mapState.raf = requestAnimationFrame(loop);
+      cleanup = () => { cancelAnimationFrame(mapState.raf); if (ro) ro.disconnect(); };
+    }
+    view.querySelectorAll('[data-mlv]').forEach((b) => b.addEventListener('click', () => {
+      mapState.lv = +b.dataset.mlv;
+      view.querySelectorAll('[data-mlv]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      if (mapState.galaxy) { mapState.galaxy.lv = mapState.lv; mapState.galaxy.setStates(); } else drawMap();
+    }));
   }
   function drawMap() {
     const cv = $('#map');
@@ -1558,6 +1908,7 @@
           <div class="setting"><span class="lab">新詞從哪一段開始</span><div class="chips">${LEVELS.map((l) => `<button class="chip lv-${l.lv}" data-start="${l.lv}" aria-pressed="${S.set.start === l.lv}"><span class="dot"></span>${l.lv} ${l.name}</button>`).join('')}</div><span class="hint">這一段學完後，會自動接著下一段。</span></div>
           <div class="setting"><span class="lab">預設發音</span><div class="seg">${[['us', '美式'], ['uk', '英式']].map(([v, t]) => `<button data-accent-set="${v}" aria-pressed="${S.set.accent === v}">${t}</button>`).join('')}</div><span class="hint">多益聽力包含美、英、加、澳四種口音，兩種都聽熟最保險。</span></div>
           <div class="setting"><label for="rate">朗讀速度 <span class="num" id="rate-v">${S.set.rate.toFixed(2)}×</span></label><input id="rate" type="range" min="0.6" max="1.2" step="0.05" value="${S.set.rate}"></div>
+          <div class="setting"><span class="lab">開場動畫</span><div class="seg">${[[true, '每天第一次播放'], [false, '關閉']].map(([v, t]) => `<button data-splash-set="${v}" aria-pressed="${S.set.splash === v}">${t}</button>`).join('')}</div></div>
           <div class="setting"><span class="lab">外觀</span><div class="seg">${[['system', '跟隨系統'], ['light', '淺色'], ['dark', '深色']].map(([v, t]) => `<button data-theme-set="${v}" aria-pressed="${S.set.theme === v}">${t}</button>`).join('')}</div></div>
           <div class="setting">
             <span class="lab">備份與還原</span>
@@ -1604,6 +1955,7 @@
     view.querySelectorAll('[data-goal]').forEach((b) => b.addEventListener('click', () => { S.set.goal = +b.dataset.goal; save(); plan(); viewMe(); toast(`每日新詞改為 ${S.set.goal} 個`); }));
     view.querySelectorAll('[data-start]').forEach((b) => b.addEventListener('click', () => { S.set.start = +b.dataset.start; const d = today(); d.plan = (d.plan || []).filter((id) => S.cards[id]); save(); plan(); viewMe(); toast(`新詞改從 ${S.set.start} 分段開始`); }));
     view.querySelectorAll('[data-accent-set]').forEach((b) => b.addEventListener('click', () => { S.set.accent = b.dataset.accentSet; save(); viewMe(); playWord(BY_ID.get(1)); }));
+    view.querySelectorAll('[data-splash-set]').forEach((b) => b.addEventListener('click', () => { S.set.splash = b.dataset.splashSet === 'true'; save(); viewMe(); }));
     view.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => { S.set.theme = b.dataset.themeSet; save(); applyTheme(); paintTools(); viewMe(); }));
     const rate = $('#rate');
     rate.addEventListener('input', () => { S.set.rate = +rate.value; $('#rate-v').textContent = `${S.set.rate.toFixed(2)}×`; });
@@ -1709,6 +2061,121 @@
     ov.querySelector('[data-go]').focus();
   }
 
+  /* ======================================================
+     SPLASH: stardust gathers into the mark, the name and the wordmark; a tap opens the cabin door
+     ====================================================== */
+  const SPLASH_KEY = 'toeic-voyage:splash';
+  function shouldSplash() {
+    if (S.set.splash === false) return false;
+    const h = (location.hash || '').slice(1);
+    if (h && h !== 'today') return false;               // deep links go straight to the content
+    try { return localStorage.getItem(SPLASH_KEY) !== ymd(); } catch (e) { return true; }
+  }
+  function splashTargets(w, h, count) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    const s = Math.min(w, h); const cx = w / 2; const R = s * 0.075; const cy = h * 0.5 - s * 0.2;
+    g.fillStyle = g.strokeStyle = '#fff';
+    // the mark: a ring, a dotted flight path and a small plane
+    g.lineWidth = Math.max(2, s * 0.007);
+    g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
+    g.setLineDash([s * 0.004, s * 0.014]); g.beginPath(); g.moveTo(cx - R * 0.62, cy + R * 0.28); g.quadraticCurveTo(cx, cy + R * 0.1, cx + R * 0.48, cy - R * 0.45); g.stroke(); g.setLineDash([]);
+    g.beginPath(); g.moveTo(cx + R * 0.36, cy - R * 0.5); g.lineTo(cx + R * 0.68, cy - R * 0.62); g.lineTo(cx + R * 0.58, cy - R * 0.3); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(cx - R * 0.32, cy + R * 0.55); g.lineTo(cx + R * 0.32, cy + R * 0.55); g.stroke();
+    const zh = Math.min(w * 0.17, s * 0.15);
+    g.font = `900 ${zh}px "Noto Serif TC", "Songti TC", "PMingLiU", serif`;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('多益詞旅', cx, cy + R + zh * 0.95);
+    const data = g.getImageData(0, 0, w, h).data;
+    const lit = [];
+    for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (data[(y * w + x) * 4 + 3] > 120) lit.push(x, y);
+    const pts = [];
+    for (let i = 0; i < count && lit.length; i++) { const k = Math.floor(Math.random() * (lit.length / 2)) * 2; pts.push([lit[k] + Math.random() * 2, lit[k + 1] + Math.random() * 2]); }
+    return { pts, below: cy + R + zh * 2.3, en: cy + R + zh * 1.62, enSize: Math.max(13, zh * 0.19) };
+  }
+  function runSplash(done) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ov = document.createElement('div');
+    ov.className = 'splash';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-label', '多益詞旅 歡迎登機');
+    ov.innerHTML = `<canvas class="splash-cv" aria-hidden="true"></canvas>
+      <p class="splash-en" aria-hidden="true">TOEIC VOYAGE</p>
+      <div class="splash-ui">
+        <p class="splash-tag">一千個職場單字，一段從 400 飛到 990 的航程</p>
+        <button class="splash-go" id="splash-go">點一下，登機出發</button>
+        <button class="splash-skip" id="splash-skip">略過</button>
+      </div>`;
+    document.body.appendChild(ov);
+    document.documentElement.classList.add('is-locked');
+    const cv = ov.querySelector('canvas');
+    const w = innerWidth; const h = innerHeight; const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = w * dpr; cv.height = h * dpr;
+    const g = cv.getContext('2d'); g.scale(dpr, dpr);
+    const palette = [['243,236,223', 0.56], ['232,182,90', 0.18], ['229,124,90', 0.11], ['151,184,142', 0.08], ['143,178,204', 0.07]];
+    const pick = () => { let r = Math.random(); for (const [c, p] of palette) if ((r -= p) <= 0) return c; return palette[0][0]; };
+    let P = []; let raf = 0; let phase = 'gather'; let t0 = performance.now(); let tOpen = 0; let below = h * 0.75;
+    const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+    const build = () => {
+      const N = w < 700 ? 2300 : 4600;
+      const T = splashTargets(w, h, N); below = T.below;
+      ov.querySelector('.splash-ui').style.top = `${Math.min(h - 150, below)}px`;
+      const enEl = ov.querySelector('.splash-en'); enEl.style.top = `${T.en}px`; enEl.style.fontSize = `${T.enSize}px`;
+      P = T.pts.map(([tx, ty]) => {
+        const a = Math.random() * Math.PI * 2; const rr = Math.max(w, h) * (0.45 + Math.random() * 0.7);
+        const sx = w / 2 + Math.cos(a) * rr * 0.9; const sy = h / 2 + Math.sin(a) * rr * 0.6;
+        return { x: sx, y: sy, sx, sy, tx, ty, vx: 0, vy: 0, c: pick(), r: 0.6 + Math.random() * 1.3, d: Math.random() * 0.55, tw: Math.random() * 6.28 };
+      });
+    };
+    const tick = (now) => {
+      const t = (now - t0) / 1000;
+      g.globalCompositeOperation = 'source-over';
+      g.fillStyle = 'rgba(7, 11, 22, 0.32)'; g.fillRect(0, 0, w, h);          // trails
+      g.globalCompositeOperation = 'lighter';
+      for (const p of P) {
+        if (phase !== 'open') {
+          const k = ease((t - p.d) / 1.9);
+          const swirl = (1 - k) * 0.9;
+          const ax = p.sx + (p.tx - p.sx) * k; const ay = p.sy + (p.ty - p.sy) * k;
+          const dx = ax - w / 2; const dy = ay - h / 2;
+          p.x = w / 2 + dx * Math.cos(swirl) - dy * Math.sin(swirl);
+          p.y = h / 2 + dx * Math.sin(swirl) + dy * Math.cos(swirl);
+          if (k >= 1) { p.x += Math.sin(t * 1.3 + p.tw) * 0.25; p.y += Math.cos(t * 1.1 + p.tw) * 0.25; }
+        } else {
+          p.vx += (p.x - w / 2) * 0.0009 + (Math.random() - 0.5) * 0.3; p.vy += (p.y - h / 2) * 0.0009 - 0.05;
+          p.x += p.vx; p.y += p.vy;
+        }
+        const a = 0.55 + 0.45 * Math.sin(t * 2.2 + p.tw);
+        g.fillStyle = `rgba(${p.c},${(phase === 'open' ? Math.max(0, 1 - (now - tOpen) / 900) : 1) * a})`;
+        g.beginPath(); g.arc(p.x, p.y, p.r, 0, 6.283); g.fill();
+      }
+      if (phase === 'gather' && t > 2.3) { phase = 'ready'; ov.classList.add('is-ready'); $('#splash-go', ov).focus({ preventScroll: true }); }
+      raf = requestAnimationFrame(tick);
+    };
+    const finish = () => {
+      cancelAnimationFrame(raf); ov.remove();
+      if (!$('.overlay')) document.documentElement.classList.remove('is-locked');
+      try { localStorage.setItem(SPLASH_KEY, ymd()); } catch (e) { /* ignore */ }
+      done();
+    };
+    const open = () => {
+      if (phase === 'open') return;
+      armAudio(); sfx('start');
+      phase = 'open'; tOpen = performance.now();
+      ov.classList.add('is-open');
+      setTimeout(finish, reduce ? 200 : 1100);
+    };
+    $('#splash-go', ov).addEventListener('click', open);
+    $('#splash-skip', ov).addEventListener('click', (e) => { e.stopPropagation(); armAudio(); finish(); });
+    ov.addEventListener('click', (e) => { if (phase === 'ready' && !e.target.closest('button')) open(); });
+    ov.addEventListener('keydown', (e) => { if (e.key === 'Escape') { armAudio(); finish(); } });
+    if (reduce) { ov.classList.add('is-ready', 'is-still'); return; }
+    const go = () => { build(); g.fillStyle = '#070b16'; g.fillRect(0, 0, w, h); t0 = performance.now(); raf = requestAnimationFrame(tick); };
+    // wait briefly for the display fonts so the stardust spells the real letterforms
+    const fontsReady = document.fonts && document.fonts.load ? Promise.all([document.fonts.load('900 64px "Noto Serif TC"', '多益詞旅'), document.fonts.load('600 20px "Fraunces"', 'TOEIC')]) : Promise.resolve();
+    Promise.race([fontsReady, new Promise((r) => setTimeout(r, 1200))]).then(go, go);
+  }
+
   /* ---------- global keys ---------- */
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); return; }
@@ -1733,5 +2200,6 @@
 
   applyTheme();
   render();
-  if (!S.onboarded) onboarding();
+  const afterSplash = () => { if (!S.onboarded) onboarding(); };
+  if (shouldSplash()) runSplash(afterSplash); else afterSplash();
 })();

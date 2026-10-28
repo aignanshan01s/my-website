@@ -236,6 +236,23 @@ img { max-width: 100%; display: block; }
 .amb-vol input { width: 100%; accent-color: var(--ochre); }
 .amb-note { font-size: 12px; color: var(--ink-3); padding: 0 4px; }
 @media (max-width: 860px) { .amb { position: static; } .amb-pop { position: fixed; top: calc(var(--top) + env(safe-area-inset-top, 0px) + 6px); right: max(16px, env(safe-area-inset-right, 0px)); } }
+.splash { position: fixed; inset: 0; z-index: 195; background: #070b16; color: #f3ecdf; overflow: hidden; clip-path: circle(150% at 50% 50%); transition: clip-path 1s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.6s; }
+.splash.is-open { clip-path: circle(0% at 50% 42%); }
+.splash-cv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.splash-ui { position: absolute; left: 0; right: 0; top: 70%; display: grid; justify-items: center; gap: 14px; padding: 0 max(20px, env(safe-area-inset-left, 0px)); text-align: center; opacity: 0; transform: translateY(8px); transition: opacity 0.8s var(--ease), transform 0.8s var(--ease); }
+.splash.is-ready .splash-ui { opacity: 1; transform: none; }
+.splash-en { position: absolute; left: 0; right: 0; margin: 0; transform: translateY(-50%); text-align: center; font-family: var(--serif); font-weight: 600; letter-spacing: 0.42em; padding-left: 0.42em; color: rgba(243, 220, 160, 0.9); opacity: 0; transition: opacity 1.2s var(--ease) 0.2s; }
+.splash.is-ready .splash-en { opacity: 1; }
+.splash.is-still .splash-en { display: none; }
+.splash-tag { font: 500 15px/1.6 var(--serif-zh); color: rgba(243, 236, 223, 0.72); letter-spacing: 0.08em; }
+.splash-go { padding: 12px 26px; border-radius: 999px; border: 1px solid rgba(243, 220, 160, 0.55); color: #f3dca0; font-weight: 600; letter-spacing: 0.1em; background: rgba(243, 220, 160, 0.06); animation: breathe 2.4s ease-in-out infinite; }
+.splash-go:hover { background: rgba(243, 220, 160, 0.14); }
+@keyframes breathe { 0%, 100% { box-shadow: 0 0 0 0 rgba(243, 220, 160, 0.0); } 50% { box-shadow: 0 0 0 10px rgba(243, 220, 160, 0.08); } }
+.splash-skip { position: fixed; right: max(18px, env(safe-area-inset-right, 0px)); top: calc(18px + env(safe-area-inset-top, 0px)); font-size: 13px; color: rgba(243, 236, 223, 0.55); padding: 6px 10px; }
+.splash.is-still .splash-ui { top: 45%; }
+.splash.is-still::before { content: "多益詞旅"; position: absolute; left: 0; right: 0; top: 30%; text-align: center; font: 900 clamp(40px, 10vw, 88px)/1 var(--serif-zh); color: #f3ecdf; }
+.gx-hint-short { display: none; }
+@media (max-width: 600px) { .gx-hint-long { display: none; } .gx-hint-short { display: inline; } .gx-label { font-size: 11px; } .gx-orbit { font-size: 9px; } }
 .burst-layer { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 185; }
 .tabbar { display: none; }
 @media (max-width: 860px) {
@@ -817,6 +834,13 @@ main { display: block; padding-bottom: 72px; }
 /* ---------- map ---------- */
 .map-wrap { position: relative; border-radius: var(--r-xl); overflow: hidden; background: #070b16; box-shadow: var(--shadow-lg); aspect-ratio: 16 / 10; max-width: 100%; min-height: 440px; }
 .map-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
+.gx-canvas { position: absolute; inset: 0; display: block; cursor: grab; touch-action: none; }
+.gx-canvas:active { cursor: grabbing; }
+.gx-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.gx-label { position: absolute; left: 0; top: 0; font: 700 13px/1 var(--serif-zh); color: rgba(242, 235, 221, 0.9); text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8); white-space: nowrap; will-change: transform; }
+.gx-orbit { position: absolute; left: 0; top: 0; font: 500 11px/1 var(--mono); letter-spacing: 0.1em; color: rgba(243, 220, 160, 0.9); white-space: nowrap; will-change: transform; }
+.gx-hint { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); padding: 6px 14px; border-radius: 999px; background: rgba(8, 12, 24, 0.6); color: rgba(242, 235, 221, 0.85); font-size: 12px; white-space: nowrap; pointer-events: none; transition: opacity 1.2s; max-width: calc(100% - 24px); overflow: hidden; text-overflow: ellipsis; }
+.gx-hint.is-faded { opacity: 0; }
 .map-legend { position: absolute; left: 22px; bottom: 18px; display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: rgba(242, 235, 221, 0.72); pointer-events: none; }
 .map-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
 .map-tip { position: absolute; z-index: 2; pointer-events: none; display: grid; grid-template-columns: 52px auto; gap: 10px; align-items: center; padding: 6px 14px 6px 6px; border-radius: 14px; background: rgba(251, 246, 236, 0.97); color: #1a2035; font-size: 13px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45); white-space: nowrap; }
@@ -870,3 +894,33 @@ main { display: block; padding-bottom: 72px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------- view transitions ---------- */
+.top { view-transition-name: topbar; }
+.tabbar { view-transition-name: tabbar; }
+.flash, .q-card { view-transition-name: card; }
+::view-transition-group(topbar), ::view-transition-group(tabbar) { animation: none; }
+::view-transition-old(root) { animation: vt-fade-out 0.22s var(--ease) both; }
+::view-transition-new(root) { animation: vt-fade-in 0.3s var(--ease) both; }
+html[data-vt="page-fwd"]::view-transition-old(root) { animation: vt-out-left 0.26s var(--ease) both; }
+html[data-vt="page-fwd"]::view-transition-new(root) { animation: vt-in-right 0.42s var(--ease) both; }
+html[data-vt="page-back"]::view-transition-old(root) { animation: vt-out-right 0.26s var(--ease) both; }
+html[data-vt="page-back"]::view-transition-new(root) { animation: vt-in-left 0.42s var(--ease) both; }
+html[data-vt="card"]::view-transition-old(card) { animation: vt-out-left 0.28s var(--ease) both; }
+html[data-vt="card"]::view-transition-new(card) { animation: vt-in-right 0.45s var(--ease) both; }
+html[data-vt="card"]::view-transition-old(root), html[data-vt="card"]::view-transition-new(root) { animation: none; }
+::view-transition-group(word-art) { animation-duration: 0.5s; animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1); }
+::view-transition-old(word-art), ::view-transition-new(word-art) { height: 100%; object-fit: cover; }
+html[data-vt="modal"] .sheet { animation: none; }
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-fade-in { from { opacity: 0; } }
+@keyframes vt-out-left { to { opacity: 0; transform: translateX(-28px); } }
+@keyframes vt-in-right { from { opacity: 0; transform: translateX(36px); } }
+@keyframes vt-out-right { to { opacity: 0; transform: translateX(28px); } }
+@keyframes vt-in-left { from { opacity: 0; transform: translateX(-36px); } }
+.vt-fallback { animation: vt-in-right 0.42s var(--ease) both; }
+main.vt-fallback { animation: vt-fade-in 0.35s var(--ease) both; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+html[data-vt="card"] .flash, html[data-vt="card"] .q-card { animation: none; }
