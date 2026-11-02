@@ -5,6 +5,7 @@
 
   const WORDS = window.TOEIC_WORDS || [];
   const BY_ID = new Map(WORDS.map((w) => [w.id, w]));
+  const CLOZE = window.TOEIC_CLOZE || {};
   const STORY = window.TOEIC_STORIES || { series: {}, chapters: [] };
   const CH = STORY.chapters;
   const DAY = 864e5;
@@ -117,7 +118,7 @@
   /* ---------- storage ---------- */
   const KEY = 'toeic-atlas-v1'; // kept from the first release so saved progress survives the rename
   const DEFAULT_SET = { goal: 10, start: 400, accent: 'us', rate: 0.9, sfx: true, theme: 'system', amb: 'night', ambVol: 0.45, splash: true, passN: 3, reward: '' };
-  function fresh() { return { v: 1, cards: {}, days: {}, stars: [], story: { read: {}, best: {} }, sprint: {}, notes: [], set: { ...DEFAULT_SET }, onboarded: false }; }
+  function fresh() { return { v: 1, cards: {}, days: {}, stars: [], story: { read: {}, best: {} }, sprint: {}, notes: [], exi: {}, set: { ...DEFAULT_SET }, onboarded: false }; }
   function load() {
     try {
       const raw = JSON.parse(localStorage.getItem(KEY));
@@ -601,6 +602,14 @@
   }
   const dailyEx = (w) => w.ex.find((e) => e.k === 'd') || w.ex[0];
   const toeicEx = (w) => w.ex.find((e) => e.k === 't') || w.ex[0];
+  // fill-in-the-blank questions rotate through several workplace sentences, so a word is never tied to one memorized line
+  function nextCloze(w) {
+    const t = toeicEx(w);
+    const pool = (CLOZE[w.id] || []).map(([en, a, f, kind]) => ({ en, a, f, kind })).concat({ en: t.en, a: t.a, f: t.f, zh: t.zh, kind: formKind(w) });
+    const k = (S.exi[w.id] || 0) % pool.length;
+    S.exi[w.id] = k + 1;
+    return pool[k];
+  }
   function markSentence(ex) {
     const s = ex.en;
     const a = ex.a;
@@ -1257,18 +1266,19 @@
     pracState.mode = mode;
     pracState.qs = picks.map((w) => {
       const q = { id: w.id };
+      if (mode === 'cloze' || mode === 'spell') q.ex = nextCloze(w);
       if (mode === 'spell') return q;
       const ds = distractors(w, 3, pool);
       if (mode === 'cloze') {
-        const kind = formKind(w);
-        const X = toeicEx(w);
+        const X = q.ex;
         const cap = X.a === 0;
-        q.opts = shuffle([{ id: w.id, t: X.f }, ...ds.map((d) => ({ id: d.id, t: applyForm(d.w, kind, cap) }))]);
+        q.opts = shuffle([{ id: w.id, t: X.f }, ...ds.map((d) => ({ id: d.id, t: applyForm(d.w, X.kind, cap) }))]);
       } else {
         q.opts = shuffle([w, ...ds].map((x) => ({ id: x.id })));
       }
       return q;
     });
+    save();
     pracState.i = 0;
     pracState.answered = false;
     pracState.results = [];
@@ -1291,13 +1301,13 @@
     const q = P.qs[P.i];
     const w = BY_ID.get(q.id);
     const pct = (P.i / P.qs.length) * 100;
-    const X = toeicEx(w);
+    const X = q.ex || toeicEx(w);
     let body = '';
     if (P.mode === 'cloze') {
       const before = X.en.slice(0, X.a);
       const after = X.en.slice(X.a + X.f.length);
       body = `<p class="q-sent">${esc(before)}<span class="blank" id="blank">${P.answered ? esc(X.f) : '&nbsp;'}</span>${esc(after)}</p>
-        ${P.answered ? `<p class="q-sub" style="text-align:left">${esc(X.zh)}</p>` : ''}`;
+        ${P.answered && X.zh ? `<p class="q-sub" style="text-align:left">${esc(X.zh)}</p>` : ''}`;
     } else if (P.mode === 'pic') {
       body = `<div class="q-pic">${art(w, { full: true })}</div><p class="q-sub">這張圖在說哪個字？</p>`;
     } else if (P.mode === 'def') {
@@ -1374,7 +1384,7 @@
     P.answered = true;
     recordAnswer(q.id, q.ok);
     const w = BY_ID.get(q.id);
-    if (P.mode === 'cloze') speak(toeicEx(w).en); else playWord(w);
+    if (P.mode === 'cloze') speak(q.ex.en); else playWord(w);
     paintQuiz();
     if (q.ok) burstFrom($('.opt.ok'), 26, 0.8);
   }
@@ -2036,11 +2046,11 @@
     const ds = distractors(w, 3, group);
     const q = { id: w.id, type, answered: false };
     if (type === 'cloze') {
-      const ex = card.seen % 2 ? dailyEx(w) : toeicEx(w);
+      const ex = nextCloze(w);
+      save();
       q.ex = ex;
-      const kind = blankKind(ex.f, w.w.toLowerCase());
       const cap = ex.a === 0;
-      q.opts = shuffle([{ id: w.id, t: ex.f }, ...ds.map((d) => ({ id: d.id, t: applyForm(d.w, kind, cap) }))]);
+      q.opts = shuffle([{ id: w.id, t: ex.f }, ...ds.map((d) => ({ id: d.id, t: applyForm(d.w, ex.kind, cap) }))]);
     } else q.opts = shuffle([w, ...ds].map((x) => ({ id: x.id, t: x.w })));
     return q;
   }
@@ -2895,6 +2905,7 @@
           <h2>關於多益詞旅</h2>
           <ul>
             <li>每個字的英英釋義、分詞性中文釋義、近似詞、相反詞、日常例句、多益例句、中文翻譯與常用搭配，皆由本站以台灣用語原創撰寫。</li>
+            <li>填空題使用的 5,000 句多益情境例句（每字 5 句，與詞卡上的多益例句輪流出題）為本站原創撰寫。</li>
             <li>航程故事《NS-014 號航班》是本站原創的連載小說，人物、情節與中文翻譯皆為原創；每章收錄 9–10 個同分數段的單字，並避開意思相近的字放在同一章，減少混淆。</li>
             <li>KK 音標依 CMU Pronouncing Dictionary 自動轉寫並人工校對常見多音字；15 個職場場景與 ${WORDS.filter((w) => w.tip).length} 則「多益考點」由本站編輯整理。</li>
             <li>單字插畫、場景插畫與美英發音錄音取自 Word Atlas（Word Atlas contributors，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>），本站已縮放並合併成圖集與音訊檔。${fmt(WORDS.filter((w) => w.ar === 'w').length)} 個字使用原字插畫、${WORDS.filter((w) => w.ar === 'r').length} 個字使用同字根插畫，其餘以所屬職場場景的插畫代替；有真人錄音的字共 ${fmt(WORDS.filter((w) => w.u).length)} 個，其餘使用裝置內建語音。</li>
