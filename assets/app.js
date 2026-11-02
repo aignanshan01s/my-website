@@ -37,6 +37,7 @@
   ];
   const TP = Object.fromEntries(TOPICS.map((t) => [t.k, t]));
   const STATUS_ZH = { new: '未學', learning: '學習中', mastered: '已熟' };
+  const POS_EN = { 'n.': 'noun', 'v.': 'verb', 'adj.': 'adjective', 'adv.': 'adverb', 'prep.': 'preposition' };
   const POS_ZH = { 'n.': '名詞', 'v.': '動詞', 'adj.': '形容詞', 'adv.': '副詞', 'prep.': '介系詞' };
 
   /* ---------- icons ---------- */
@@ -115,8 +116,8 @@
 
   /* ---------- storage ---------- */
   const KEY = 'toeic-atlas-v1'; // kept from the first release so saved progress survives the rename
-  const DEFAULT_SET = { goal: 10, start: 400, accent: 'us', rate: 0.9, sfx: true, theme: 'system', amb: 'night', ambVol: 0.45, splash: true };
-  function fresh() { return { v: 1, cards: {}, days: {}, stars: [], story: { read: {}, best: {} }, set: { ...DEFAULT_SET }, onboarded: false }; }
+  const DEFAULT_SET = { goal: 10, start: 400, accent: 'us', rate: 0.9, sfx: true, theme: 'system', amb: 'night', ambVol: 0.45, splash: true, passN: 3, reward: '' };
+  function fresh() { return { v: 1, cards: {}, days: {}, stars: [], story: { read: {}, best: {} }, sprint: {}, notes: [], set: { ...DEFAULT_SET }, onboarded: false }; }
   function load() {
     try {
       const raw = JSON.parse(localStorage.getItem(KEY));
@@ -169,11 +170,9 @@
   }
   function newOrder() {
     const start = S.set.start;
-    // story words come first, chapter by chapter, so each day's new words match the next chapter
-    const told = CH.flatMap((c) => c.words).map((id) => BY_ID.get(id)).filter((w) => w && w.lv >= start);
-    const toldIds = new Set(told.map((w) => w.id));
-    const rest = WORDS.filter((w) => !toldIds.has(w.id));
-    return told.concat(rest.filter((w) => w.lv >= start), rest.filter((w) => w.lv < start));
+    // same order as the sprint levels: story words first, then each leg mixed across topics
+    const all = sprintOrder().map((id) => BY_ID.get(id));
+    return all.filter((w) => w.lv >= start).concat(all.filter((w) => w.lv < start));
   }
   function plan() {
     const d = today();
@@ -449,7 +448,7 @@
     ['today', '啟程', I.today],
     ['story', '故事', I.book],
     ['atlas', '詞庫', I.atlas],
-    ['practice', '試飛', I.practice],
+    ['practice', '闖關', I.practice],
     ['map', '星圖', I.map],
     ['me', '護照', I.me],
   ];
@@ -550,7 +549,7 @@
     if (el) { el.classList.remove('vt-fallback'); void el.offsetWidth; el.classList.add('vt-fallback'); }
     if (after) after();
   }
-  const NAV_ORDER = ['today', 'learn', 'story', 'atlas', 'practice', 'map', 'me'];
+  const NAV_ORDER = ['today', 'learn', 'recap', 'story', 'atlas', 'practice', 'sprint', 'map', 'me'];
 
   /* ---------- router ---------- */
   const route = { name: 'today', sub: 0, hash: 'today' };
@@ -563,8 +562,8 @@
     const m = raw.match(/^word-(\d+)$/);
     let sub = 0;
     if (m) { wordId = +m[1]; name = route.name && route.name !== 'word' ? route.name : 'atlas'; sub = route.sub; }
-    const sm = raw.match(/^story-(\d+)$/);
-    if (sm) { name = 'story'; sub = +sm[1]; }
+    const sm = raw.match(/^(story|sprint)-(\d+)$/);
+    if (sm) { name = sm[1]; sub = +sm[2]; }
     if (!VIEWS[name]) name = 'today';
     if (cleanup) { cleanup(); cleanup = null; }
     const prevRoute = route.name;
@@ -574,7 +573,7 @@
     route.name = name;
     route.sub = sub;
     if (!wordId) route.hash = raw;
-    $$('[data-nav]').forEach((a) => a.setAttribute('aria-current', a.dataset.nav === name || (name === 'learn' && a.dataset.nav === 'today') ? 'page' : 'false'));
+    $$('[data-nav]').forEach((a) => a.setAttribute('aria-current', a.dataset.nav === name || ((name === 'learn' || name === 'recap') && a.dataset.nav === 'today') || (name === 'sprint' && a.dataset.nav === 'practice') ? 'page' : 'false'));
     if (changed || !wordId) {
       const from = NAV_ORDER.indexOf(prevRoute) * 100 + (prevRoute === name ? prevSub : 0); const to = NAV_ORDER.indexOf(name) * 100 + sub;
       const doIt = () => { VIEWS[name](); if (!wordId) window.scrollTo(0, 0); };
@@ -687,6 +686,8 @@
           </div>
         </section>
 
+        ${rhythmCard()}
+
         ${storyFeature()}
 
         <section class="section">
@@ -751,6 +752,8 @@
 
     view.querySelectorAll('[data-leg]').forEach((b) => b.addEventListener('click', () => { atlasState.lv = +b.dataset.leg; atlasState.topic = 'all'; go('atlas'); }));
     view.querySelectorAll('[data-topic]').forEach((b) => b.addEventListener('click', () => { atlasState.topic = b.dataset.topic; atlasState.lv = 0; go('atlas'); }));
+    const rw = $('#reward-in');
+    if (rw) rw.addEventListener('change', () => { S.set.reward = rw.value.trim(); save(); viewToday(); });
     const extra = $('#extra');
     if (extra) extra.addEventListener('click', () => { S.set.goal += 5; save(); plan(); go('learn'); });
   }
@@ -930,6 +933,7 @@
           <div class="entry-no"><span>№ ${pad(w.id, 4)}</span><i></i><span>TOEIC VOYAGE</span></div>
           <h2 class="entry-word">${esc(w.w)}</h2>
           ${pron(w)}
+          <p class="def-line"><span class="def-tag">EN</span>${esc(w.d)}</p>
           <div class="senses">${sensesByPos(w).map(([pos, zh]) => `<div class="sense"><i>${pos}<small>${POS_ZH[pos] || ''}</small></i><b>${esc(zh)}</b></div>`).join('')}</div>
           ${w.syn.length || w.ant.length ? `<div class="nyms">
             ${w.syn.length ? `<div class="nym"><span class="block-label">近似詞</span><div class="nym-list">${w.syn.map(wordLink).join('')}</div></div>` : ''}
@@ -1118,12 +1122,13 @@
           ${pron(w)}
           ${s.revealed ? `
             <div class="flash-back">
+              <p class="def-line"><span class="def-tag">EN</span>${esc(w.d)}</p>
               <div class="senses">${sensesByPos(w).map((x) => `<div class="sense"><i>${x[0]}</i><b>${esc(x[1])}</b></div>`).join('')}</div>
               ${storyCue(w, true)}
               <div class="example"><span class="ex-tag">多益例句</span><p class="en-line">${markSentence(toeicEx(w))} <button class="mini-spk" data-say="${esc(toeicEx(w).en)}" aria-label="朗讀例句">${I.speaker}</button></p><p class="zh-line">${esc(toeicEx(w).zh)}</p></div>
               <div class="cols compact">${w.col.slice(0, 2).map((c) => `<div class="col"><b>${esc(c[0])}</b><span>${esc(c[1])}</span></div>`).join('')}</div>
               ${w.tip ? `<div class="tip"><div class="block-label">多益考點</div><p>${esc(w.tip)}</p></div>` : ''}
-            </div>` : `<p class="flash-hint">看著畫面，先在心裡說出中文意思，再翻面確認。</p>`}
+            </div>` : `<p class="flash-hint">看著畫面、聽發音，先用英文想：它在說什麼？能不能用它說一句話？再翻面確認。</p>`}
         </div>
       </article>
       ${s.revealed ? `
@@ -1149,10 +1154,10 @@
      ====================================================== */
   const MODES = [
     { k: 'cloze', part: 'Part 5 句子填空', zh: '例句填空', desc: '例句挖空，四個同詞性選項選一個，跟多益 Part 5 詞彙題同樣的考法。', img: 'data' },
-    { k: 'zh2en', part: 'Meaning → Word', zh: '看義選詞', desc: '看插畫與中文釋義，從四個英文單字裡選出正確的那一個。', img: 'topic-education' },
-    { k: 'en2zh', part: 'Word → Meaning', zh: '看詞選義', desc: '看英文單字與 KK 音標，選出正確的中文意思。', img: 'topic-thinking' },
+    { k: 'pic', part: 'Picture → Word', zh: '看圖選字', desc: '只看插畫，直接想出英文單字。不繞道中文，畫面和字直接連在一起。', img: 'topic-education' },
+    { k: 'def', part: 'English → Word', zh: '英英釋義', desc: '讀一句簡單的英文解釋，選出它在說哪個字，練 Part 7 換句話說的反射。', img: 'topic-thinking' },
     { k: 'listen', part: 'Part 1–2 聽力暖身', zh: '聽音辨詞', desc: '只聽真人發音，選出你聽到的單字，練多益聽力的字音反射。', img: 'listen' },
-    { k: 'spell', part: 'Spelling', zh: '拼字挑戰', desc: '看中文與例句提示，把單字完整拼出來。', img: 'typing' },
+    { k: 'spell', part: 'Spelling', zh: '拼字挑戰', desc: '看英文解釋與例句提示，把單字完整拼出來。', img: 'typing' },
   ];
   const pracState = { scope: 'all', mode: null, qs: [], i: 0, answered: false, results: [] };
   function scopePool(scope) {
@@ -1166,11 +1171,13 @@
     const pool = scopePool(pracState.scope);
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">試飛 · 每輪 10 題 · 只有第一次作答計入正確率</span>
-        <h1>正式起飛前，先試飛十題。</h1>
-        <p class="sub">題目從你選的範圍隨機抽出，干擾選項取自同一分數段、同詞性的單字，難度貼近正式考試。</p>
+        <span class="eyebrow">闖關 · 50 關 × 20 字 · 全程用英文線索作答</span>
+        <h1>一關 15 分鐘，把 20 個字練到會用。</h1>
+        <p class="sub">每一關三步：看圖聽音大聲唸、用圖片／英文解釋／例句回想到連續答對，最後挑 3 個字自己造句。題目只給英文線索，不在中英之間來回翻譯。</p>
       </header>
-      <section class="section" style="padding-top:0">
+      ${sprintMap()}
+      <section class="section">
+        <div class="section-head"><h2>自由練習</h2><span class="more">每輪 10 題 · 只有第一次作答計入正確率</span></div>
         <div style="display:grid;gap:12px">
           <span class="eyebrow">出題範圍</span>
           <div class="chips">
@@ -1178,15 +1185,19 @@
           </div>
           <p style="font-size:13px;color:var(--ink-3)">目前範圍共 <b class="num">${pool.length}</b> 個單字${pool.length < 4 ? '，至少需要 4 個字才能出題。' : '。'}</p>
         </div>
-      </section>
-      <section class="section">
         <div class="modes">
           ${MODES.map((m) => `<button class="mode" data-mode="${m.k}" ${pool.length < 4 ? 'disabled' : ''}><img src="assets/brand/${m.img}.webp" alt="" width="480" height="480" loading="lazy"><span class="mode-txt"><span class="m-part">${m.part}</span><h3>${m.zh}</h3><p>${m.desc}</p></span></button>`).join('')}
         </div>
       </section>
+      ${S.notes.length ? `<section class="section">
+        <div class="section-head"><h2>我的造句本</h2><span class="more">${S.notes.length} 句</span></div>
+        <div class="notes" data-list>${S.notes.slice(-12).reverse().map((n) => { const w = BY_ID.get(n.id); return `<div class="note"><button class="note-w" data-open="${w.id}">${esc(w.w)}</button><p>${esc(n.t)}</p><span>${esc(n.at)}</span></div>`; }).join('')}</div>
+      </section>` : ''}
     </div>`;
+    listContext = S.notes.slice(-12).reverse().map((n) => n.id);
     view.querySelectorAll('[data-scope]').forEach((b) => b.addEventListener('click', () => { pracState.scope = b.dataset.scope; viewPractice(); }));
     view.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => startQuiz(b.dataset.mode)));
+    view.querySelectorAll('[data-passn]').forEach((b) => b.addEventListener('click', () => { S.set.passN = +b.dataset.passn; save(); viewPractice(); }));
   }
 
   // English inflection for distractors, mirroring the answer's form.
@@ -1214,10 +1225,22 @@
     else if (kind === 'ing') out = inflIng(word);
     return cap ? out[0].toUpperCase() + out.slice(1) : out;
   }
+  const ZH_TERMS = new Map();
+  const zhTerms = (w) => {
+    if (!ZH_TERMS.has(w.id)) ZH_TERMS.set(w.id, new Set(w.s.flatMap((s) => s[1].split(/[；;、，,（）()…]/)).map((t) => t.trim()).filter((t) => t.length >= 2)));
+    return ZH_TERMS.get(w.id);
+  };
+  // near-synonyms (listed synonyms or a shared Chinese gloss) would make a question ambiguous
+  function confusable(a, b) {
+    if (a.syn.some((t) => fold(t) === fold(b.w)) || b.syn.some((t) => fold(t) === fold(a.w))) return true;
+    const A = zhTerms(a);
+    for (const t of zhTerms(b)) if (A.has(t)) return true;
+    return false;
+  }
   function distractors(w, n, pool) {
     const pos = posOf(w);
     const zh = w.s[0][1];
-    const ok = (x) => x.id !== w.id && x.s[0][1] !== zh && fold(x.w) !== fold(w.w);
+    const ok = (x) => x.id !== w.id && x.s[0][1] !== zh && fold(x.w) !== fold(w.w) && !confusable(w, x);
     let c = shuffle(pool.filter((x) => ok(x) && posOf(x) === pos && x.lv === w.lv));
     if (c.length < n) c = c.concat(shuffle(WORDS.filter((x) => ok(x) && posOf(x) === pos && !c.includes(x))));
     if (c.length < n) c = c.concat(shuffle(WORDS.filter((x) => ok(x) && !c.includes(x))));
@@ -1228,7 +1251,9 @@
     if (pool.length < 4) return;
     // prefer words that are due or learning, then the rest
     const voiced = pool.filter((w) => w.u);
-    const picks = shuffle(mode === 'listen' && voiced.length >= 10 ? voiced : pool).slice(0, 10);
+    const drawn = pool.filter((w) => w.ar === 'w');
+    if (mode === 'pic' && drawn.length < 4) { toast('這個範圍裡有專屬插畫的字不到 4 個，換個範圍試試。'); return; }
+    const picks = shuffle(mode === 'listen' && voiced.length >= 10 ? voiced : mode === 'pic' ? drawn : pool).slice(0, 10);
     pracState.mode = mode;
     pracState.qs = picks.map((w) => {
       const q = { id: w.id };
@@ -1273,21 +1298,21 @@
       const after = X.en.slice(X.a + X.f.length);
       body = `<p class="q-sent">${esc(before)}<span class="blank" id="blank">${P.answered ? esc(X.f) : '&nbsp;'}</span>${esc(after)}</p>
         ${P.answered ? `<p class="q-sub" style="text-align:left">${esc(X.zh)}</p>` : ''}`;
-    } else if (P.mode === 'zh2en') {
-      body = `<div class="q-hero">${art(w, { tag: true })}<div style="display:grid;gap:8px"><p class="q-prompt zh">${esc(zhMain(w))}</p><p class="q-sub">${w.s.map((s) => `${POS_ZH[s[0]] || s[0]}`).join('／')}</p></div></div>`;
-    } else if (P.mode === 'en2zh') {
-      body = `<div style="display:grid;gap:10px"><p class="q-prompt">${esc(w.w)}</p><p class="q-sub">${kkHtml(w)} <button class="mini-spk" data-word="${w.id}" aria-label="播放發音">${I.speaker}</button></p></div>`;
+    } else if (P.mode === 'pic') {
+      body = `<div class="q-pic">${art(w, { full: true })}</div><p class="q-sub">這張圖在說哪個字？</p>`;
+    } else if (P.mode === 'def') {
+      body = `<div class="q-def"><span class="def-tag">${POS_EN[posOf(w)] || posOf(w)}</span><p>${esc(w.d)}</p></div>`;
     } else if (P.mode === 'listen') {
       body = `<div class="listen-stage"><img src="assets/brand/listen.webp" alt="" width="480" height="480"><button class="big-listen" data-word="${w.id}" aria-label="再聽一次">${I.listen}</button><p class="q-sub">點擊播放，可重複聆聽。${P.answered ? '' : ` <button class="btn ghost small" data-word="${w.id}" data-slow="1">慢速</button>`}</p></div>`;
     } else if (P.mode === 'spell') {
       const hint = X.f[0] + X.f.slice(1).replace(/[A-Za-zÀ-ÿ]/g, '_');
-      body = `<div class="q-hero">${art(w, { tag: true })}<p class="q-prompt zh">${esc(zhMain(w))}</p></div>
+      body = `<div class="q-hero ${w.ar === 'w' ? '' : 'is-solo'}">${w.ar === 'w' ? art(w) : ''}<div class="q-def is-small"><span class="def-tag">${POS_EN[posOf(w)] || posOf(w)}</span><p>${esc(w.d)}</p></div></div>
         <p class="q-sent" style="font-size:19px">${esc(X.en.slice(0, X.a))}<span class="blank">${P.answered ? esc(X.f) : esc(hint)}</span>${esc(X.en.slice(X.a + X.f.length))}</p>
         <form class="spell" id="spell-form" autocomplete="off"><label class="sr-only" for="spell-in">輸入單字</label><input id="spell-in" type="text" autocapitalize="off" spellcheck="false" placeholder="輸入空格裡的單字" ${P.answered ? 'disabled' : ''}><button class="btn" type="submit" ${P.answered ? 'disabled' : ''}>確認</button></form>`;
     }
     const opts = q.opts ? `<div class="opts">${q.opts.map((o, i) => {
       const ow = BY_ID.get(o.id);
-      const label = P.mode === 'cloze' ? `<span class="t en">${esc(o.t)}</span>` : P.mode === 'en2zh' ? `<span class="t">${esc(zhMain(ow))}</span>` : `<span class="t en">${esc(ow.w)}</span>`;
+      const label = P.mode === 'cloze' ? `<span class="t en">${esc(o.t)}</span>` : `<span class="t en">${esc(ow.w)}</span>`;
       let cls = '';
       if (P.answered) { if (o.id === w.id) cls = 'ok'; else if (o.id === q.picked) cls = 'no'; }
       return `<button class="opt ${cls}" data-o="${o.id}" ${P.answered ? 'disabled' : ''}><span class="k">${'ABCD'[i]}</span>${label}</button>`;
@@ -1297,7 +1322,8 @@
         <button data-open="${w.id}" aria-label="打開 ${esc(w.w)} 詞卡">${art(w)}</button>
         <div style="display:grid;gap:4px;min-width:0">
           <span class="fb-title ${ok ? 'ok' : 'no'}">${ok ? '答對了' : `正確答案：${esc(P.mode === 'cloze' || P.mode === 'spell' ? X.f : w.w)}`}</span>
-          <span><button data-open="${w.id}" style="font:600 19px var(--serif);text-decoration:underline;text-underline-offset:3px">${esc(w.w)}</button> ${kkHtml(w)} · ${esc(zhMain(w))}</span>
+          <span><button data-open="${w.id}" style="font:600 19px var(--serif);text-decoration:underline;text-underline-offset:3px">${esc(w.w)}</button> ${kkHtml(w)}</span>
+          <span class="fb-def">${esc(w.d)}<small>${esc(zhMain(w))}</small></span>
           ${w.tip && !ok ? `<span class="fb-tip">考點：${esc(w.tip)}</span>` : ''}
         </div>
       </div>
@@ -1348,7 +1374,7 @@
     P.answered = true;
     recordAnswer(q.id, q.ok);
     const w = BY_ID.get(q.id);
-    if (P.mode === 'cloze') speak(toeicEx(w).en); else if (P.mode === 'zh2en' || P.mode === 'listen') playWord(w);
+    if (P.mode === 'cloze') speak(toeicEx(w).en); else playWord(w);
     paintQuiz();
     if (q.ok) burstFrom($('.opt.ok'), 26, 0.8);
   }
@@ -1648,7 +1674,7 @@
       const w = BY_ID.get(q.id);
       const kind = blankKind(q.f, w.w.toLowerCase());
       const cap = /^[A-Z]/.test(q.f) && !/^[A-Z]/.test(w.w);
-      const mates = shuffle(ch.words.filter((id) => id !== q.id).map((id) => BY_ID.get(id)).filter((x) => posOf(x) === posOf(w)));
+      const mates = shuffle(ch.words.filter((id) => id !== q.id).map((id) => BY_ID.get(id)).filter((x) => posOf(x) === posOf(w) && !confusable(w, x)));
       const more = distractors(w, 6, WORDS.filter((x) => x.lv === lv));
       const used = new Set([fold(q.f)]);
       const opts = [{ id: w.id, t: q.f }];
@@ -1778,6 +1804,526 @@
     listContext = wrong.map((w) => w.id);
     if (cleanup) { cleanup(); cleanup = null; }
     $('#cz-again').addEventListener('click', () => vt('card', () => startCloze(ch)));
+  }
+
+  /* ======================================================
+     SPRINT — 50 timed levels of 20 words: see & say, recall until it sticks, then use it
+     ====================================================== */
+  const SPRINT_SIZE = 20;
+  const SPRINT_MIN = 15;
+  let SPRINT_ORDER = null;
+  function sprintOrder() {
+    if (SPRINT_ORDER) return SPRINT_ORDER;
+    const told = CH.flatMap((c) => c.words);
+    const toldSet = new Set(told);
+    const out = [];
+    for (const l of LEVELS) {
+      out.push(...told.filter((id) => BY_ID.get(id).lv === l.lv));
+      // deal the rest of the leg round-robin across topics, so one level mixes scenes and parts of speech
+      const byT = new Map();
+      for (const w of WORDS) if (w.lv === l.lv && !toldSet.has(w.id)) { if (!byT.has(w.t)) byT.set(w.t, []); byT.get(w.t).push(w.id); }
+      const lists = [...byT.values()];
+      while (lists.some((x) => x.length)) for (const x of lists) if (x.length) out.push(x.shift());
+    }
+    SPRINT_ORDER = out;
+    return out;
+  }
+  let SPRINTS = null;
+  function sprints() {
+    if (SPRINTS) return SPRINTS;
+    const o = sprintOrder();
+    SPRINTS = [];
+    for (let i = 0; i < o.length; i += SPRINT_SIZE) {
+      const ids = o.slice(i, i + SPRINT_SIZE);
+      const lvs = ids.map((id) => BY_ID.get(id).lv);
+      const lv = [...new Set(lvs)].sort((a, b) => lvs.filter((x) => x === b).length - lvs.filter((x) => x === a).length)[0];
+      SPRINTS.push({ no: SPRINTS.length + 1, ids, lv });
+    }
+    return SPRINTS;
+  }
+  const sprintDone = (no) => !!S.sprint[no];
+  function sprintOpen(no) {
+    const L = sprints()[no - 1];
+    if (!L) return false;
+    if (no === 1 || sprintDone(no) || sprintDone(no - 1)) return true;
+    return sprints()[no - 2].lv !== L.lv; // the first level of every leg is always open
+  }
+  const nextSprint = () => sprints().find((L) => !sprintDone(L.no) && sprintOpen(L.no)) || null;
+  const starStr = (n) => '★'.repeat(n) + '☆'.repeat(3 - n);
+  function sprintMap() {
+    const L = sprints();
+    const passed = L.filter((x) => sprintDone(x.no)).length;
+    const stars = L.reduce((a, x) => a + (S.sprint[x.no]?.stars || 0), 0);
+    const nx = nextSprint();
+    return `<section class="section">
+      <div class="section-head"><h2>衝刺關卡</h2><span class="more">已過 ${passed} / ${L.length} 關 · ★ ${stars} / ${L.length * 3}</span></div>
+      <div class="sp-how">
+        <div><b>1</b><span><strong>看・唸</strong>插畫、英文解釋、例句一起看，跟著發音大聲唸出來。</span></div>
+        <div><b>2</b><span><strong>回想</strong>輪流用圖片、英文解釋、例句挖空、聲音考你，答錯立刻放回牌堆。</span></div>
+        <div><b>3</b><span><strong>造句</strong>挑 3 個最容易錯的字，自己寫一句。會用，才算真的會。</span></div>
+      </div>
+      <div class="sp-rule">
+        <span>每個字要連續答對</span>
+        <div class="seg">${[2, 3, 6].map((n) => `<button data-passn="${n}" aria-pressed="${S.set.passN === n}">${n} 次</button>`).join('')}</div>
+        <span>才算過關 · 建議 3 次</span>
+      </div>
+      <div class="sp-grid">
+        ${L.map((x) => {
+          const r = S.sprint[x.no];
+          if (!sprintOpen(x.no)) return `<span class="sp-tile lv-${x.lv} is-locked" aria-label="第 ${x.no} 關未解鎖"><b>${pad(x.no)}</b><i>${x.lv}</i></span>`;
+          return `<a class="sp-tile lv-${x.lv} ${r ? 'is-done' : ''} ${nx && nx.no === x.no ? 'is-next' : ''}" href="#sprint-${x.no}" aria-label="第 ${x.no} 關${r ? `，${r.stars} 顆星` : ''}"><b>${pad(x.no)}</b><i>${x.lv}</i><span class="sp-stars">${r ? starStr(r.stars) : nx && nx.no === x.no ? '出發' : '☆☆☆'}</span></a>`;
+        }).join('')}
+      </div>
+    </section>`;
+  }
+
+  let sprint = null;
+  let spTick = null;
+  function viewSprint() {
+    const no = route.sub;
+    const L = sprints()[no - 1];
+    if (!L || !sprintOpen(no)) { toast('先完成前一關，這一關才會解鎖。'); go('practice'); return; }
+    if (!sprint || sprint.no !== no || sprint.stage === 'done') sprint = { no, ids: L.ids.slice(), lv: L.lv, stage: 'intro', i: 0 };
+    paintSprint();
+    const onKey = (e) => {
+      if ($('.overlay') || !sprint || e.target.matches('input, textarea')) return;
+      if (sprint.stage === 'see' && e.key === 'Enter') { e.preventDefault(); spNextSee(); }
+      else if (sprint.stage === 'recall') {
+        const q = sprint.q;
+        if (q && !q.answered) {
+          const k = e.key.toLowerCase();
+          const i = '1234'.indexOf(k) >= 0 ? '1234'.indexOf(k) : 'abcd'.indexOf(k);
+          if (i >= 0 && q.opts[i]) { e.preventDefault(); spAnswer(i); }
+        } else if (q && q.answered && e.key === 'Enter') { e.preventDefault(); spNextQ(); }
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    cleanup = () => { document.removeEventListener('keydown', onKey); clearInterval(spTick); spTick = null; if (spRec) { try { spRec.abort(); } catch (e) { /* ignore */ } } };
+  }
+  function spClock() {
+    if (!sprint.t0) return '';
+    const left = SPRINT_MIN * MIN - (Date.now() - sprint.t0);
+    const a = Math.abs(left);
+    return `${left < 0 ? '+' : ''}${Math.floor(a / MIN)}:${pad(Math.floor((a % MIN) / 1000))}`;
+  }
+  function spTop(label, done, total) {
+    const over = sprint.t0 && Date.now() - sprint.t0 > SPRINT_MIN * MIN;
+    return `<div class="learn-top">
+        <a class="icon-btn" href="#practice" aria-label="離開這一關">${I.close}</a>
+        <div class="meter" role="progressbar" aria-valuenow="${Math.round((done / total) * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${(done / total) * 100}%"></i></div>
+        <span class="count num">${label}</span>
+        <span class="sp-clock num ${over ? 'is-over' : ''}" id="sp-clock" aria-label="剩餘時間">${spClock()}</span>
+      </div>
+      <ol class="sp-steps">${['看・唸', '回想', '造句'].map((t, k) => `<li class="${['see', 'recall', 'make'].indexOf(sprint.stage) === k ? 'is-on' : ['see', 'recall', 'make'].indexOf(sprint.stage) > k ? 'is-past' : ''}"><b>${k + 1}</b>${t}</li>`).join('')}</ol>`;
+  }
+  function spStartClock() {
+    clearInterval(spTick);
+    spTick = setInterval(() => {
+      const el = $('#sp-clock');
+      if (!el || !sprint || !sprint.t0) return;
+      el.textContent = spClock();
+      el.classList.toggle('is-over', Date.now() - sprint.t0 > SPRINT_MIN * MIN);
+    }, 1000);
+  }
+  function paintSprint() {
+    const P = sprint;
+    if (P.stage === 'intro') return spIntro();
+    if (P.stage === 'see') return spSee();
+    if (P.stage === 'recall') return spRecall();
+    if (P.stage === 'make') return spMake();
+    return spDone();
+  }
+  function spIntro() {
+    const P = sprint;
+    const best = S.sprint[P.no];
+    const words = P.ids.map((id) => BY_ID.get(id));
+    view.innerHTML = `<div class="wrap"><div class="learn sp">
+      <div class="sp-intro">
+        <span class="eyebrow mono">LEVEL ${pad(P.no)} · ${P.lv} ${LV[P.lv].name}</span>
+        <h1>第 ${P.no} 關</h1>
+        <p>${words.length} 個字 · 倒數 ${SPRINT_MIN} 分鐘 · 每個字連續答對 ${S.set.passN} 次${best ? ` · 最佳 ${starStr(best.stars)}` : ''}</p>
+        <div class="sp-faces">${words.map((w) => art(w)).join('')}</div>
+        <ul class="sp-stars-how">
+          <li><b>★</b>完成三步就過關</li>
+          <li><b>★★</b>第一次作答的正確率達 80%</li>
+          <li><b>★★★</b>${SPRINT_MIN} 分鐘內完成，而且 3 句都自己寫</li>
+        </ul>
+        <button class="btn" id="sp-go">開始倒數 ${I.arrow}</button>
+      </div>
+    </div></div>`;
+    $('#sp-go').addEventListener('click', () => {
+      Object.assign(P, { stage: 'see', i: 0, t0: Date.now(), first: {}, wrong: {}, voice: 0, made: [], combo: 0, bestCombo: 0 });
+      sfx('start');
+      spStartClock();
+      vt('card', paintSprint);
+    });
+  }
+  /* step 1: see, hear and say every word once */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let spRec = null;
+  function spSee() {
+    const P = sprint;
+    const w = BY_ID.get(P.ids[P.i]);
+    const ex = dailyEx(w);
+    view.innerHTML = `<div class="wrap"><div class="learn sp">
+      ${spTop(`${P.i + 1} / ${P.ids.length}`, P.i, P.ids.length)}
+      <article class="flash sp-see">
+        ${art(w, { full: true, tag: true })}
+        <div class="flash-body">
+          <div class="flash-head"><div style="display:flex;gap:8px">${lvBadge(w.lv, true)}<span class="badge plain">${TP[w.t].zh}</span></div><span class="badge plain">${POS_EN[posOf(w)] || posOf(w)}</span></div>
+          <div class="flash-word">${esc(w.w)}</div>
+          ${pron(w)}
+          <p class="def-line"><span class="def-tag">EN</span>${esc(w.d)}</p>
+          <div class="example"><p class="en-line">${markSentence(ex)} <button class="mini-spk" data-say="${esc(ex.en)}" aria-label="朗讀例句">${I.speaker}</button></p></div>
+          <details class="sp-zh"><summary>需要的話，看中文</summary><p>${esc(zhMain(w))}</p><p>${esc(ex.zh)}</p></details>
+        </div>
+      </article>
+      <div class="sp-actions">
+        ${SR ? `<button class="btn ghost" id="sp-mic">${I.listen}<span>跟讀檢查</span></button>` : ''}
+        <button class="btn" id="sp-said">我唸出來了 ${I.arrow}</button>
+      </div>
+      <p class="kbd-hint">大聲唸單字，再唸一次例句。<kbd>Enter</kbd> 下一個</p>
+    </div></div>`;
+    loadFull(view);
+    $('#sp-said').addEventListener('click', spNextSee);
+    const mic = $('#sp-mic');
+    if (mic) mic.addEventListener('click', () => spListen(w, mic));
+    setTimeout(() => { if (sprint === P && P.stage === 'see' && P.ids[P.i] === w.id) playWord(w); }, 250);
+  }
+  function spListen(w, btn) {
+    if (spRec) { try { spRec.abort(); } catch (e) { /* ignore */ } spRec = null; }
+    let r;
+    try { r = new SR(); } catch (e) { toast('這個瀏覽器無法使用語音辨識。'); return; }
+    spRec = r;
+    r.lang = S.set.accent === 'uk' ? 'en-GB' : 'en-US';
+    r.maxAlternatives = 5;
+    r.interimResults = false;
+    const label = btn.querySelector('span');
+    btn.classList.add('is-on');
+    label.textContent = '請唸出單字…';
+    const target = fold(w.w);
+    const stem = target.length > 5 ? target.slice(0, -2) : target;
+    r.onresult = (e) => {
+      const alts = Array.from(e.results[0]).map((a) => fold(a.transcript));
+      const ok = alts.some((t) => t.includes(target) || t.split(/\s+/).some((x) => x.startsWith(stem)));
+      btn.classList.remove('is-on');
+      if (ok) { label.textContent = '發音辨識通過 ✓'; btn.classList.add('is-ok'); sprint.voice++; sfx('correct'); burstFrom(btn, 18, 0.6); }
+      else { label.textContent = `聽成「${alts[0] || '…'}」，再試一次`; sfx('wrong'); }
+    };
+    r.onerror = (e) => { btn.classList.remove('is-on'); label.textContent = e.error === 'not-allowed' || e.error === 'service-not-allowed' ? '麥克風未開放' : '沒聽到，再試一次'; };
+    r.onend = () => { btn.classList.remove('is-on'); if (spRec === r) spRec = null; };
+    try { r.start(); } catch (e) { label.textContent = '跟讀檢查'; btn.classList.remove('is-on'); }
+  }
+  function spNextSee() {
+    const P = sprint;
+    if (P.stage !== 'see') return;
+    sfx('page');
+    P.i++;
+    if (P.i >= P.ids.length) {
+      P.stage = 'recall';
+      P.queue = shuffle(P.ids).map((id) => ({ id, streak: 0, seen: 0 }));
+      P.cleared = 0;
+      P.q = null;
+    }
+    vt('card', paintSprint);
+  }
+  /* step 2: recall with English cues until each word is right N times in a row */
+  function spMakeQ(card) {
+    const w = BY_ID.get(card.id);
+    const types = ['cloze', w.ar === 'w' ? 'pic' : null, 'def', w.u ? 'listen' : null].filter(Boolean);
+    const type = types[(card.seen + hash(w.w)) % types.length];
+    const group = sprint.ids.map((id) => BY_ID.get(id));
+    const ds = distractors(w, 3, group);
+    const q = { id: w.id, type, answered: false };
+    if (type === 'cloze') {
+      const ex = card.seen % 2 ? dailyEx(w) : toeicEx(w);
+      q.ex = ex;
+      const kind = blankKind(ex.f, w.w.toLowerCase());
+      const cap = ex.a === 0;
+      q.opts = shuffle([{ id: w.id, t: ex.f }, ...ds.map((d) => ({ id: d.id, t: applyForm(d.w, kind, cap) }))]);
+    } else q.opts = shuffle([w, ...ds].map((x) => ({ id: x.id, t: x.w })));
+    return q;
+  }
+  function spRecall() {
+    const P = sprint;
+    if (!P.queue.length && !(P.q && P.q.answered)) { P.stage = 'make'; return spMake(); }
+    if (!P.q) { P.qcard = P.queue[0]; P.q = spMakeQ(P.qcard); }
+    const q = P.q;
+    const card = P.qcard;
+    const w = BY_ID.get(q.id);
+    const need = S.set.passN;
+    const prog = P.cleared * need + P.queue.reduce((a, c) => a + Math.min(c.streak, need), 0);
+    let body = '';
+    if (q.type === 'cloze') body = `<p class="q-sent">${esc(q.ex.en.slice(0, q.ex.a))}<span class="blank">${q.answered ? esc(q.ex.f) : '&nbsp;'}</span>${esc(q.ex.en.slice(q.ex.a + q.ex.f.length))}</p>`;
+    else if (q.type === 'pic') body = `<div class="q-pic">${art(w, { full: true })}</div><p class="q-sub">這張圖在說哪個字？</p>`;
+    else if (q.type === 'def') body = `<div class="q-def"><span class="def-tag">${POS_EN[posOf(w)] || posOf(w)}</span><p>${esc(w.d)}</p></div>`;
+    else body = `<div class="listen-stage is-compact"><button class="big-listen" data-word="${w.id}" aria-label="再聽一次">${I.listen}</button><p class="q-sub">聽到的是哪個字？ <button class="btn ghost small" data-word="${w.id}" data-slow="1">慢速</button></p></div>`;
+    const tag = { cloze: '例句挖空', pic: '看圖', def: '英文解釋', listen: '聽音' }[q.type];
+    view.innerHTML = `<div class="wrap"><div class="quiz sp">
+      ${spTop(`剩 ${P.queue.length} 字`, prog, P.ids.length * need)}
+      <article class="q-card">
+        <div class="flash-head"><span class="eyebrow">${tag}</span><span class="sp-dots" aria-label="這個字已連續答對 ${card.streak} 次">${Array.from({ length: need }, (_, k) => `<i class="${k < card.streak ? 'on' : ''}"></i>`).join('')}</span></div>
+        ${body}
+        <div class="opts">${q.opts.map((o, k) => {
+          let cls = '';
+          if (q.answered) { if (o.id === q.id) cls = 'ok'; else if (o.id === q.picked) cls = 'no'; }
+          return `<button class="opt ${cls}" data-o="${k}" ${q.answered ? 'disabled' : ''}><span class="k">${'ABCD'[k]}</span><span class="t en">${esc(o.t)}</span></button>`;
+        }).join('')}</div>
+      </article>
+      ${q.answered && !q.ok ? `<div class="feedback">
+        <button data-open="${w.id}" aria-label="打開 ${esc(w.w)} 詞卡">${art(w)}</button>
+        <div style="display:grid;gap:4px;min-width:0">
+          <span class="fb-title no">正確答案：${esc(q.type === 'cloze' ? q.ex.f : w.w)}　這個字稍後會再出現</span>
+          <span class="fb-def">${esc(w.d)}<small>${esc(zhMain(w))}</small></span>
+        </div>
+      </div>
+      <button class="btn" id="sp-next" style="justify-self:end">知道了 ${I.arrow}</button>` : ''}
+      ${P.combo >= 3 ? `<div class="sp-combo" aria-live="polite">連對 ×${P.combo}</div>` : ''}
+    </div></div>`;
+    view.querySelectorAll('[data-o]').forEach((b) => b.addEventListener('click', () => spAnswer(+b.dataset.o)));
+    const nx = $('#sp-next');
+    if (nx) { nx.addEventListener('click', spNextQ); nx.focus({ preventScroll: true }); }
+    loadFull(view);
+    if (q.type === 'listen' && !q.played) { q.played = true; setTimeout(() => playWord(w), 250); }
+  }
+  function spAnswer(k) {
+    const P = sprint;
+    const q = P.q;
+    if (!q || q.answered) return;
+    q.answered = true;
+    q.picked = q.opts[k].id;
+    q.ok = q.picked === q.id;
+    const card = P.queue.shift();
+    card.seen++;
+    if (!(q.id in P.first)) P.first[q.id] = q.ok;
+    const d = today();
+    d.q++;
+    if (q.ok) d.c++;
+    save();
+    const need = S.set.passN;
+    if (q.ok) {
+      card.streak++;
+      P.combo++;
+      P.bestCombo = Math.max(P.bestCombo, P.combo);
+      if (card.streak >= need) P.cleared++;
+      else P.queue.splice(Math.min(P.queue.length, 3 + card.streak * 3), 0, card); // space the next look out a little more each time
+      sfx(P.combo % 5 === 0 ? 'streak' : 'correct');
+    } else {
+      card.streak = 0;
+      P.combo = 0;
+      P.wrong[q.id] = (P.wrong[q.id] || 0) + 1;
+      P.queue.splice(Math.min(P.queue.length, 2), 0, card); // straight back into the deck
+      sfx('wrong');
+    }
+    if (q.type === 'cloze') speak(q.ex.en); else if (q.type !== 'listen' || !q.ok) playWord(BY_ID.get(q.id));
+    spRecall();
+    if (q.ok) {
+      burstFrom($('.opt.ok'), card.streak >= need ? 30 : 14, card.streak >= need ? 0.9 : 0.5);
+      setTimeout(() => { if (sprint === P && P.q === q) spNextQ(); }, 650);
+    }
+  }
+  function spNextQ() { const P = sprint; if (!P.q || !P.q.answered) return; P.q = null; vt('card', paintSprint); }
+  /* step 3: produce — write a sentence with the three hardest words */
+  function spMake() {
+    const P = sprint;
+    if (!P.makeIds) {
+      P.makeIds = P.ids.slice().sort((a, b) => (P.wrong[b] || 0) - (P.wrong[a] || 0) || (hash(String(a) + P.t0) % 97) - (hash(String(b) + P.t0) % 97)).slice(0, 3);
+      P.mi = 0;
+    }
+    if (P.mi >= P.makeIds.length) return spFinish();
+    const w = BY_ID.get(P.makeIds[P.mi]);
+    const shown = P.shown;
+    view.innerHTML = `<div class="wrap"><div class="learn sp">
+      ${spTop(`${P.mi + 1} / 3 句`, P.mi, 3)}
+      <article class="q-card sp-make">
+        <div class="sp-make-head">${w.ar === 'w' ? art(w) : ''}<div><div class="flash-word">${esc(w.w)}</div><p class="def-line"><span class="def-tag">${POS_EN[posOf(w)] || posOf(w)}</span>${esc(w.d)}</p></div></div>
+        <p class="sp-make-hint">用 <b>${esc(w.w)}</b> 寫一句跟你自己有關的話：你的工作、學校、昨天發生的事都可以。至少 5 個英文字，字形可以變化（如 ${esc(applyForm(w.w, posOf(w) === 'v.' ? 'ed' : posOf(w) === 'n.' ? 's' : '', false))}）。</p>
+        <form id="sp-form" class="sp-form" autocomplete="off">
+          <label class="sr-only" for="sp-in">你的句子</label>
+          <textarea id="sp-in" rows="3" spellcheck="true" placeholder="I ..." ${shown ? 'disabled' : ''}>${shown ? esc(shown) : ''}</textarea>
+          ${shown ? '' : '<div class="row-btns"><button class="btn" type="submit">寫好了</button><button class="btn ghost" type="button" id="sp-skip">跳過</button></div>'}
+        </form>
+        <p class="sp-make-msg" id="sp-msg" aria-live="polite"></p>
+        ${shown ? `<div class="example"><span class="ex-tag is-toeic">參考例句</span><p class="en-line">${markSentence(toeicEx(w))}</p></div><button class="btn" id="sp-mnext" style="justify-self:end">${P.mi === 2 ? '看成績' : '下一句'} ${I.arrow}</button>` : ''}
+      </article>
+    </div></div>`;
+    if (shown) { $('#sp-mnext').addEventListener('click', () => { P.mi++; P.shown = null; vt('card', paintSprint); }); $('#sp-mnext').focus({ preventScroll: true }); return; }
+    const input = $('#sp-in');
+    input.focus({ preventScroll: true });
+    input.addEventListener('keydown', (e) => { if (e.key.length === 1 || e.key === 'Backspace') sfx('key'); if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#sp-form').requestSubmit(); } });
+    $('#sp-skip').addEventListener('click', () => { P.mi++; vt('card', paintSprint); });
+    $('#sp-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const t = input.value.trim().replace(/\s+/g, ' ');
+      const msg = $('#sp-msg');
+      const base = fold(w.w);
+      const stem = /\s|-/.test(base) ? base : base.replace(/(e|y)$/, '').slice(0, Math.max(3, base.length - 2));
+      const has = fold(t).includes(base) || fold(t).split(/[^a-z'-]+/).some((x) => x.startsWith(stem));
+      if (!has) { msg.textContent = `句子裡還沒有 ${w.w} 喔。`; sfx('wrong'); return; }
+      if (t.split(' ').length < 5) { msg.textContent = '再多寫幾個字，至少 5 個英文字。'; sfx('wrong'); return; }
+      P.made.push(w.id);
+      S.notes.push({ id: w.id, t, at: ymd() });
+      save();
+      P.shown = t;
+      sfx('correct');
+      spMake();
+      burstFrom($('.sp-make'), 22, 0.7);
+    });
+  }
+  function spFinish() {
+    const P = sprint;
+    const ms = Date.now() - P.t0;
+    const firstOk = P.ids.filter((id) => P.first[id]).length;
+    const acc = firstOk / P.ids.length;
+    const stars = 1 + (acc >= 0.8 ? 1 : 0) + (ms <= SPRINT_MIN * MIN && P.made.length === 3 ? 1 : 0);
+    const prev = S.sprint[P.no];
+    S.sprint[P.no] = { stars: Math.max(stars, prev?.stars || 0), ms: Math.min(ms, prev?.ms || Infinity), acc: Math.max(acc, prev?.acc || 0), at: ymd() };
+    const now = Date.now();
+    for (const id of P.ids) if (!S.cards[id] || S.cards[id].due <= now) grade(id, P.first[id] ? 3 : 2); // hand the words to spaced review
+    const d = today();
+    d.sp = (d.sp || 0) + 1;
+    save();
+    clearInterval(spTick);
+    Object.assign(P, { stage: 'done', ms, acc, stars, isBest: !prev || stars > prev.stars });
+    vt('card', spDone);
+  }
+  function spDone() {
+    const P = sprint;
+    const next = sprints()[P.no];
+    const hard = P.ids.filter((id) => !P.first[id]).map((id) => BY_ID.get(id));
+    sfx('complete');
+    setTimeout(() => burst(innerWidth / 2, innerHeight * 0.35, 40 + P.stars * 25, 1 + P.stars * 0.2), 160);
+    view.innerHTML = `<div class="wrap"><div class="quiz">
+      <div class="done sp-done">
+        <div class="sp-stamp lv-${P.lv}"><span class="eyebrow mono">LEVEL ${pad(P.no)}</span><b>${starStr(P.stars)}</b><span>${P.stars === 3 ? '完美通關' : P.stars === 2 ? '漂亮過關' : '過關'}</span></div>
+        <div class="done-body">
+          <span class="eyebrow">第 ${P.no} 關完成${P.isBest ? ' · 新紀錄' : ''}</span>
+          <div class="sp-stats">
+            <div><b class="num">${Math.floor(P.ms / MIN)}:${pad(Math.floor((P.ms % MIN) / 1000))}</b><span>用時 / ${SPRINT_MIN}:00</span></div>
+            <div><b class="num">${Math.round(P.acc * 100)}%</b><span>首答正確率</span></div>
+            <div><b class="num">${P.bestCombo}</b><span>最長連對</span></div>
+            <div><b class="num">${P.made.length}</b><span>自己造的句子</span></div>
+          </div>
+          <p style="color:var(--ink-2)">這 20 個字已排進間隔複習：明天早上的「晨間複習」會再見到答錯過的字，今晚睡前用「睡前快掃」再看一遍。</p>
+          <div class="row-btns">
+            ${next && sprintOpen(next.no) ? `<a class="btn" href="#sprint-${next.no}">下一關 ${I.arrow}</a>` : `<a class="btn" href="#practice">回關卡地圖 ${I.arrow}</a>`}
+            <button class="btn ghost" id="sp-again">再挑戰一次</button>
+          </div>
+        </div>
+      </div>
+      ${hard.length ? `<div class="result-list" data-list><span class="eyebrow">第一次答錯的字</span>${hard.map((w) => `<button class="result-row" data-open="${w.id}">${art(w)}<b>${esc(w.w)}</b><span>${esc(w.d)}</span></button>`).join('')}</div>` : ''}
+      ${rewardLine()}
+    </div></div>`;
+    listContext = hard.map((w) => w.id);
+    $('#sp-again').addEventListener('click', () => { sprint = { no: P.no, ids: P.ids, lv: P.lv, stage: 'intro', i: 0 }; vt('card', paintSprint); });
+  }
+
+  /* ---------- daily rhythm: morning review, one sprint, a bedtime recap ---------- */
+  function todaysWords() {
+    const k = ymd();
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    return Object.entries(S.cards).filter(([, c]) => c.first === k || (c.last && c.last >= +start)).map(([id]) => +id);
+  }
+  function rhythm() {
+    const d = today();
+    const due = dueIds().length;
+    const nx = nextSprint();
+    const tw = todaysWords().length;
+    return [
+      { k: 'review', t: '晨間複習', done: due === 0, sub: due ? `${due} 個字到期 · 約 ${Math.max(1, Math.round(due * 0.3))} 分鐘` : d.r ? `複習了 ${d.r} 次 ✓` : '今天沒有到期的字 ✓', href: '#learn', go: '開始複習' },
+      { k: 'sprint', t: '衝刺一關', done: (d.sp || 0) > 0, sub: (d.sp || 0) > 0 ? `今天過了 ${d.sp} 關 ✓` : nx ? `第 ${nx.no} 關 · 20 字 · ${SPRINT_MIN} 分鐘` : '50 關全部完成', href: nx ? `#sprint-${nx.no}` : '#practice', go: '出發' },
+      { k: 'recap', t: '睡前快掃', done: !!d.recap, sub: d.recap ? '已掃過 ✓' : tw ? `今天的 ${tw} 個字 · 約 3 分鐘` : '學完新字後開放', href: '#recap', go: '快掃', off: !tw && !d.recap },
+    ];
+  }
+  function rewardLine() {
+    const steps = rhythm();
+    if (!steps.every((x) => x.done) || !S.set.reward) return '';
+    return `<p class="reward-line">今天三步都完成了，去享受你的「${esc(S.set.reward)}」吧。</p>`;
+  }
+  function rhythmCard() {
+    const steps = rhythm();
+    const n = steps.filter((x) => x.done).length;
+    const h = new Date().getHours();
+    return `<section class="section">
+      <div class="section-head"><h2>今日節奏</h2><span class="more">完成 ${n} / 3</span></div>
+      <div class="rhythm">
+        <div class="meter rhythm-meter"><i class="m-mastered" style="width:${(n / 3) * 100}%"></i></div>
+        ${steps.map((x, k) => `<a class="rh-step ${x.done ? 'is-done' : ''} ${x.off ? 'is-off' : ''} ${!x.done && !x.off && ((x.k === 'recap' && h >= 20) || (x.k !== 'recap' && steps.slice(0, k).every((y) => y.done))) ? 'is-now' : ''}" href="${x.off ? '#today' : x.href}">
+          <span class="rh-no">${x.done ? '✓' : k + 1}</span>
+          <span class="rh-txt"><b>${x.t}</b><span>${x.sub}</span></span>
+          ${x.done || x.off ? '' : `<span class="rh-go">${x.go} ${I.arrow}</span>`}
+        </a>`).join('')}
+        <label class="reward"><span>三步完成，我要犒賞自己：</span><input id="reward-in" maxlength="24" placeholder="一杯手搖、一集影集…" value="${esc(S.set.reward)}"></label>
+        ${n === 3 ? `<p class="reward-line">${S.set.reward ? `三步都完成了，去享受你的「${esc(S.set.reward)}」吧。` : '三步都完成了。今天的字，交給睡眠去鞏固。'}</p>` : '<p class="rh-note">早上先複習前一天的字，睡前再掃一遍當天的字，睡眠會幫你把它們存進長期記憶。</p>'}
+      </div>
+    </section>`;
+  }
+  /* bedtime recap: picture and definition first, the word on tap */
+  let recap = null;
+  function viewRecap() {
+    const ids = todaysWords();
+    if (!recap || recap.day !== ymd() || recap.done) recap = { day: ymd(), ids: shuffle(ids), i: 0, shown: false, unsure: [] };
+    paintRecap();
+    const onKey = (e) => {
+      if ($('.overlay') || !recap || recap.i >= recap.ids.length) return;
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (!recap.shown) rcShow(); else rcNext(true); }
+      else if (recap.shown && e.key === '1') rcNext(false);
+      else if (recap.shown && e.key === '2') rcNext(true);
+    };
+    document.addEventListener('keydown', onKey);
+    cleanup = () => document.removeEventListener('keydown', onKey);
+  }
+  function rcShow() { recap.shown = true; sfx('flip'); paintRecap(); playWord(BY_ID.get(recap.ids[recap.i])); }
+  function rcNext(sure) {
+    const id = recap.ids[recap.i];
+    if (!sure) { recap.unsure.push(id); if (!S.stars.includes(id)) S.stars.push(id); save(); }
+    recap.i++;
+    recap.shown = false;
+    vt('card', paintRecap);
+  }
+  function paintRecap() {
+    const R = recap;
+    if (!R.ids.length) {
+      view.innerHTML = `<div class="wrap"><div class="learn"><div class="done"><img src="assets/brand/night.webp" alt="" width="480" height="480"><div class="done-body"><span class="eyebrow">睡前快掃</span><h2>今天還沒有學新字。</h2><p style="color:var(--ink-2)">先闖一關或完成今日航程，睡前再回來掃一遍。</p><div class="row-btns"><a class="btn" href="#practice">去闖關 ${I.arrow}</a></div></div></div></div></div>`;
+      return;
+    }
+    if (R.i >= R.ids.length) {
+      if (!R.done) { R.done = true; today().recap = true; save(); sfx('complete'); }
+      view.innerHTML = `<div class="wrap"><div class="learn"><div class="done">
+        <img src="assets/brand/night.webp" alt="" width="480" height="480">
+        <div class="done-body">
+          <span class="eyebrow">睡前快掃完成</span>
+          <h2>晚安，旅人。剩下的交給睡眠。</h2>
+          <p style="color:var(--ink-2)">掃過 ${R.ids.length} 個字${R.unsure.length ? `，${R.unsure.length} 個不太確定的已加入收藏，明天練習時可以只練它們` : '，每個都還記得'}。</p>
+          ${rewardLine()}
+          <div class="row-btns"><a class="btn" href="#today">回到啟程 ${I.arrow}</a></div>
+        </div></div></div></div>`;
+      return;
+    }
+    const w = BY_ID.get(R.ids[R.i]);
+    view.innerHTML = `<div class="wrap"><div class="learn">
+      <div class="learn-top">
+        <a class="icon-btn" href="#today" aria-label="離開快掃">${I.close}</a>
+        <div class="meter"><i style="width:${(R.i / R.ids.length) * 100}%"></i></div>
+        <span class="count num">${R.i + 1} / ${R.ids.length}</span>
+      </div>
+      <article class="flash rc-card">
+        ${art(w, { full: true })}
+        <div class="flash-body">
+          <span class="eyebrow">睡前快掃 · 想得起是哪個字嗎？</span>
+          <p class="def-line is-big"><span class="def-tag">${POS_EN[posOf(w)] || posOf(w)}</span>${esc(w.d)}</p>
+          ${R.shown ? `<div class="flash-back"><div class="flash-word">${esc(w.w)}</div>${pron(w)}<p class="en-line rc-sent">${markSentence(dailyEx(w))}</p></div>` : ''}
+        </div>
+      </article>
+      ${R.shown
+        ? `<div class="rates rc-rates"><button class="rate r1" id="rc-no">不太確定<small>加入收藏</small></button><button class="rate r4" id="rc-yes">記得<small>下一個</small></button></div><p class="kbd-hint"><kbd>1</kbd> 不太確定　<kbd>2</kbd> 記得</p>`
+        : `<button class="btn reveal-btn" id="rc-show">看答案</button><p class="kbd-hint"><kbd>Space</kbd> 看答案</p>`}
+    </div></div>`;
+    loadFull(view);
+    const sh = $('#rc-show');
+    if (sh) sh.addEventListener('click', rcShow);
+    const y = $('#rc-yes');
+    if (y) { y.addEventListener('click', () => rcNext(true)); $('#rc-no').addEventListener('click', () => rcNext(false)); }
   }
 
   /* ======================================================
@@ -2348,7 +2894,7 @@
         <article class="card panel">
           <h2>關於多益詞旅</h2>
           <ul>
-            <li>每個字的分詞性釋義、近似詞、相反詞、日常例句、多益例句、中文翻譯與常用搭配，皆由本站以台灣用語原創撰寫。</li>
+            <li>每個字的英英釋義、分詞性中文釋義、近似詞、相反詞、日常例句、多益例句、中文翻譯與常用搭配，皆由本站以台灣用語原創撰寫。</li>
             <li>航程故事《NS-014 號航班》是本站原創的連載小說，人物、情節與中文翻譯皆為原創；每章收錄 9–10 個同分數段的單字，並避開意思相近的字放在同一章，減少混淆。</li>
             <li>KK 音標依 CMU Pronouncing Dictionary 自動轉寫並人工校對常見多音字；15 個職場場景與 ${WORDS.filter((w) => w.tip).length} 則「多益考點」由本站編輯整理。</li>
             <li>單字插畫、場景插畫與美英發音錄音取自 Word Atlas（Word Atlas contributors，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>），本站已縮放並合併成圖集與音訊檔。${fmt(WORDS.filter((w) => w.ar === 'w').length)} 個字使用原字插畫、${WORDS.filter((w) => w.ar === 'r').length} 個字使用同字根插畫，其餘以所屬職場場景的插畫代替；有真人錄音的字共 ${fmt(WORDS.filter((w) => w.u).length)} 個，其餘使用裝置內建語音。</li>
@@ -2603,7 +3149,7 @@
   });
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => paintTools());
 
-  const VIEWS = { today: viewToday, story: viewStory, atlas: viewAtlas, learn: viewLearn, practice: viewPractice, map: viewMap, me: viewMe };
+  const VIEWS = { today: viewToday, recap: viewRecap, sprint: viewSprint, story: viewStory, atlas: viewAtlas, learn: viewLearn, practice: viewPractice, map: viewMap, me: viewMe };
 
   applyTheme();
   render();
