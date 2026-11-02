@@ -84,22 +84,31 @@
     return `<div class="art ${opt.cls || ''}" style="${spriteCss(idx, 'thumb')}" role="img" aria-label="${typeof w === 'object' ? esc(w.w) + ' 插畫' : '場景插畫'}">${opt.full ? `<div class="art-full" data-full="${idx}"></div>` : ''}${tag}</div>`;
   }
   const sheetCache = new Map();
+  function fullSheet(idx) {
+    const url = `assets/img/full-${Math.floor(idx / (SP.full.cols * SP.full.cols))}.webp`;
+    let p = sheetCache.get(url);
+    if (!p) {
+      p = new Promise((res, rej) => { const im = new Image(); im.onload = () => (im.decode ? im.decode().catch(() => {}) : Promise.resolve()).then(res); im.onerror = rej; im.src = url; });
+      p.then(() => { p.done = true; }, () => {});
+      sheetCache.set(url, p);
+    }
+    return p;
+  }
+  // warm the full-size plates of the words a session is about to show
+  const preloadFull = (ids) => ids.forEach((id) => { const w = BY_ID.get(id); if (w) fullSheet(w.i); });
   function loadFull(root = document) {
     root.querySelectorAll('[data-full]:not(.is-in)').forEach((el) => {
       const idx = +el.dataset.full;
-      const per = SP.full.cols * SP.full.cols;
-      const url = `assets/img/full-${Math.floor(idx / per)}.webp`;
-      let p = sheetCache.get(url);
-      if (!p) {
-        p = new Promise((res, rej) => { const im = new Image(); im.onload = res; im.onerror = rej; im.src = url; });
-        sheetCache.set(url, p);
-      }
+      const p = fullSheet(idx);
       el.setAttribute('style', spriteCss(idx, 'full'));
-      p.then(() => el.classList.add('is-in'), () => {});
+      if (p.done) el.classList.add('is-in'); // already decoded once: show it sharp at once, no fade
+      else p.then(() => el.classList.add('is-in'), () => {});
     });
   }
 
   /* ---------- helpers ---------- */
+  // after an in-place repaint (answering, flipping) the card must not replay its entrance animation
+  const settle = () => document.querySelectorAll('#view .q-card, #view .flash').forEach((el) => el.classList.add('no-enter'));
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -539,7 +548,8 @@
     if (reducedMotion()) { update(); if (after) after(); return; }
     if (document.startViewTransition) {
       document.documentElement.dataset.vt = kind;
-      const t = document.startViewTransition(update);
+      // the slide is the card's entrance; without settle() its CSS entrance would replay once the transition ends
+      const t = document.startViewTransition(kind === 'card' ? () => { update(); settle(); } : update);
       t.ready.catch(() => {});                 // a newer transition can skip this one; that is fine
       t.updateCallbackDone.catch(() => {});
       t.finished.catch(() => {}).finally(() => { if (document.documentElement.dataset.vt === kind) delete document.documentElement.dataset.vt; if (after) after(); });
@@ -1060,6 +1070,7 @@
   function startSession() {
     const due = dueIds();
     const fresh = plan().filter((id) => !S.cards[id]);
+    preloadFull([...due, ...fresh].slice(0, 30));
     session = { queue: [...due, ...fresh], total: due.length + fresh.length, done: 0, revealed: false, tally: { 1: 0, 2: 0, 3: 0, 4: 0 }, seen: new Set() };
   }
   function viewLearn() {
@@ -1073,7 +1084,7 @@
     document.addEventListener('keydown', onKey);
     cleanup = () => document.removeEventListener('keydown', onKey);
   }
-  function reveal() { session.revealed = true; sfx('flip'); paintLearn(); }
+  function reveal() { session.revealed = true; sfx('flip'); paintLearn(); settle(); }
   function rate(g) {
     if (g >= 3) { sfx('correct'); burstFrom(view.querySelector(`[data-g="${g}"]`), 18, 0.6); } else sfx('page');
     const id = session.queue.shift();
@@ -1264,6 +1275,7 @@
     if (mode === 'pic' && drawn.length < 4) { toast('這個範圍裡有專屬插畫的字不到 4 個，換個範圍試試。'); return; }
     const picks = shuffle(mode === 'listen' && voiced.length >= 10 ? voiced : mode === 'pic' ? drawn : pool).slice(0, 10);
     pracState.mode = mode;
+    preloadFull(picks.map((w) => w.id));
     pracState.qs = picks.map((w) => {
       const q = { id: w.id };
       if (mode === 'cloze' || mode === 'spell') q.ex = nextCloze(w);
@@ -1352,6 +1364,7 @@
       ${fb}
       ${!P.answered && q.opts ? '<p class="kbd-hint">鍵盤 <kbd>1</kbd>–<kbd>4</kbd> 或 <kbd>A</kbd>–<kbd>D</kbd> 作答</p>' : ''}
     </div></div>`;
+    loadFull(view);
     $('#q-exit').addEventListener('click', () => { P.mode = null; P.qs = []; viewPractice(); });
     view.querySelectorAll('[data-o]').forEach((b) => b.addEventListener('click', () => answer(+b.dataset.o)));
     const nx = $('#q-next');
@@ -1368,6 +1381,7 @@
         recordAnswer(w.id, good);
         if (good) playWord(w);
         paintQuiz();
+        settle();
         if (good) burstFrom($('.spell'), 26, 0.8);
       });
       if (!P.answered) $('#spell-in').focus({ preventScroll: true });
@@ -1386,6 +1400,7 @@
     const w = BY_ID.get(q.id);
     if (P.mode === 'cloze') speak(q.ex.en); else playWord(w);
     paintQuiz();
+    settle();
     if (q.ok) burstFrom($('.opt.ok'), 26, 0.8);
   }
   function nextQ() { pracState.i++; pracState.answered = false; vt('card', paintQuiz); }
@@ -1778,6 +1793,7 @@
     sfx(q.ok ? 'correct' : 'wrong');
     playWord(BY_ID.get(q.id));
     paintCloze(ch);
+    settle();
     if (q.ok) burstFrom($('.opt.ok'), 26, 0.8);
   }
   function clozeNext(ch) { const C = storyState.cloze; C.i++; C.answered = false; vt('card', () => paintCloze(ch)); }
@@ -1962,6 +1978,7 @@
       </div>
     </div></div>`;
     $('#sp-go').addEventListener('click', () => {
+      preloadFull(P.ids);
       Object.assign(P, { stage: 'see', i: 0, t0: Date.now(), first: {}, wrong: {}, voice: 0, made: [], combo: 0, bestCombo: 0 });
       sfx('start');
       spStartClock();
@@ -2090,10 +2107,10 @@
       <button class="btn" id="sp-next" style="justify-self:end">知道了 ${I.arrow}</button>` : ''}
       ${P.combo >= 3 ? `<div class="sp-combo" aria-live="polite">連對 ×${P.combo}</div>` : ''}
     </div></div>`;
+    loadFull(view); // before focus(), which forces a style pass and would make the plate fade in again
     view.querySelectorAll('[data-o]').forEach((b) => b.addEventListener('click', () => spAnswer(+b.dataset.o)));
     const nx = $('#sp-next');
     if (nx) { nx.addEventListener('click', spNextQ); nx.focus({ preventScroll: true }); }
-    loadFull(view);
     if (q.type === 'listen' && !q.played) { q.played = true; setTimeout(() => playWord(w), 250); }
   }
   function spAnswer(k) {
@@ -2127,6 +2144,7 @@
     }
     if (q.type === 'cloze') speak(q.ex.en); else if (q.type !== 'listen' || !q.ok) playWord(BY_ID.get(q.id));
     spRecall();
+    settle();
     if (q.ok) {
       burstFrom($('.opt.ok'), card.streak >= need ? 30 : 14, card.streak >= need ? 0.9 : 0.5);
       setTimeout(() => { if (sprint === P && P.q === q) spNextQ(); }, 650);
@@ -2177,6 +2195,7 @@
       P.shown = t;
       sfx('correct');
       spMake();
+      settle();
       burstFrom($('.sp-make'), 22, 0.7);
     });
   }
@@ -2283,7 +2302,7 @@
     document.addEventListener('keydown', onKey);
     cleanup = () => document.removeEventListener('keydown', onKey);
   }
-  function rcShow() { recap.shown = true; sfx('flip'); paintRecap(); playWord(BY_ID.get(recap.ids[recap.i])); }
+  function rcShow() { recap.shown = true; sfx('flip'); paintRecap(); settle(); playWord(BY_ID.get(recap.ids[recap.i])); }
   function rcNext(sure) {
     const id = recap.ids[recap.i];
     if (!sure) { recap.unsure.push(id); if (!S.stars.includes(id)) S.stars.push(id); save(); }

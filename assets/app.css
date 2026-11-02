@@ -1197,3 +1197,4 @@ a.sp-tile:hover { transform: translateY(-3px); box-shadow: inset 0 0 0 1.5px var
   .result-row .art { grid-row: span 2; }
   .result-row span { text-align: left; }
 }
+.no-enter { animation: none !important; }
