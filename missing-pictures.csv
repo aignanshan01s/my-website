@@ -1,0 +1,506 @@
+﻿編號,單字,分數段,詞性,英英釋義,中文,場景,原因
+3,subject,400,n.,the thing that people are talking or writing about,主題；話題,通用核心,原圖和字義連不起來
+6,amount,400,n.,"how much of something there is, often money",數量；總額；金額,財務金融,原圖和字義連不起來
+8,fee,400,n.,money you pay to use a service or to do something,費用；手續費；服務費,財務金融,原圖和字義連不起來
+13,label,400,n.,a small piece of paper on a product that gives information about it,標籤；標示,製造物流,原圖和字義連不起來
+16,receipt,400,n.,a piece of paper that shows you have paid for something,收據；發票,購物消費,原圖和字義連不起來
+19,destination,400,n.,the place that someone or something is going to,目的地；終點,旅遊交通,原圖和字義連不起來
+23,reminder,400,n.,a note or message that helps you remember something,提醒；提示（物）,辦公行政,原圖和字義連不起來
+34,volume,400,n.,how loud a sound is,音量,通用核心,原圖和字義連不起來
+35,item,400,n.,one thing on a list or in a group,項目；品項；物品,購物消費,原圖和字義連不起來
+43,income,400,n.,money that you get from your job or from other places,收入；所得,財務金融,原圖和字義連不起來
+50,response,400,n.,an answer or reaction to something,回應；答覆,通用核心,原圖和字義連不起來
+51,sum,400,n.,an amount of money,金額；款項,財務金融,原圖和字義連不起來
+54,decision,400,n.,a choice that you make after thinking,決定；決策,通用核心,原圖和字義連不起來
+55,energy,400,n.,"power from electricity, oil, gas or the sun that makes machines work",能源,製造物流,原圖和字義連不起來
+56,section,400,n.,one of the parts that something is divided into,部分；段落,通用核心,原圖和字義連不起來
+57,purpose,400,n.,the reason for doing something,目的；意圖；用途,通用核心,原圖和字義連不起來
+59,opportunity,400,n.,a chance to do something good or useful,機會；良機,通用核心,原圖和字義連不起來
+62,method,400,n.,a way of doing something,方法；方式,通用核心,原圖和字義連不起來
+63,data,400,n.,facts and numbers collected so they can be studied,資料；數據,科技數位,原圖和字義連不起來
+66,theme,400,n.,"the main idea of a talk, event or piece of art",主題；題目,會議活動,原圖和字義連不起來
+67,condition,400,n.,the state that something or someone is in,狀況；狀態,通用核心,原圖和字義連不起來
+72,device,400,n.,a machine or tool made for a special job,裝置；設備,科技數位,原圖和字義連不起來
+75,status,400,n.,the situation of something at a particular time,狀態；狀況,通用核心,原圖和字義連不起來
+82,property,400,n.,land and buildings that someone owns,房地產；不動產,房產設施,原圖和字義連不起來
+92,spreadsheet,400,n.,a computer program that shows numbers in rows and columns,試算表；電子表格,辦公行政,原作沒有這個字的插畫
+97,venue,400,n.,the place where an event such as a concert or meeting happens,舉辦地點；會場,會議活動,原作沒有這個字的插畫
+102,standard,400,n.,a level of quality that people expect,標準；水準,通用核心,原圖和字義連不起來
+103,minimum,400,n.,the smallest amount that is allowed or possible,最低限度；最小值,通用核心,原圖和字義連不起來
+104,budget,400,n.,the amount of money that you plan to spend,預算,財務金融,原圖和字義連不起來
+105,manual,400,n.,a book that tells you how to use or repair something,手冊；說明書,辦公行政,原圖和字義連不起來
+106,result,400,n.,something that happens because of something else,結果；成果,通用核心,原圖和字義連不起來
+108,form,400,n.,an official paper with spaces for you to write information,表格,辦公行政,原圖和字義連不起來
+110,award,400,n.,a prize given to someone for doing something well,獎；獎項,人資職涯,原作沒有這個字的插畫
+111,tax,400,n.,money that people and businesses must pay to the government,稅；稅金,財務金融,原圖和字義連不起來
+112,discount,400,n.,a lower price than usual,折扣,購物消費,原圖和字義連不起來
+118,power,400,n.,electricity used to run machines,電力；動力,通用核心,原作沒有這個字的插畫
+125,progress,400,n.,movement toward finishing or improving something,進展；進步,通用核心,原圖和字義連不起來
+128,range,400,n.,a group of different things of the same general type,範圍；幅度,通用核心,原圖和字義連不起來
+133,raise,400,n.,an increase in the money you are paid for your work,加薪,人資職涯,原作沒有這個字的插畫
+137,common,400,adj.,happening often or shared by many people,常見的；普遍的,通用核心,原圖和字義連不起來
+138,regular,400,adj.,"happening at the same time every day, week or month",定期的；規律的,通用核心,原圖和字義連不起來
+139,major,400,adj.,very large or important,主要的；重大的,通用核心,原圖和字義連不起來
+140,available,400,adj.,"able to be used, bought or found",可獲得的；可用的,通用核心,原圖和字義連不起來
+141,negative,400,adj.,"bad or harmful, or expressing no",負面的；消極的,通用核心,原圖和字義連不起來
+143,primary,400,adj.,"most important, or coming first",主要的；首要的,通用核心,原圖和字義連不起來
+144,typical,400,adj.,having the usual qualities of a particular type,典型的；一般的；有代表性的,通用核心,原圖和字義連不起來
+149,various,400,adj.,of several different kinds,各式各樣的；不同的,通用核心,原圖和字義連不起來
+150,suitable,400,adj.,right for a particular purpose or person,合適的；適當的,通用核心,原圖和字義連不起來
+151,practical,400,adj.,useful and sensible in real situations,實際的；實用的,通用核心,原圖和字義連不起來
+152,due,400,adj.,expected to happen or be paid at a certain time,到期的；應付的,財務金融,原圖和字義連不起來
+157,entire,400,adj.,whole or complete,全部的；整個的,通用核心,原作沒有這個字的插畫
+158,stable,400,adj.,"firmly fixed, or not likely to change",穩定的；牢固的,通用核心,原圖和字義連不起來
+161,unlikely,400,adj.,probably not going to happen,不太可能的,通用核心,原圖和字義連不起來
+162,detailed,400,adj.,including many small facts,詳細的；精細的,通用核心,原圖和字義連不起來
+163,obvious,400,adj.,easy to see or understand,明顯的；顯而易見的,通用核心,原圖和字義連不起來
+164,aware,400,adj.,knowing or realizing something,察覺到的；知道的；意識到的,通用核心,原作沒有這個字的插畫
+166,original,400,adj.,"existing at the beginning, before any changes",原本的；最初的,通用核心,原圖和字義連不起來
+169,secure,400,adj.,safe and protected from danger,安全的；穩固的,通用核心,原圖和字義連不起來
+170,initial,400,adj.,happening at the beginning,最初的；開始的,通用核心,原圖和字義連不起來
+173,save,400,v.,to keep information on a computer so you can use it later,儲存（檔案）,科技數位,原作沒有這個字的插畫
+183,organize,400,v.,to plan and arrange an event or activity,組織；籌辦,會議活動,原圖和字義連不起來
+186,book,400,v.,"to arrange to have a seat, room or ticket for later",預訂；預約,旅遊交通,原作沒有這個字的插畫
+188,mention,400,v.,to talk or write about something in a few words,提到；說起,通用核心,原圖和字義連不起來
+192,match,400,v.,to be the same as or look good with something else,相配；與…相符；匹配,通用核心,原作沒有這個字的插畫
+193,afford,400,v.,to have enough money to pay for something,負擔得起；買得起,財務金融,原圖和字義連不起來
+197,confirm,400,v.,to say or show that something is true or will happen,確認；證實,通用核心,原圖和字義連不起來
+199,reduce,400,v.,to make something smaller in size or amount,減少；降低,通用核心,原圖和字義連不起來
+202,remain,400,v.,to stay in the same place or condition,保持；仍然是,通用核心,原圖和字義連不起來
+207,represent,400,v.,to speak or act officially for another person or group,代表；代理,企業經營,原圖和字義連不起來
+208,intend,400,v.,to have a plan to do something,打算；想要,通用核心,原圖和字義連不起來
+211,require,400,v.,to need something,需要；要求,通用核心,原圖和字義連不起來
+213,replace,400,v.,to put something new in the place of something old,取代；替換,通用核心,原圖和字義連不起來
+222,seek,400,v.,to try to find or get something,尋求；尋找,通用核心,原圖和字義連不起來
+225,propose,400,v.,to suggest a plan for other people to think about,提議；建議,企業經營,原圖和字義連不起來
+227,offer,400,v.,to ask someone if they would like something,提供；給予,通用核心,原圖和字義連不起來
+230,increase,400,v.,to become or make larger in amount or number,增加；提高,通用核心,原圖和字義連不起來
+237,permit,400,v.,to allow something officially,允許；許可,合約法規,原圖和字義連不起來
+238,benefit,400,v.,to be useful or helpful to someone,對…有益；受益（benefit from）,通用核心,原圖和字義連不起來
+242,ban,400,v.,to officially say that something is not allowed,禁止；取締,合約法規,原圖和字義連不起來
+244,transfer,400,v.,to move someone or something from one place to another,轉移；轉調,財務金融,原圖和字義連不起來
+245,launch,400,v.,to start selling a new product or begin a new activity,推出；發表,行銷媒體,原圖和字義連不起來
+246,command,400,n.,an order given to a person or computer,指令；命令,通用核心,原圖和字義連不起來
+247,advance,400,n.,progress or a change for the better,進步；發展,通用核心,原圖和字義連不起來
+251,regarding,600,prep.,about or connected with a particular subject,關於；就…而言,通用核心,原圖和字義連不起來
+253,appliance,600,n.,"an electrical machine used in the home, such as a fridge",家電；器具,房產設施,原作沒有這個字的插畫
+256,competitor,600,n.,a company or person trying to win against others in business or sport,競爭者；對手,企業經營,原圖和字義連不起來
+258,trend,600,n.,a general direction in which something is changing,趨勢；潮流；動向,行銷媒體,原圖和字義連不起來
+259,balance,600,n.,the amount of money left in a bank account,餘額,財務金融,原作沒有這個字的插畫
+264,performance,600,n.,how well a person or machine does a job,表現；績效,人資職涯,原圖和字義連不起來
+266,briefcase,600,n.,a flat case for carrying papers and documents,公事包,辦公行政,原作沒有這個字的插畫
+270,identification,600,n.,official papers or a card that show who you are,身分證明；證件,旅遊交通,原圖和字義連不起來
+271,interest,600,n.,extra money that a bank pays you or you pay on a loan,利息,財務金融,原作沒有這個字的插畫
+273,conclusion,600,n.,"the final part of something, or an opinion you reach after thinking",結論；結尾,通用核心,原圖和字義連不起來
+276,fault,600,n.,responsibility for a mistake or a problem,過錯；責任,通用核心,原圖和字義連不起來
+281,promotion,600,n.,a move to a higher and more important job,升遷；晉升,人資職涯,原圖和字義連不起來
+282,pension,600,n.,money paid regularly to someone who has stopped working because of age,退休金；養老金,人資職涯,原作沒有這個字的插畫
+284,extension,600,n.,one of many telephone lines inside an office building,分機,辦公行政,原作沒有這個字的插畫
+285,assembly,600,n.,the process of putting the parts of something together,組裝；裝配,製造物流,原圖和字義連不起來
+288,division,600,n.,a large part of a company that has its own business,（公司的）部門；處,企業經營,原作沒有這個字的插畫
+289,policy,600,n.,a set of rules or plans that an organization follows,政策；方針；規定,企業經營,原圖和字義連不起來
+291,investment,600,n.,money put into a business to make a profit,投資；投資額,財務金融,原圖和字義連不起來
+292,résumé,600,n.,a short document that lists your education and work experience,履歷；履歷表,人資職涯,原作沒有這個字的插畫
+297,sector,600,n.,one part of a country's economy,產業；部門；領域,企業經營,原圖和字義連不起來
+298,term,600,n.,the conditions of an agreement or contract,條款；條件（常用複數）,合約法規,原作沒有這個字的插畫
+299,committee,600,n.,a group of people chosen to make decisions about something,委員會,企業經營,原作沒有這個字的插畫
+300,plant,600,n.,a factory where goods are produced,工廠；廠房,製造物流,原作沒有這個字的插畫
+302,duration,600,n.,the length of time that something lasts,持續時間；期間,通用核心,原作沒有這個字的插畫
+307,superior,600,n.,a person who has a higher position than you at work,上司；上級,人資職涯,原作沒有這個字的插畫
+309,unemployment,600,n.,the state of not having a job,失業；失業率,人資職涯,原作沒有這個字的插畫
+311,dashboard,600,n.,the part of a car in front of the driver that shows speed and fuel,（汽車）儀表板,科技數位,原作沒有這個字的插畫
+312,principle,600,n.,a basic rule or belief that guides how you act,原則；原理,通用核心,原圖和字義連不起來
+315,resource,600,n.,"something useful, such as money, people or materials",資源；物力,通用核心,原圖和字義連不起來
+321,session,600,n.,a period of time spent doing one particular activity,一段時間；一堂（課）；一場（活動）,會議活動,原圖和字義連不起來
+322,improvement,600,n.,a change that makes something better,改善；改進；進步,通用核心,原圖和字義連不起來
+327,priority,600,n.,something that is more important than other things,優先事項；優先權,通用核心,原圖和字義連不起來
+328,trial,600,n.,a period of testing something to see if it works well,試用；試驗,購物消費,原作沒有這個字的插畫
+329,economy,600,n.,the system by which a country makes and uses money and goods,經濟；經濟體,財務金融,原圖和字義連不起來
+333,motivation,600,n.,the desire or reason to do something,動機；動力；積極性,人資職涯,原圖和字義連不起來
+338,statement,600,n.,a document from a bank showing the money in and out of an account,對帳單；結算單,財務金融,原作沒有這個字的插畫
+339,position,600,n.,a job in a company,職位；職務,人資職涯,原圖和字義連不起來
+341,feedback,600,n.,comments about how good or useful something is,意見；回饋；反應,通用核心,原圖和字義連不起來
+342,courier,600,n.,a person or company that takes packages from one place to another quickly,快遞員；快遞公司,製造物流,原作沒有這個字的插畫
+345,quarter,600,n.,one of four three-month periods in a business year,季度；一季,財務金融,原作沒有這個字的插畫
+347,utilities,600,n.,"services such as electricity, water and gas for a building",（pl.）水電瓦斯等公用事業；水電費,房產設施,原作沒有這個字的插畫
+348,layover,600,n.,a short stop between flights on a long trip,（旅途中）短暫停留；轉機停留,旅遊交通,原作沒有這個字的插畫
+349,agenda,600,n.,a list of the things to discuss at a meeting,議程；議程表,會議活動,原作沒有這個字的插畫
+353,itinerary,600,n.,a plan showing the places and times of a trip,行程表；旅程,旅遊交通,原作沒有這個字的插畫
+354,consent,600,n.,permission to do something,同意；允許；許可,合約法規,原作沒有這個字的插畫
+357,certification,600,n.,official proof that someone has reached a certain standard,認證；證照；檢定,人資職涯,原圖和字義連不起來
+359,individual,600,n.,"a single person, considered separately from a group",個人；個體,通用核心,原圖和字義連不起來
+360,reward,600,n.,something given to someone because they have done something good,報酬；獎賞；獎勵,人資職涯,原圖和字義連不起來
+362,influence,600,n.,the power to change how someone thinks or acts,影響；影響力,通用核心,原圖和字義連不起來
+367,credit,600,n.,an arrangement to pay later for something you buy now,信用；信貸；賒帳,財務金融,原圖和字義連不起來
+369,rate,600,n.,an amount of money charged for something,費率；價格,財務金融,原圖和字義連不起來
+370,shift,600,n.,"a period of work in a day, such as the night one",輪班；班次,人資職涯,原作沒有這個字的插畫
+374,deposit,600,n.,money paid at first as part of the full price,訂金；押金,財務金融,原圖和字義連不起來
+376,impact,600,n.,a strong effect that something has on something else,衝擊；影響,通用核心,原圖和字義連不起來
+379,current,600,adj.,happening or existing now,目前的；現行的,通用核心,原圖和字義連不起來
+380,specific,600,adj.,"clear and exact, not general",特定的；明確的；具體的,通用核心,原圖和字義連不起來
+383,flexible,600,adj.,able to change easily to suit new situations,靈活的；有彈性的,通用核心,原圖和字義連不起來
+384,unique,600,adj.,being the only one of its kind,獨特的；獨一無二的,通用核心,原圖和字義連不起來
+385,effective,600,adj.,working well and producing the result you want,有效的；生效的,通用核心,原圖和字義連不起來
+387,constant,600,adj.,happening all the time without stopping,持續的；不斷的,通用核心,原圖和字義連不起來
+388,gross,600,adj.,"total, before taxes or costs are taken away",總的；毛的（未扣除的）,財務金融,原圖和字義連不起來
+389,inexperienced,600,adj.,not having much knowledge or skill from practice,缺乏經驗的；生疏的,人資職涯,原作沒有這個字的插畫
+392,relevant,600,adj.,closely connected with what is being discussed,相關的；切題的,通用核心,原圖和字義連不起來
+393,domestic,600,adj.,"inside one country, not international",國內的,旅遊交通,原圖和字義連不起來
+394,complimentary,600,adj.,"given free, especially by a hotel or business",免費贈送的,餐飲住宿,原作沒有這個字的插畫
+396,principal,600,adj.,most important or main,主要的；首要的,通用核心,原圖和字義連不起來
+398,spacious,600,adj.,having a lot of space inside,寬敞的,房產設施,原作沒有這個字的插畫
+400,internal,600,adj.,existing or happening inside an organization,內部的；國內的,企業經營,原作沒有這個字的插畫
+406,additional,600,adj.,more than what was first expected or planned,額外的；附加的,通用核心,原圖和字義連不起來
+407,reasonable,600,adj.,"fair and sensible, especially about a price",合理的；公道的,通用核心,原圖和字義連不起來
+408,appropriate,600,adj.,suitable or right for a particular situation,適當的；合適的,通用核心,原圖和字義連不起來
+409,permanent,600,adj.,lasting for a very long time or for ever,永久的；長久的；常設的,通用核心,原圖和字義連不起來
+412,extensive,600,adj.,covering a large area or a lot of details,廣泛的；大量的；大規模的,通用核心,原圖和字義連不起來
+413,potential,600,adj.,"possible in the future, but not yet real",潛在的；可能的,企業經營,原作沒有這個字的插畫
+419,moderate,600,adj.,neither very large nor very small,適度的；中等的；溫和的,通用核心,原圖和字義連不起來
+420,particularly,600,adv.,more than usual or more than others,特別；尤其,通用核心,原圖和字義連不起來
+421,approximately,600,adv.,close to an exact number but not exact,大約；近乎,通用核心,原圖和字義連不起來
+423,scan,600,v.,to copy a document into a computer using a special machine,掃描,科技數位,原作沒有這個字的插畫
+424,postpone,600,v.,to move an event to a later time,延後；延期,會議活動,原圖和字義連不起來
+425,reschedule,600,v.,to change the time or date of a planned event,重新安排時間；改期,會議活動,原作沒有這個字的插畫
+426,affect,600,v.,to cause a change in someone or something,影響,通用核心,原圖和字義連不起來
+428,enroll,600,v.,to officially join a course or school,註冊；登記；入學,會議活動,原作沒有這個字的插畫
+430,involve,600,v.,to include something as a necessary part,涉及；包含；需要,通用核心,原圖和字義連不起來
+433,forward,600,v.,to send an e-mail or letter you received to another person,轉寄；轉交,辦公行政,原作沒有這個字的插畫
+440,occur,600,v.,"to happen, especially without being planned",發生；出現,通用核心,原圖和字義連不起來
+441,assure,600,v.,to tell someone that something is true so they will not worry,向…保證；使放心,通用核心,原圖和字義連不起來
+442,persuade,600,v.,to make someone agree to do something by giving reasons,說服；勸服,通用核心,原圖和字義連不起來
+443,convince,600,v.,to make someone believe that something is true,使相信；說服,通用核心,原圖和字義連不起來
+445,declare,600,v.,to say something officially or publicly,宣布；聲明,通用核心,原圖和字義連不起來
+446,alter,600,v.,to change something slightly,改變；修改,通用核心,原圖和字義連不起來
+448,employ,600,v.,to give someone a paid job,雇用,人資職涯,原圖和字義連不起來
+453,conclude,600,v.,to bring something to an end,結束；完成,通用核心,原作沒有這個字的插畫
+457,draw,600,v.,to make people come to a place or event,吸引（人群、注意）,行銷媒體,原作沒有這個字的插畫
+459,claim,600,v.,to say that something is true even though there is no proof,聲稱；主張,通用核心,原圖和字義連不起來
+461,promote,600,v.,to help sell a product by advertising it,促銷；推廣,行銷媒體,原圖和字義連不起來
+462,adapt,600,v.,to change your behavior to deal with a new situation,適應；調整,通用核心,原圖和字義連不起來
+463,settle,600,v.,"to end an argument or problem, or pay money that is owed",解決；結清,合約法規,原圖和字義連不起來
+464,revise,600,v.,to change a piece of writing to improve or correct it,修改；修訂；校訂,辦公行政,原作沒有這個字的插畫
+465,invest,600,v.,to put money into something to make a profit,投資；投入（時間、金錢）,財務金融,原圖和字義連不起來
+468,quote,600,v.,to tell a customer how much a job will cost,報價,財務金融,原作沒有這個字的插畫
+469,demote,600,v.,to move someone to a lower position at work,降職；降級,人資職涯,原作沒有這個字的插畫
+471,dominate,600,v.,to have control over or be the most powerful in something,支配；主宰；佔據主導地位,企業經營,原作沒有這個字的插畫
+472,elaborate,600,v.,to give more details about something,詳細說明；闡述,通用核心,原作沒有這個字的插畫
+474,anticipate,600,v.,to expect something and prepare for it,預期；預料,通用核心,原作沒有這個字的插畫
+476,appoint,600,v.,to choose someone officially for a job,任命；指派,人資職涯,原圖和字義連不起來
+477,customize,600,v.,to change something to suit one person's needs,客製化；訂做,購物消費,原作沒有這個字的插畫
+478,appeal,600,v.,to seem interesting or good to someone,吸引；引起興趣（appeal to）,行銷媒體,原作沒有這個字的插畫
+479,commit,600,v.,to promise to do something,承諾；致力於（commit to）,通用核心,原作沒有這個字的插畫
+480,sustain,600,v.,to keep something going over time,維持；支撐,通用核心,原作沒有這個字的插畫
+482,nominate,600,v.,to officially suggest someone for a job or prize,提名；推薦；任命,人資職涯,原圖和字義連不起來
+486,track,600,v.,to follow the movement or progress of something,追蹤；記錄,製造物流,原作沒有這個字的插畫
+487,charge,600,v.,to ask an amount of money for a product or service,收費；索價,財務金融,原圖和字義連不起來
+491,concern,600,n.,a feeling of worry about something,擔心；憂慮,通用核心,原圖和字義連不起來
+492,function,600,n.,the purpose or job of something,功能；作用；職責,科技數位,原圖和字義連不起來
+494,guarantee,600,v.,to promise that something will happen or will work,保證；擔保,購物消費,原圖和字義連不起來
+497,feature,600,n.,an important or interesting part of something,特色；特點；功能,行銷媒體,原圖和字義連不起來
+498,default,600,n.,a setting that a computer uses if you do not change it,預設值,財務金融,原作沒有這個字的插畫
+499,sponsor,600,v.,"to pay for an event or program, usually to advertise",贊助；資助,會議活動,原圖和字義連不起來
+500,malfunction,600,n.,a failure to work correctly,故障；失靈,科技數位,原作沒有這個字的插畫
+501,commitment,800,n.,"a promise to do something, or being willing to give time and energy to it",承諾；投入；奉獻,人資職涯,原圖和字義連不起來
+502,exposure,800,n.,"attention from newspapers, television or the internet",曝光；宣傳,行銷媒體,原圖和字義連不起來
+504,factor,800,n.,one of the things that causes or influences a situation,因素；要素,通用核心,原圖和字義連不起來
+506,criteria,800,n.,the standards used to judge or decide something,標準；準則（criterion 的複數）,通用核心,原圖和字義連不起來
+509,foundation,800,n.,"an organization that gives money for a special purpose, such as research",基金會,企業經營,原作沒有這個字的插畫
+510,perspective,800,n.,a particular way of thinking about something,觀點；看法；角度,通用核心,原圖和字義連不起來
+512,representative,800,n.,"a person chosen to act or speak for others, or a salesperson",代表；代理人；業務員,企業經營,原圖和字義連不起來
+516,coverage,800,n.,"the reporting of news on television, radio or in newspapers",新聞報導,行銷媒體,原作沒有這個字的插畫
+518,resolution,800,n.,an official decision made after a group votes,決議；決定,通用核心,原作沒有這個字的插畫
+519,compensation,800,n.,money and benefits that a worker receives for a job,報酬；薪酬,人資職涯,原圖和字義連不起來
+521,merit,800,n.,a good quality that deserves praise,優點；價值,通用核心,原作沒有這個字的插畫
+522,prospect,800,n.,the possibility that something good will happen in the future,前景；可能性,通用核心,原圖和字義連不起來
+523,warranty,800,n.,a written promise to repair or replace a product for a certain time,保固；保證書,購物消費,原圖和字義連不起來
+526,reference,800,n.,a person or letter that tells a new company about your work and character,推薦人；推薦信,人資職涯,原圖和字義連不起來
+527,layoff,800,n.,the act of ending workers' jobs because there is not enough work,裁員；資遣,人資職涯,原作沒有這個字的插畫
+528,scale,800,n.,the size or level of something,規模；程度,通用核心,原圖和字義連不起來
+529,personnel,800,n.,the people who work for an organization,全體人員；員工,人資職涯,原作沒有這個字的插畫
+530,emphasis,800,n.,special importance given to something,強調；重點；重視,通用核心,原作沒有這個字的插畫
+531,commission,800,n.,money paid to a salesperson for each product they sell,佣金；手續費,企業經營,原圖和字義連不起來
+534,operation,800,n.,"the way that something works, or a business activity",運作；營運；業務,製造物流,原圖和字義連不起來
+536,consumption,800,n.,"the amount of energy, food or materials that is used",消耗量；消費,通用核心,原圖和字義連不起來
+537,efficiency,800,n.,the quality of doing something well without wasting time or energy,效率；效能,通用核心,原圖和字義連不起來
+540,amenities,800,n.,"things that make a place comfortable, such as a pool or gym",（pl.）便利設施；生活設施,餐飲住宿,原作沒有這個字的插畫
+541,vendor,800,n.,a company or person that sells something,供應商；廠商,製造物流,原作沒有這個字的插畫
+543,installment,800,n.,one of several regular payments made over time for something,分期付款（的一期）,財務金融,原圖和字義連不起來
+545,guideline,800,n.,advice on how to do something,指導方針；準則（常用複數）,通用核心,原圖和字義連不起來
+547,asset,800,n.,something valuable that a person or company owns,資產；財產,財務金融,原作沒有這個字的插畫
+550,phase,800,n.,one stage in a process,階段；時期,通用核心,原圖和字義連不起來
+552,circumstance,800,n.,the facts or conditions that affect a situation,情況；環境（常用複數）,通用核心,原圖和字義連不起來
+554,revision,800,n.,"a change made to something, or a new version of a text",修改；修訂；修訂版,通用核心,原作沒有這個字的插畫
+555,hazard,800,n.,something that could be dangerous,危險；危害；危險因素,製造物流,原圖和字義連不起來
+556,webinar,800,n.,a seminar that people join online,線上研討會；網路講座,科技數位,原作沒有這個字的插畫
+557,intake,800,n.,"the amount of food, drink or air that you take into your body",攝取量,餐飲住宿,原作沒有這個字的插畫
+558,founder,800,n.,a person who starts a company or organization,創辦人；創始人,企業經營,原作沒有這個字的插畫
+560,associate,800,n.,a person you work with or do business with,同事；夥伴；合夥人,企業經營,原作沒有這個字的插畫
+563,investigation,800,n.,an official examination of the facts about a problem or crime,調查；研究,通用核心,原圖和字義連不起來
+565,procedure,800,n.,the official or correct way of doing something,程序；步驟；手續,通用核心,原圖和字義連不起來
+567,headquarters,800,n.,the main office of a company or organization,總部；總公司（單複數同形）,企業經營,原圖和字義連不起來
+569,cubicle,800,n.,a small work area separated by low walls in an office,（辦公室的）隔間；小隔間座位,辦公行政,原作沒有這個字的插畫
+570,headcount,800,n.,the number of people who work for an organization,員工人數；人頭數,人資職涯,原作沒有這個字的插畫
+577,catering,800,n.,the service of providing food and drinks at an event,外燴；餐飲服務,餐飲住宿,原圖和字義連不起來
+578,campaign,800,n.,"a series of planned activities to achieve a goal, such as selling a product",活動；宣傳活動,行銷媒體,原圖和字義連不起來
+581,inconvenience,800,n.,a problem that causes trouble or difficulty,不便；麻煩,通用核心,原作沒有這個字的插畫
+583,branch,800,n.,one of the local offices or shops that belong to a larger company,分店；分公司；分行,企業經營,原作沒有這個字的插畫
+584,timeline,800,n.,a plan that shows when each step of a project should happen,時程表；時間軸,辦公行政,原作沒有這個字的插畫
+586,downtime,800,n.,the time when a machine or computer system is not working,停機時間,製造物流,原作沒有這個字的插畫
+587,clause,800,n.,one separate part of a contract or law,（合約、法律的）條款,合約法規,原圖和字義連不起來
+589,stance,800,n.,an opinion that is stated publicly,立場；態度,企業經營,原作沒有這個字的插畫
+590,amendment,800,n.,a change made to a law or agreement,修正；修訂；修正案,合約法規,原圖和字義連不起來
+591,revenue,800,n.,money that a company receives from its business,收入；營收；收益,財務金融,原作沒有這個字的插畫
+594,hurdle,800,n.,a problem that you must deal with before you can make progress,障礙；難關,通用核心,原作沒有這個字的插畫
+596,broker,800,n.,a person who buys and sells things for other people,經紀人；仲介,財務金融,原作沒有這個字的插畫
+598,approach,800,n.,a way of dealing with something,方法；途徑,通用核心,原圖和字義連不起來
+599,dispute,800,n.,a serious argument or disagreement,爭端；糾紛,合約法規,原圖和字義連不起來
+601,object,800,n.,the purpose of an activity,目標；對象,通用核心,原作沒有這個字的插畫
+602,span,800,n.,the length of time between a beginning and an end,一段時間；期間,通用核心,原圖和字義連不起來
+607,crucial,800,adj.,extremely important for success,極重要的；決定性的,通用核心,原圖和字義連不起來
+609,eligible,800,adj.,having the right to do or receive something,有資格的；符合條件的,通用核心,原作沒有這個字的插畫
+611,compulsory,800,adj.,that must be done because of a rule or law,強制的；義務的；必修的,合約法規,原圖和字義連不起來
+614,adequate,800,adj.,enough or good enough for a particular purpose,足夠的；適當的；尚可的,通用核心,原圖和字義連不起來
+616,bankrupt,800,adj.,unable to pay your debts,破產的,財務金融,原圖和字義連不起來
+618,reliable,800,adj.,able to be trusted to work well or do the right thing,可靠的；可信賴的,通用核心,原圖和字義連不起來
+619,vital,800,adj.,extremely important and necessary,極重要的；不可或缺的,通用核心,原圖和字義連不起來
+620,intensive,800,adj.,with a lot of hard work or activity in a short time,密集的；加強的；集中的,通用核心,原圖和字義連不起來
+622,apparent,800,adj.,easy to see or understand,明顯的；顯而易見的,通用核心,原圖和字義連不起來
+623,sufficient,800,adj.,as much as is needed,足夠的；充分的,通用核心,原圖和字義連不起來
+624,ambitious,800,adj.,having a strong wish to be successful,有雄心的；有抱負的,人資職涯,原圖和字義連不起來
+625,prior,800,adj.,happening or existing before something else,先前的；事先的,通用核心,原圖和字義連不起來
+627,blue-collar,800,adj.,"connected with workers who do physical work, such as in factories",藍領的；勞力工作的,人資職涯,原作沒有這個字的插畫
+630,economical,800,adj.,"using money, time or fuel without waste",節約的；經濟實惠的；省錢的,通用核心,原圖和字義連不起來
+633,enthusiastic,800,adj.,feeling or showing a lot of excitement and interest,熱情的；熱衷的；熱心的,通用核心,原作沒有這個字的插畫
+635,significant,800,adj.,large or important enough to be noticed,顯著的；相當大的,通用核心,原圖和字義連不起來
+636,dedicated,800,adj.,working hard because you care about something,專注的；盡心盡力的,人資職涯,原作沒有這個字的插畫
+638,understaffed,800,adj.,not having enough workers,人手不足的；人員短缺的,人資職涯,原作沒有這個字的插畫
+639,consistent,800,adj.,always behaving or happening in the same way,一致的；始終如一的,通用核心,原作沒有這個字的插畫
+640,mandatory,800,adj.,required by law or by a rule,強制的；義務的；法定的,合約法規,原圖和字義連不起來
+641,precise,800,adj.,exact and correct in every detail,精確的；準確的,通用核心,原作沒有這個字的插畫
+644,confidential,800,adj.,meant to be kept secret,機密的；保密的,合約法規,原圖和字義連不起來
+646,concrete,800,adj.,"based on real facts, not ideas or guesses",具體的；確實的,通用核心,原作沒有這個字的插畫
+651,apprehensive,800,adj.,worried that something bad might happen,憂慮的；擔心的,通用核心,原作沒有這個字的插畫
+655,primarily,800,adv.,mainly; more than anything else,主要地；首先,通用核心,原圖和字義連不起來
+656,onsite,800,adj.,happening at the place where the work is done,現場的；就地的,房產設施,原作沒有這個字的插畫
+657,duplicate,800,v.,to make an exact copy of something,複製；複印；重複,辦公行政,原圖和字義連不起來
+663,establish,800,v.,to start a company or organization that will last,建立；創立；設立,企業經營,原圖和字義連不起來
+666,retain,800,v.,to keep something or someone,保留；保持；留住,人資職涯,原圖和字義連不起來
+669,generate,800,v.,to produce or create something,產生；造成；創造,通用核心,原圖和字義連不起來
+672,clarify,800,v.,to make something easier to understand,澄清；闡明；說清楚,辦公行政,原圖和字義連不起來
+673,proceed,800,v.,"to continue to do something, or move forward",前往；繼續進行,通用核心,原圖和字義連不起來
+676,fulfill,800,v.,to do what is required or promised,履行；完成；實現,通用核心,原圖和字義連不起來
+678,dismiss,800,v.,to officially remove someone from their job,解雇；開除,人資職涯,原作沒有這個字的插畫
+681,specify,800,v.,to state something clearly and in detail,明確說明；詳細指定,辦公行政,原圖和字義連不起來
+684,suspend,800,v.,to stop something for a period of time,暫停；中止,通用核心,原作沒有這個字的插畫
+685,justify,800,v.,to give a good reason for something,證明…是正當的；為…辯護,通用核心,原圖和字義連不起來
+688,reveal,800,v.,to make something known that was secret,揭露；透露；顯示,通用核心,原作沒有這個字的插畫
+690,overlook,800,v.,to fail to notice something,忽略；沒注意到,通用核心,原圖和字義連不起來
+692,deduct,800,v.,to take an amount away from a total,扣除；減去,財務金融,原圖和字義連不起來
+698,determine,800,v.,to officially decide something,決定；確定,通用核心,原圖和字義連不起來
+699,found,800,v.,to start an organization or company,創立；建立；設立,企業經營,原圖和字義連不起來
+700,enforce,800,v.,to make people obey a law or rule,執行；實施；強制遵守,合約法規,原圖和字義連不起來
+701,undertake,800,v.,to agree to be responsible for a job and begin it,承擔；從事；著手,通用核心,原圖和字義連不起來
+702,discard,800,v.,to throw something away,丟棄；拋棄,通用核心,原作沒有這個字的插畫
+704,acknowledge,800,v.,to accept or admit that something is true,承認；認可,通用核心,原圖和字義連不起來
+705,adopt,800,v.,to start to use a new method or idea,採用；採納,通用核心,原圖和字義連不起來
+706,consult,800,v.,to ask someone who knows a lot about a subject for advice,諮詢；請教；查閱,通用核心,原作沒有這個字的插畫
+707,enable,800,v.,to make it possible for someone to do something,使能夠；使可能,通用核心,原作沒有這個字的插畫
+708,emphasize,800,v.,to show that something is especially important,強調；著重,通用核心,原作沒有這個字的插畫
+709,enhance,800,v.,to improve the quality of something,提高；增強；改善,通用核心,原圖和字義連不起來
+713,dedicate,800,v.,to give all your time and energy to something,奉獻；致力於（dedicate oneself to）,人資職涯,原作沒有這個字的插畫
+715,imply,800,v.,to suggest that something is true without saying it directly,暗示；意味著,通用核心,原圖和字義連不起來
+716,prioritize,800,v.,to decide which tasks are most important and deal with them first,排定優先順序；優先處理,辦公行政,原圖和字義連不起來
+717,evolve,800,v.,to change and develop slowly over time,逐步發展；演變；進化,通用核心,原作沒有這個字的插畫
+718,relocate,800,v.,to move to a new place,搬遷；遷移；調職,房產設施,原作沒有這個字的插畫
+720,pursue,800,v.,to try to achieve something over a long period,追求；從事,通用核心,原作沒有這個字的插畫
+723,relieve,800,v.,to make pain or a problem less serious,緩解；減輕,通用核心,原作沒有這個字的插畫
+726,notify,800,v.,to tell someone officially about something,通知；告知,辦公行政,原作沒有這個字的插畫
+730,allocate,800,v.,"to give money, time or space for a particular purpose",分配；撥出,通用核心,原圖和字義連不起來
+732,assume,800,v.,to think something is true without checking,假設；認為,通用核心,原圖和字義連不起來
+733,streamline,800,v.,to make a process simpler and more efficient,精簡；簡化（流程）,辦公行政,原圖和字義連不起來
+735,underperform,800,v.,to do less well than expected,表現不如預期；表現不佳,通用核心,原作沒有這個字的插畫
+736,retrieve,800,v.,to find and bring something back,取回；收回,科技數位,原作沒有這個字的插畫
+738,grant,800,n.,money given by an organization for a special purpose,補助金；獎助金,通用核心,原圖和字義連不起來
+743,remark,800,v.,to say what you think about something,評論；說,通用核心,原作沒有這個字的插畫
+744,substitute,800,v.,to use one thing or person in place of another,代替；替換,通用核心,原圖和字義連不起來
+745,address,800,v.,to start to deal with a problem,處理；應對,通用核心,原作沒有這個字的插畫
+746,highlight,800,v.,to point out something so people notice it,強調；突顯,行銷媒體,原圖和字義連不起來
+748,boost,800,v.,to make something increase or improve,提高；促進；增強,通用核心,原圖和字義連不起來
+749,release,800,v.,to make a new product or information available to the public,發布；發行,行銷媒體,原圖和字義連不起來
+750,delegate,800,v.,to give part of your work or power to someone else,委派；授權,通用核心,原作沒有這個字的插畫
+753,benchmark,990,n.,a standard used to compare and measure other things,基準；標竿,企業經營,原作沒有這個字的插畫
+754,payroll,990,n.,the list of workers in a company and the money paid to them,薪資名冊；薪資總額,財務金融,原作沒有這個字的插畫
+755,workflow,990,n.,the order of steps that a piece of work goes through,工作流程,辦公行政,原作沒有這個字的插畫
+756,inflation,990,n.,a general rise in prices over time,通貨膨脹；物價上漲,財務金融,原圖和字義連不起來
+757,deduction,990,n.,"an amount taken away from a total, such as from your pay",扣除；扣除額,財務金融,原圖和字義連不起來
+758,workstation,990,n.,the desk and computer where one person works,工作站；辦公座位,辦公行政,原作沒有這個字的插畫
+759,premises,990,n.,the buildings and land that a business uses,（pl.）營業場所；房屋及土地,房產設施,原作沒有這個字的插畫
+760,chairperson,990,n.,the person who leads a meeting or committee,主席；議長,企業經營,原作沒有這個字的插畫
+763,attire,990,n.,"clothes, especially the clothes you wear to a special event",服裝；衣著（正式用語）,人資職涯,原作沒有這個字的插畫
+765,enterprise,990,n.,a company or business,企業；公司,企業經營,原作沒有這個字的插畫
+768,conjunction,990,n.,the state of working together with something else,結合；共同（in conjunction with）,通用核心,原圖和字義連不起來
+769,commodity,990,n.,"a product such as oil, coffee or metal that is bought and sold in large amounts",商品；貨物；大宗物資,購物消費,原作沒有這個字的插畫
+771,compliance,990,n.,the act of obeying a rule or law,遵守；合規；服從,合約法規,原圖和字義連不起來
+772,connectivity,990,n.,the ability to connect to the internet or other devices,連線能力；網路連線,科技數位,原作沒有這個字的插畫
+773,blueprint,990,n.,a detailed plan or drawing of a building or machine,藍圖；設計圖,房產設施,原作沒有這個字的插畫
+774,profitability,990,n.,the ability of a business to make money,獲利能力；盈利性,財務金融,原作沒有這個字的插畫
+775,inquiry,990,n.,a question asking for information,詢問；查詢,通用核心,原圖和字義連不起來
+776,credentials,990,n.,"the training, papers and experience that show you can do a job",（pl.）資歷；資格證明；證書,人資職涯,原作沒有這個字的插畫
+777,cofounder,990,n.,one of two or more people who start a company together,共同創辦人,企業經營,原作沒有這個字的插畫
+778,code,990,n.,a set of rules about how people should behave or work,規範；守則,合約法規,原作沒有這個字的插畫
+780,boardroom,990,n.,a room where the directors of a company meet,董事會會議室,辦公行政,原作沒有這個字的插畫
+781,stakeholder,990,n.,"a person who cares about a business and is affected by it, such as a worker, owner or customer",利害關係人；相關利益者,企業經營,原作沒有這個字的插畫
+782,capital,990,n.,money used to start or grow a business,資本；資金,財務金融,原作沒有這個字的插畫
+783,initiative,990,n.,a new plan or action to fix a problem,新計畫；倡議；措施,企業經營,原圖和字義連不起來
+784,minutes,990,n.,a written record of what was said at a meeting,（pl.）會議紀錄,辦公行政,原作沒有這個字的插畫
+785,rollout,990,n.,the time when a new product or service is first given to the public,（新產品、服務的）推出；上線,行銷媒體,原作沒有這個字的插畫
+787,quota,990,n.,a fixed amount that is officially allowed or expected,配額；限額；定額,通用核心,原圖和字義連不起來
+788,justification,990,n.,a good reason for doing something,正當理由；辯護；依據,通用核心,原圖和字義連不起來
+790,integrity,990,n.,the quality of being honest and doing what is right,誠信；正直,人資職涯,原圖和字義連不起來
+791,misconception,990,n.,a belief that is wrong because it is based on a mistake,誤解；錯誤觀念,通用核心,原作沒有這個字的插畫
+793,affiliation,990,n.,an official connection with a group or organization,隸屬關係；聯繫；附屬,通用核心,原圖和字義連不起來
+794,surplus,990,n.,an amount that is more than what is needed,盈餘；過剩；剩餘,財務金融,原作沒有這個字的插畫
+795,vision,990,n.,a clear idea of what the future should be like,願景；遠見,行銷媒體,原圖和字義連不起來
+796,credibility,990,n.,the quality of being trusted and believed,可信度；信譽,通用核心,原作沒有這個字的插畫
+797,constraint,990,n.,something that limits what you can do,限制；約束,通用核心,原圖和字義連不起來
+799,analytics,990,n.,the study of numbers and facts to find useful information,分析；數據分析,行銷媒體,原圖和字義連不起來
+800,discretion,990,n.,the freedom to decide what to do in a situation,自行決定權；裁量權,通用核心,原圖和字義連不起來
+801,incentive,990,n.,something that encourages a person to do something,誘因；激勵；獎勵,人資職涯,原圖和字義連不起來
+802,allegation,990,n.,"a statement that someone has done something wrong, without proof",（未經證實的）指控；說法,合約法規,原作沒有這個字的插畫
+804,retention,990,n.,"the act of keeping something or someone, such as workers or customers",保留；保持,人資職涯,原圖和字義連不起來
+806,subsidiary,990,n.,a company that is owned and controlled by a larger company,子公司,企業經營,原作沒有這個字的插畫
+807,clientele,990,n.,all the customers of a business,（總稱）顧客；客戶群,行銷媒體,原作沒有這個字的插畫
+808,acquisition,990,n.,the act of buying another company,收購；購併,企業經營,原圖和字義連不起來
+809,dividend,990,n.,a part of a company's profit paid to people who own its shares,股利；紅利,財務金融,原作沒有這個字的插畫
+812,equity,990,n.,the value of the shares in a company,股權；權益；資產淨值,財務金融,原作沒有這個字的插畫
+814,proceeds,990,n.,money received from selling something or from an event,（pl.）收益；收入（某活動或販售所得）,財務金融,原作沒有這個字的插畫
+815,onboarding,990,n.,the process of helping new workers learn about their jobs,（新進員工的）入職培訓；（新用戶的）導入流程,人資職涯,原作沒有這個字的插畫
+817,provision,990,n.,a condition in a contract or law,（合約、法律的）條款；規定,合約法規,原圖和字義連不起來
+819,audit,990,n.,an official check of a company's financial records,審計；稽核；查帳,財務金融,原作沒有這個字的插畫
+820,functionality,990,n.,the range of things that a computer program can do,功能；功能性,科技數位,原圖和字義連不起來
+821,severance,990,n.,money paid to a worker who loses their job,遣散費；資遣費,人資職涯,原作沒有這個字的插畫
+822,expenditure,990,n.,the total amount of money spent by a government or company,支出；開銷；經費,財務金融,原圖和字義連不起來
+824,infrastructure,990,n.,"the basic systems a country needs, such as roads and power",基礎建設；公共設施,房產設施,原作沒有這個字的插畫
+825,procurement,990,n.,the process of buying goods and services for an organization,採購；取得,製造物流,原圖和字義連不起來
+826,legislation,990,n.,"laws, or the process of making laws",法規；法律；立法,合約法規,原作沒有這個字的插畫
+827,conglomerate,990,n.,a large company made of many smaller companies in different businesses,企業集團；聯合企業,企業經營,原作沒有這個字的插畫
+829,turnover,990,n.,the rate at which workers leave a company and are replaced,（員工的）流動率,人資職涯,原圖和字義連不起來
+830,sustainability,990,n.,the ability to continue for a long time without harming the environment,永續性；可持續性,企業經營,原作沒有這個字的插畫
+831,oversight,990,n.,a mistake made because you did not notice something,疏忽；失察,通用核心,原圖和字義連不起來
+832,entitlement,990,n.,the official right to have or do something,應得權利；權益,人資職涯,原圖和字義連不起來
+834,cybersecurity,990,n.,the protection of computer systems from attacks,資訊安全；網路安全,科技數位,原作沒有這個字的插畫
+835,shareholder,990,n.,a person who owns shares in a company,股東,財務金融,原作沒有這個字的插畫
+836,liability,990,n.,"legal responsibility for something, especially costs or damage",法律責任；義務,合約法規,原圖和字義連不起來
+837,ledger,990,n.,a book or file where a company records money in and out,分類帳；總帳；帳簿,財務金融,原作沒有這個字的插畫
+838,auditor,990,n.,a person who officially checks financial records,稽核員；審計員；查帳員,財務金融,原作沒有這個字的插畫
+840,jurisdiction,990,n.,the official power to make legal decisions in an area,管轄權；司法權,合約法規,原作沒有這個字的插畫
+842,synergy,990,n.,the extra success two groups achieve by working together,綜效；協同作用,企業經營,原作沒有這個字的插畫
+846,demographic,990,n.,"a group of people of a similar age, income or background",（特定的）人口群體；客群,行銷媒體,原作沒有這個字的插畫
+847,collateral,990,n.,something valuable you promise to give a bank if you cannot pay back a loan,擔保品；抵押品,財務金融,原作沒有這個字的插畫
+849,outreach,990,n.,the work of reaching out to give help or information to people,推廣服務；拓展；外展工作,行銷媒體,原作沒有這個字的插畫
+850,board,990,n.,the group of people who control a company,董事會；委員會,企業經營,原作沒有這個字的插畫
+851,crash,990,n.,a sudden large fall in prices or value,崩盤；暴跌,財務金融,原作沒有這個字的插畫
+852,cease,990,v.,to stop happening or doing something,停止；終止,通用核心,原圖和字義連不起來
+854,respect,990,n.,a particular part or detail of something,方面；細節,通用核心,原圖和字義連不起來
+855,breach,990,n.,"an action that breaks a law, rule or agreement",違反；違約,合約法規,原作沒有這個字的插畫
+856,syndicate,990,n.,a group of companies that work together for a common purpose,聯合組織；企業聯盟；財團,企業經營,原作沒有這個字的插畫
+857,accountable,990,adj.,responsible for your actions and expected to explain them,應負責的；有責任的,通用核心,原作沒有這個字的插畫
+859,feasible,990,adj.,possible and likely to work,可行的；行得通的,通用核心,原圖和字義連不起來
+860,plausible,990,adj.,likely to be true,似乎合理的；可信的,通用核心,原圖和字義連不起來
+861,prompt,990,adj.,"done quickly, without waiting",迅速的；及時的；準時的,通用核心,原作沒有這個字的插畫
+863,white-collar,990,adj.,connected with people who work in offices,白領的；坐辦公室的,人資職涯,原作沒有這個字的插畫
+864,preliminary,990,adj.,happening before the main part of something,初步的；預備的,通用核心,原作沒有這個字的插畫
+865,conducive,990,adj.,helping something to happen,有助於…的；有益於…的（conducive to）,通用核心,原作沒有這個字的插畫
+867,viable,990,adj.,able to work successfully,可行的；能存活的；可實施的,通用核心,原圖和字義連不起來
+871,substantial,990,adj.,large in amount or importance,大量的；可觀的；重大的,通用核心,原作沒有這個字的插畫
+873,accessibility,990,n.,"how easy it is to reach, enter or use something",（交通、地點的）可及性；便利性,通用核心,原作沒有這個字的插畫
+874,complementary,990,adj.,different but working well together,互補的；相輔相成的,通用核心,原作沒有這個字的插畫
+875,prevalent,990,adj.,common in a particular place or time,盛行的；普遍的；流行的,通用核心,原作沒有這個字的插畫
+876,outstanding,990,adj.,not yet paid or finished,未償付的；未解決的,財務金融,原作沒有這個字的插畫
+877,diversified,990,adj.,having many different types of products or businesses,多元化的；多樣化的,通用核心,原作沒有這個字的插畫
+878,intuitive,990,adj.,easy to use without needing to read how,直覺的；易懂的；容易上手的,科技數位,原作沒有這個字的插畫
+880,prospective,990,adj.,likely to become something in the future,未來的；可能的；預期的,行銷媒體,原圖和字義連不起來
+882,imperative,990,adj.,extremely important and needed now,極重要的；緊急的；必要的,通用核心,原圖和字義連不起來
+884,established,990,adj.,having existed for a long time and being respected,已確立的；著名的；歷史悠久的,通用核心,原圖和字義連不起來
+885,prestigious,990,adj.,respected and thought highly of because of its high quality,有聲望的；聲譽高的,通用核心,原作沒有這個字的插畫
+888,managerial,990,adj.,connected with the work of managers,管理的；經營上的,人資職涯,原作沒有這個字的插畫
+889,legitimate,990,adj.,allowed by law or fair and reasonable,合法的；正當的,合約法規,原圖和字義連不起來
+890,arbitrary,990,adj.,"chosen or done by chance, not for a good reason",任意的；隨意的；武斷的,通用核心,原圖和字義連不起來
+892,definitive,990,adj.,final and not able to be changed,最終的；確定的,通用核心,原圖和字義連不起來
+893,fiscal,990,adj.,connected with government or business money,財政的；會計年度的,財務金融,原作沒有這個字的插畫
+894,contractual,990,adj.,connected with the terms of a contract,合約的；契約上的,合約法規,原圖和字義連不起來
+895,invaluable,990,adj.,extremely useful and important,極寶貴的；無價的,通用核心,原圖和字義連不起來
+898,negligent,990,adj.,failing to take proper care,疏忽的；粗心大意的；過失的,合約法規,原作沒有這個字的插畫
+899,pragmatic,990,adj.,"dealing with problems in a sensible, practical way",務實的；實際的,通用核心,原圖和字義連不起來
+901,provisional,990,adj.,existing for now but likely to change later,臨時的；暫定的,通用核心,原圖和字義連不起來
+902,insightful,990,adj.,showing a clear understanding of something,有洞察力的；有深刻見解的,通用核心,原作沒有這個字的插畫
+903,preemptive,990,adj.,done to stop something bad from happening before it starts,先發制人的；預防性的,通用核心,原作沒有這個字的插畫
+904,ergonomic,990,adj.,designed to be comfortable and safe for the body,符合人體工學的,醫療健康,原作沒有這個字的插畫
+906,unprecedented,990,adj.,never having happened before,前所未有的；空前的,通用核心,原圖和字義連不起來
+908,state-of-the-art,990,adj.,using the newest and most advanced technology,最先進的；最新式的,科技數位,原作沒有這個字的插畫
+909,foremost,990,adj.,most important or famous,最重要的；首要的；最著名的,通用核心,原作沒有這個字的插畫
+910,accomplished,990,adj.,very skilled at something,有造詣的；技藝高超的；熟練的,人資職涯,原圖和字義連不起來
+911,multinational,990,adj.,operating in several countries,跨國的；多國的,企業經營,原作沒有這個字的插畫
+912,offsite,990,adj.,happening away from a company's main building,場外的；廠區外的,房產設施,原作沒有這個字的插畫
+913,exempt,990,adj.,not required to do or pay something,被免除的；豁免的,合約法規,原圖和字義連不起來
+914,accordingly,990,adv.,in a way that suits the situation,相應地；照著,通用核心,原圖和字義連不起來
+916,respectively,990,adv.,in the same order as the things already mentioned,分別地；各自地,通用核心,原圖和字義連不起來
+917,exclusively,990,adv.,"only for one person, group or purpose",專門地；獨家地；僅僅,通用核心,原圖和字義連不起來
+920,administer,990,v.,to be in charge of something and make sure it is done,管理；執行,通用核心,原圖和字義連不起來
+924,oversee,990,v.,to watch and direct work to make sure it is done correctly,監督；管理,通用核心,原作沒有這個字的插畫
+925,complement,990,v.,to add to something in a way that makes it better,補足；與…相得益彰,通用核心,原作沒有這個字的插畫
+926,perceive,990,v.,to notice or understand something in a particular way,察覺；感知,通用核心,原作沒有這個字的插畫
+927,comply,990,v.,to obey a rule or request,遵守；服從；照做,合約法規,原作沒有這個字的插畫
+929,deter,990,v.,to make someone decide not to do something,嚇阻；阻止；使斷念,通用核心,原圖和字義連不起來
+930,embrace,990,v.,to accept an idea or change happily and with interest,欣然接受；採納,通用核心,原圖和字義連不起來
+932,regulate,990,v.,to control an activity with rules,管理；控管；規範,合約法規,原圖和字義連不起來
+933,expedite,990,v.,to make a process happen more quickly,加速；迅速處理；促進,通用核心,原作沒有這個字的插畫
+934,solicit,990,v.,"to ask people for something, such as money or opinions",徵求；請求；募集,通用核心,原作沒有這個字的插畫
+935,exploit,990,v.,to use something fully to get an advantage,利用；開發,通用核心,原圖和字義連不起來
+936,withhold,990,v.,to refuse to give something,扣留；保留；不給,合約法規,原作沒有這個字的插畫
+937,restructure,990,v.,to change the way a company is organized,重組；調整結構；改組,企業經營,原作沒有這個字的插畫
+938,reconcile,990,v.,to compare two sets of records to make sure they agree,核對；使一致,通用核心,原圖和字義連不起來
+940,entitle,990,v.,to give someone the right to have or do something,給予…權利或資格,合約法規,原圖和字義連不起來
+942,utilize,990,v.,to use something for a practical purpose,利用；使用；運用,通用核心,原圖和字義連不起來
+943,consolidate,990,v.,to join several things into one,合併；整合,通用核心,原圖和字義連不起來
+944,troubleshoot,990,v.,to find and fix problems in a system,排除故障；解決問題,科技數位,原作沒有這個字的插畫
+945,economize,990,v.,to spend less money or use less of something,節省；節約,財務金融,原圖和字義連不起來
+948,confiscate,990,v.,to officially take something away from someone,沒收；充公,合約法規,原作沒有這個字的插畫
+949,disengage,990,v.,to stop being involved in something,脫離；退出,通用核心,原作沒有這個字的插畫
+950,succeed,990,v.,to take over someone's position after they leave,繼任；接替,人資職涯,原圖和字義連不起來
+951,escalate,990,v.,to become more serious or greater,逐步升級；擴大；加劇,通用核心,原作沒有這個字的插畫
+952,illustrate,990,v.,to explain something by using examples or pictures,闡明；說明,通用核心,原圖和字義連不起來
+953,downsize,990,v.,to make a company smaller by reducing the number of workers,裁員；縮編；縮小規模,人資職涯,原作沒有這個字的插畫
+954,reallocate,990,v.,to give money or resources to a different purpose,重新分配；重新配置,通用核心,原作沒有這個字的插畫
+955,incur,990,v.,to have to pay a cost or deal with something bad because of your actions,招致；引起；蒙受,財務金融,原圖和字義連不起來
+956,advocate,990,v.,to publicly support an idea or plan,提倡；擁護；主張,通用核心,原圖和字義連不起來
+957,convene,990,v.,to bring people together for a formal meeting,召集；召開（會議）；集合,會議活動,原作沒有這個字的插畫
+958,encompass,990,v.,to include many different things,包含；涵蓋；圍繞,通用核心,原作沒有這個字的插畫
+959,disseminate,990,v.,to spread information widely,散布；傳播,行銷媒體,原作沒有這個字的插畫
+960,appreciate,990,v.,to be thankful for something,感激；感謝,財務金融,原作沒有這個字的插畫
+962,curtail,990,v.,to reduce or limit something,縮減；削減；限制,通用核心,原作沒有這個字的插畫
+963,exemplify,990,v.,to be a typical example of something,例證；作為…的典範,通用核心,原圖和字義連不起來
+965,endorse,990,v.,to say publicly that you support a product or person,代言；為（產品）背書,行銷媒體,原作沒有這個字的插畫
+967,mitigate,990,v.,to make something less harmful or serious,減輕；緩和,通用核心,原圖和字義連不起來
+970,elicit,990,v.,to get information or a reaction from someone,引出；誘出；探出,通用核心,原圖和字義連不起來
+971,terminate,990,v.,to bring something to an end,終止；結束,合約法規,原圖和字義連不起來
+972,deploy,990,v.,to move people or equipment into position for use,部署；調度,科技數位,原作沒有這個字的插畫
+973,subsidize,990,v.,to pay part of the cost of something,補助；資助；津貼,通用核心,原圖和字義連不起來
+974,outsource,990,v.,to pay another company to do work instead of doing it yourself,外包；委外,企業經營,原作沒有這個字的插畫
+976,optimize,990,v.,to make something work as well as possible,最佳化；優化；充分利用,科技數位,原作沒有這個字的插畫
+978,designate,990,v.,to choose someone or something for a particular purpose,指定；指派；標示,通用核心,原圖和字義連不起來
+981,formulate,990,v.,to develop a plan carefully,制定；規劃,通用核心,原圖和字義連不起來
+983,monetize,990,v.,to earn money from something,將…變現；使貨幣化,財務金融,原作沒有這個字的插畫
+984,reiterate,990,v.,to say something again to make it clear,重申；反覆地說,通用核心,原圖和字義連不起來
+985,alleviate,990,v.,to make pain or a problem less serious,減輕；緩和,通用核心,原圖和字義連不起來
+986,liquidate,990,v.,to close a business and sell everything it owns to pay its debts,清算；變賣資產,財務金融,原作沒有這個字的插畫
+987,liaise,990,v.,to talk with other people so you can work together,聯繫協調；擔任聯絡人,辦公行政,原作沒有這個字的插畫
+988,entail,990,v.,to have something as a necessary part,必然涉及；需要；使承擔,通用核心,原圖和字義連不起來
+989,shortlist,990,v.,to choose a small number of people from a larger group for the final stage,列入候選名單；篩選,人資職涯,原作沒有這個字的插畫
+993,surge,990,n.,a sudden large increase,激增；急遽上升,通用核心,原作沒有這個字的插畫
+996,leverage,990,v.,to use something you have to get the best result,善用；充分利用,通用核心,原作沒有這個字的插畫
+997,forfeit,990,v.,to lose something because you broke a rule,喪失；被沒收,合約法規,原圖和字義連不起來
+998,institute,990,v.,to officially start a system or rule,制定；實行；設立,通用核心,原圖和字義連不起來
+999,attribute,990,v.,to say that something was caused by a particular thing,把…歸因於；認為是…所為,通用核心,原圖和字義連不起來
+1000,debrief,990,v.,to ask someone questions about a task they have just finished,聽取匯報；任務後檢討,人資職涯,原作沒有這個字的插畫
