@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>分貝計</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one-column instrument panel. Readout → gauge → stats → 60 s trace → controls → reference scale. */
+:root {
+  --bg: #eef1f4;
+  --panel: #ffffff;
+  --ink: #17202b;
+  --muted: #5d6a78;
+  --line: #d5dce3;
+  --accent: #1f5fd1;
+  --ok: #2e8b57;
+  --mid: #c99a06;
+  --loud: #e06c16;
+  --risk: #c62f2f;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1319; --panel: #161d26; --ink: #e8edf2; --muted: #93a1b0; --line: #2a3542;
+    --accent: #6ea2ff; --ok: #4cc283; --mid: #e8bb2e; --loud: #f08a3c; --risk: #f05c5c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1319; --panel: #161d26; --ink: #e8edf2; --muted: #93a1b0; --line: #2a3542;
+  --accent: #6ea2ff; --ok: #4cc283; --mid: #e8bb2e; --loud: #f08a3c; --risk: #f05c5c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body);
+  font-size: 15px; line-height: 1.5;
+}
+.wrap { max-width: 560px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-size: 20px; margin: 0; letter-spacing: .04em; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg button {
+  font: 600 15px var(--font-display); letter-spacing: .03em; border: 0; background: transparent;
+  color: var(--muted); padding: 6px 12px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.readout { display: grid; gap: 10px; }
+.status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.dot.live { background: var(--risk); animation: pulse 1.2s infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .dot.live { animation: none; } }
+.big { display: flex; align-items: baseline; gap: 8px; }
+.num {
+  font: 700 96px/0.95 var(--font-display); font-variant-numeric: tabular-nums;
+  letter-spacing: -.01em; min-width: 3ch;
+}
+.unit { font: 600 24px var(--font-display); color: var(--muted); }
+.chip {
+  justify-self: start; font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 999px;
+  border: 1px solid currentColor; color: var(--muted);
+}
+.gauge { position: relative; height: 40px; }
+.gauge canvas { width: 100%; height: 40px; display: block; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.stat { display: grid; gap: 2px; }
+.stat b { font: 600 26px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.chart-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.chart-head strong { color: var(--ink); font-size: 14px; }
+#chart { width: 100%; height: 190px; display: block; }
+.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn {
+  font: 500 15px var(--font-body); padding: 12px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; grid-column: 1 / -1; font-weight: 700; font-size: 17px; }
+.btn:focus-visible, .seg button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.msg { font-size: 14px; padding: 10px 12px; border-radius: 8px; border-left: 4px solid var(--loud); background: var(--bg); margin: 0; }
+.msg[hidden] { display: none; }
+.cal { display: grid; gap: 6px; }
+.cal label { display: flex; justify-content: space-between; font-size: 14px; }
+.cal input[type="range"] { width: 100%; accent-color: var(--accent); }
+h2 { font-size: 15px; margin: 0 0 8px; }
+.ref { display: grid; gap: 0; }
+.ref div { display: grid; grid-template-columns: 52px 10px 1fr; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.ref div:first-child { border-top: 0; }
+.ref b { font: 600 18px var(--font-display); font-variant-numeric: tabular-nums; text-align: right; }
+.ref i { width: 10px; height: 10px; border-radius: 2px; }
+.ref div.on { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>分貝計</h1>
+    <div class="seg" role="group" aria-label="頻率加權">
+      <button id="wA" type="button" aria-pressed="true">dB(A)</button>
+      <button id="wZ" type="button" aria-pressed="false">dB(Z)</button>
+    </div>
+  </header>
+
+  <section class="panel readout" aria-live="polite">
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">範例畫面 · 按「開始量測」使用麥克風</span></div>
+    <div class="big"><span class="num" id="num">58</span><span class="unit" id="unit">dB(A)</span></div>
+    <span class="chip" id="chip">一般對話</span>
+    <div class="gauge"><canvas id="gauge" aria-hidden="true"></canvas></div>
+    <div class="stats">
+      <div class="stat"><b id="sMin">41</b><span>最低</span></div>
+      <div class="stat"><b id="sAvg">56</b><span>平均 Leq</span></div>
+      <div class="stat"><b id="sMax">72</b><span>最高</span></div>
+      <div class="stat"><b id="sTime">0:60</b><span id="sTimeLabel">時間</span></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="chart-head"><strong id="chartTitle">最近 60 秒</strong><span id="chartNote">範例資料</span></div>
+    <canvas id="chart" aria-label="音量變化圖"></canvas>
+  </section>
+
+  <p class="msg" id="msg" hidden></p>
+
+  <section class="controls">
+    <button class="btn primary" id="startBtn" type="button">開始量測</button>
+    <button class="btn" id="resetBtn" type="button">重設數據</button>
+    <button class="btn" id="fileBtn" type="button">分析錄音檔</button>
+    <input class="visually-hidden" id="fileInput" type="file" accept="audio/*,video/*" capture>
+  </section>
+
+  <section class="panel cal">
+    <label for="offset"><span>校正偏移</span><span id="offVal">+100 dB</span></label>
+    <input id="offset" type="range" min="60" max="140" step="1" value="100">
+    <p class="note">手機與電腦麥克風沒有出廠校正，數值是估計。若身邊有已知音量的音源（或專業分貝計），調整這裡讓兩者讀數一致；安靜的臥室通常約 30–35 dB(A)。</p>
+  </section>
+
+  <section class="panel">
+    <h2>常見聲音大約幾分貝</h2>
+    <div class="ref" id="ref"></div>
+    <p class="note" style="margin-top:8px">長時間處在 85 dB(A) 以上（一天 8 小時）會增加聽力受損風險；每多 3 dB，安全時間大約減半。</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  const REF = [
+    [20, "樹葉沙沙聲、錄音室"],
+    [30, "安靜的臥室、輕聲耳語"],
+    [40, "圖書館、安靜住宅區"],
+    [50, "安靜的辦公室、冷氣運轉"],
+    [60, "一般對話"],
+    [70, "吸塵器、熱鬧餐廳"],
+    [85, "交通繁忙的路口"],
+    [100, "捷運進站、機車近距離"],
+    [110, "演唱會前排、夜店"],
+    [120, "救護車鳴笛近距離、疼痛閾值"]
+  ];
+  const LEVELS = [
+    [35, "非常安靜", "--ok"], [45, "安靜", "--ok"], [55, "輕微聲響", "--ok"],
+    [65, "一般對話", "--mid"], [75, "吵雜", "--mid"], [85, "很吵", "--loud"],
+    [100, "長時間會傷聽力", "--risk"], [999, "危險音量", "--risk"]
+  ];
+  const levelInfo = db => LEVELS.find(l => db < l[0]);
+  const zoneColor = db => db < 55 ? "--ok" : db < 70 ? "--mid" : db < 85 ? "--loud" : "--risk";
+
+  // ---------- FFT + A-weighting ----------
+  const N = 2048;
+  const rev = new Uint32Array(N);
+  for (let i = 0, b = Math.log2(N); i < N; i++) {
+    let r = 0; for (let j = 0; j < b; j++) r |= ((i >> j) & 1) << (b - 1 - j); rev[i] = r;
+  }
+  const cosT = new Float64Array(N / 2), sinT = new Float64Array(N / 2);
+  for (let i = 0; i < N / 2; i++) { cosT[i] = Math.cos(2 * Math.PI * i / N); sinT[i] = -Math.sin(2 * Math.PI * i / N); }
+  const hann = new Float64Array(N);
+  for (let i = 0; i < N; i++) hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
+  const re = new Float64Array(N), im = new Float64Array(N);
+  function fftPower(buf, off) {
+    for (let i = 0; i < N; i++) { re[rev[i]] = buf[off + i] * hann[i]; im[rev[i]] = 0; }
+    for (let size = 2; size <= N; size <<= 1) {
+      const half = size >> 1, step = N / size;
+      for (let s = 0; s < N; s += size) {
+        for (let k = 0; k < half; k++) {
+          const c = cosT[k * step], si = sinT[k * step], a = s + k, b = a + half;
+          const tr = re[b] * c - im[b] * si, ti = re[b] * si + im[b] * c;
+          re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+        }
+      }
+    }
+  }
+  let aW = null, aWsr = 0;
+  function aWeights(sr) {
+    if (aW && aWsr === sr) return aW;
+    aW = new Float64Array(N / 2); aWsr = sr;
+    for (let k = 1; k < N / 2; k++) {
+      const f = k * sr / N, f2 = f * f;
+      const ra = (12194 ** 2 * f2 * f2) /
+        ((f2 + 20.6 ** 2) * Math.sqrt((f2 + 107.7 ** 2) * (f2 + 737.9 ** 2)) * (f2 + 12194 ** 2));
+      aW[k] = ra * ra * Math.pow(10, 0.2);
+    }
+    return aW;
+  }
+  // returns mean-square power of a frame, A- or Z-weighted
+  function framePower(buf, off, sr, weightA) {
+    let ms = 0;
+    for (let i = 0; i < N; i++) { const v = buf[off + i]; ms += v * v; }
+    ms /= N;
+    if (!weightA || ms < 1e-14) return ms;
+    fftPower(buf, off);
+    const w = aWeights(sr);
+    let pz = 0, pa = 0;
+    for (let k = 1; k < N / 2; k++) { const p = re[k] * re[k] + im[k] * im[k]; pz += p; pa += p * w[k]; }
+    return pz > 0 ? ms * pa / pz : ms;
+  }
+  const toDb = p => 10 * Math.log10(Math.max(p, 1e-13));
+
+  // ---------- state ----------
+  let weightA = true;
+  let offset = 100;
+  let mode = "demo"; // demo | live | file
+  let ctx = null, stream = null, analyser = null, raf = 0;
+  let history = [];        // dBFS values, one per 100 ms
+  let fileSeries = null;   // {vals, dur}
+  let smoothP = 0, lastT = 0, accT = 0, peak = -Infinity;
+  let sumP = 0, cntP = 0, minDb = Infinity, maxDb = -Infinity, startT = 0, elapsed = 0;
+
+  try { const o = localStorage.getItem("dbm-offset"); if (o) offset = +o; } catch (e) {}
+  try { if (localStorage.getItem("dbm-weight") === "Z") weightA = false; } catch (e) {}
+  $("offset").value = offset;
+
+  // demo trace (marked as example until the user starts)
+  const demo = [];
+  for (let i = 0; i < 600; i++) {
+    const t = i / 10;
+    let v = 44 + 3 * Math.sin(t * 0.9) + 2 * Math.sin(t * 3.1);
+    if (t > 12 && t < 30) v += 14 + 4 * Math.sin(t * 2.3);
+    if (t > 41 && t < 44) v += 26 - Math.abs(t - 42.5) * 6;
+    demo.push(v - offset);
+  }
+  history = demo.slice();
+
+  function resetStats() {
+    sumP = 0; cntP = 0; minDb = Infinity; maxDb = -Infinity; peak = -Infinity;
+    startT = performance.now(); elapsed = 0;
+  }
+
+  const fmt = v => Number.isFinite(v) ? Math.round(v + offset).toString() : "–";
+  const fmtTime = s => { s = Math.floor(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+
+  function setReadout(dbfs, peakFs) {
+    const db = dbfs + offset;
+    $("num").textContent = Number.isFinite(dbfs) ? Math.round(db) : "–";
+    const li = levelInfo(db);
+    const chip = $("chip");
+    chip.textContent = Number.isFinite(dbfs) ? li[1] : "等待量測";
+    chip.style.color = Number.isFinite(dbfs) ? css(li[2]) : css("--muted");
+    drawGauge(dbfs, peakFs);
+  }
+
+  function refreshStatsDisplay() {
+    $("sMin").textContent = fmt(minDb);
+    $("sMax").textContent = fmt(maxDb);
+    $("sAvg").textContent = cntP ? fmt(toDb(sumP / cntP)) : "–";
+    $("sTime").textContent = fmtTime(elapsed);
+    const cur = cntP ? toDb(sumP / cntP) + offset : NaN;
+    document.querySelectorAll("#ref div").forEach(d => d.classList.remove("on"));
+  }
+
+  // ---------- drawing ----------
+  function fitCanvas(c) {
+    const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    if (c.width !== Math.round(r.width * d) || c.height !== Math.round(r.height * d)) {
+      c.width = Math.round(r.width * d); c.height = Math.round(r.height * d);
+    }
+    const g = c.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0);
+    return [g, r.width, r.height];
+  }
+  const LO = 20, HI = 120;
+
+  function drawGauge(dbfs, peakFs) {
+    const [g, w, h] = fitCanvas($("gauge"));
+    g.clearRect(0, 0, w, h);
+    const x = db => (Math.min(HI, Math.max(LO, db)) - LO) / (HI - LO) * w;
+    const barH = 14, y0 = 4;
+    const zones = [[LO, 55, "--ok"], [55, 70, "--mid"], [70, 85, "--loud"], [85, HI, "--risk"]];
+    g.globalAlpha = 0.22;
+    zones.forEach(([a, b, c]) => { g.fillStyle = css(c); g.fillRect(x(a), y0, x(b) - x(a), barH); });
+    g.globalAlpha = 1;
+    const db = dbfs + offset;
+    if (Number.isFinite(dbfs)) {
+      zones.forEach(([a, b, c]) => {
+        if (db > a) { g.fillStyle = css(c); g.fillRect(x(a), y0, x(Math.min(db, b)) - x(a), barH); }
+      });
+    }
+    if (Number.isFinite(peakFs)) {
+      g.fillStyle = css("--ink"); g.fillRect(x(peakFs + offset) - 1, y0 - 3, 2, barH + 6);
+    }
+    g.fillStyle = css("--muted"); g.font = "12px " + css("--font-display"); g.textBaseline = "top";
+    for (let t = LO; t <= HI; t += 20) {
+      g.textAlign = t === LO ? "left" : t === HI ? "right" : "center";
+      g.fillText(t, x(t), y0 + barH + 6);
+    }
+  }
+
+  function drawChart() {
+    const [g, w, h] = fitCanvas($("chart"));
+    g.clearRect(0, 0, w, h);
+    const padL = 28, padB = 18, padT = 6, cw = w - padL - 4, ch = h - padB - padT;
+    const y = db => padT + (1 - (Math.min(HI, Math.max(LO, db)) - LO) / (HI - LO)) * ch;
+    g.font = "12px " + css("--font-display"); g.textBaseline = "middle"; g.textAlign = "right";
+    for (let t = LO; t <= HI; t += 20) {
+      g.strokeStyle = css("--line"); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(padL, Math.round(y(t)) + .5); g.lineTo(w - 4, Math.round(y(t)) + .5); g.stroke();
+      g.fillStyle = css("--muted"); g.fillText(t, padL - 6, y(t));
+    }
+    // 85 dB reference
+    g.setLineDash([4, 4]); g.strokeStyle = css("--risk"); g.globalAlpha = .7;
+    g.beginPath(); g.moveTo(padL, y(85)); g.lineTo(w - 4, y(85)); g.stroke();
+    g.setLineDash([]); g.globalAlpha = 1;
+    g.fillStyle = css("--risk"); g.textAlign = "right"; g.textBaseline = "bottom";
+    g.fillText("85", w - 6, y(85) - 2);
+
+    let vals, totalSec;
+    if (mode === "file" && fileSeries) { vals = fileSeries.vals; totalSec = fileSeries.dur; }
+    else { vals = history; totalSec = 60; }
+    const n = mode === "file" ? vals.length : 600;
+    const xAt = i => padL + (n <= 1 ? 0 : i / (n - 1)) * cw;
+    const start = mode === "file" ? 0 : n - vals.length;
+
+    // time labels
+    g.fillStyle = css("--muted"); g.textBaseline = "top";
+    g.textAlign = "left"; g.fillText(mode === "file" ? "0:00" : "-60 s", padL, h - padB + 4);
+    g.textAlign = "right"; g.fillText(mode === "file" ? fmtTime(totalSec) : "現在", w - 4, h - padB + 4);
+
+    if (!vals.length) return;
+    const acc = css("--accent");
+    g.beginPath();
+    vals.forEach((v, i) => { const X = xAt(start + i), Y = y(v + offset); i ? g.lineTo(X, Y) : g.moveTo(X, Y); });
+    const lastX = xAt(start + vals.length - 1);
+    g.lineTo(lastX, y(LO)); g.lineTo(xAt(start), y(LO)); g.closePath();
+    g.fillStyle = acc; g.globalAlpha = .14; g.fill(); g.globalAlpha = 1;
+    g.beginPath();
+    vals.forEach((v, i) => { const X = xAt(start + i), Y = y(v + offset); i ? g.lineTo(X, Y) : g.moveTo(X, Y); });
+    g.strokeStyle = acc; g.lineWidth = 1.6; g.lineJoin = "round"; g.stroke();
+    if (mode !== "file") {
+      const lv = vals[vals.length - 1];
+      g.beginPath(); g.arc(lastX, y(lv + offset), 3.5, 0, Math.PI * 2); g.fillStyle = acc; g.fill();
+    }
+  }
+
+  function renderRef(highlightDb) {
+    const box = $("ref"); box.innerHTML = "";
+    let best = -1;
+    if (Number.isFinite(highlightDb)) {
+      let bestD = Infinity;
+      REF.forEach(([db], i) => { const d = Math.abs(db - highlightDb); if (d < bestD) { bestD = d; best = i; } });
+    }
+    REF.forEach(([db, label], i) => {
+      const d = document.createElement("div");
+      if (i === best) d.classList.add("on");
+      d.innerHTML = `<b>${db}</b><i style="background:var(${zoneColor(db)})"></i><span>${label}</span>`;
+      box.appendChild(d);
+    });
+  }
+  let lastRefDb = NaN;
+  function maybeRef(db) {
+    const r = Math.round(db / 5) * 5;
+    if (r !== lastRefDb) { lastRefDb = r; renderRef(db); }
+  }
+
+  // ---------- live ----------
+  async function startLive() {
+    hideMsg();
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("nomedia");
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+    } catch (e) {
+      showMsg("沒辦法使用麥克風。在 Claude App 或內嵌視窗裡開啟時，系統不允許網頁收音；請用 Safari 或 Chrome 直接開啟這個網頁，或按「分析錄音檔」錄一段聲音來分析。若是權限被拒，請到瀏覽器設定允許麥克風。");
+      return;
+    }
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === "suspended") await ctx.resume();
+    const src = ctx.createMediaStreamSource(stream);
+    analyser = ctx.createAnalyser(); analyser.fftSize = N; analyser.smoothingTimeConstant = 0;
+    src.connect(analyser);
+    mode = "live"; history = []; fileSeries = null; resetStats(); smoothP = 0; lastT = performance.now(); accT = 0;
+    $("startBtn").textContent = "停止量測";
+    $("dot").classList.add("live");
+    $("statusText").textContent = "量測中 · Fast 時間加權";
+    $("chartTitle").textContent = "最近 60 秒"; $("chartNote").textContent = "";
+    $("sTimeLabel").textContent = "時間";
+    loop();
+  }
+  function stopLive() {
+    cancelAnimationFrame(raf);
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = null; analyser = null;
+    if (mode === "live") mode = "paused";
+    $("startBtn").textContent = "開始量測";
+    $("dot").classList.remove("live");
+    $("statusText").textContent = "已暫停 · 數據保留到重設為止";
+  }
+  const buf = new Float32Array(N);
+  function loop() {
+    raf = requestAnimationFrame(loop);
+    if (!analyser) return;
+    const now = performance.now(), dt = Math.min(0.25, (now - lastT) / 1000); lastT = now;
+    analyser.getFloatTimeDomainData(buf);
+    const p = framePower(buf, 0, ctx.sampleRate, weightA);
+    const a = 1 - Math.exp(-dt / 0.125); // Fast = 125 ms
+    smoothP = smoothP ? smoothP + a * (p - smoothP) : p;
+    const dbfs = toDb(smoothP);
+    sumP += p * dt; cntP += dt;
+    if (elapsed > 0.5) { minDb = Math.min(minDb, dbfs); maxDb = Math.max(maxDb, dbfs); }
+    peak = Math.max(peak, dbfs);
+    elapsed = (now - startT) / 1000;
+    accT += dt;
+    while (accT >= 0.1) { accT -= 0.1; history.push(dbfs); if (history.length > 600) history.shift(); }
+    setReadout(dbfs, peak);
+    $("sMin").textContent = fmt(minDb); $("sMax").textContent = fmt(maxDb);
+    $("sAvg").textContent = cntP ? fmt(toDb(sumP / cntP)) : "–";
+    $("sTime").textContent = fmtTime(elapsed);
+    maybeRef(dbfs + offset);
+    drawChart();
+  }
+
+  // ---------- file ----------
+  async function analyzeFile(file) {
+    hideMsg();
+    if (mode === "live") stopLive();
+    $("statusText").textContent = "分析中…";
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      const ab = await file.arrayBuffer();
+      const audio = await new Promise((res, rej) => {
+        const r = ctx.decodeAudioData(ab, res, rej); if (r && r.then) r.then(res, rej);
+      });
+      const sr = audio.sampleRate, len = audio.length;
+      if (len < N) throw new Error("short");
+      const mono = new Float32Array(len);
+      for (let c = 0; c < audio.numberOfChannels; c++) {
+        const d = audio.getChannelData(c);
+        for (let i = 0; i < len; i++) mono[i] += d[i] / audio.numberOfChannels;
+      }
+      const hop = Math.round(sr * 0.025); // 25 ms hop
+      const dt = hop / sr, a = 1 - Math.exp(-dt / 0.125);
+      let s = 0, sP = 0, c = 0, mn = Infinity, mx = -Infinity, acc = 0, t = 0;
+      const vals = [];
+      for (let off = 0; off + N <= len; off += hop) {
+        const p = framePower(mono, off, sr, weightA);
+        s = s ? s + a * (p - s) : p;
+        const db = toDb(s);
+        sP += p; c++;
+        if (t > 0.3) { mn = Math.min(mn, db); mx = Math.max(mx, db); }
+        t += dt; acc += dt;
+        if (acc >= 0.1) { acc -= 0.1; vals.push(db); }
+      }
+      if (!Number.isFinite(mn)) { mn = Math.min(...vals); mx = Math.max(...vals); }
+      mode = "file"; fileSeries = { vals, dur: len / sr };
+      sumP = sP; cntP = c; minDb = mn; maxDb = mx; elapsed = len / sr; peak = mx;
+      const leq = toDb(sP / c);
+      setReadout(leq, mx);
+      refreshStatsDisplay();
+      $("sTimeLabel").textContent = "錄音長度";
+      $("statusText").textContent = "錄音檔分析結果 · 大數字為整段平均 Leq";
+      $("chartTitle").textContent = file.name || "錄音檔"; $("chartNote").textContent = "整段錄音";
+      maybeRef(leq + offset);
+      drawChart();
+    } catch (e) {
+      $("statusText").textContent = "分析失敗";
+      showMsg(e.message === "short" ? "錄音太短了，請錄至少 1 秒。" : "讀不了這個檔案。請改用 m4a、mp3、wav 或手機錄影檔再試一次。");
+    }
+  }
+
+  function showMsg(t) { const m = $("msg"); m.textContent = t; m.hidden = false; }
+  function hideMsg() { $("msg").hidden = true; }
+
+  // ---------- controls ----------
+  $("startBtn").addEventListener("click", () => { if (mode === "live") stopLive(); else startLive(); });
+  $("resetBtn").addEventListener("click", () => {
+    resetStats(); history = []; fileSeries = null;
+    if (mode !== "live") { mode = "paused"; $("statusText").textContent = "已重設 · 按「開始量測」"; setReadout(NaN, NaN); }
+    $("sTimeLabel").textContent = "時間"; $("chartTitle").textContent = "最近 60 秒"; $("chartNote").textContent = "";
+    refreshStatsDisplay(); drawChart(); renderRef(NaN);
+  });
+  $("fileBtn").addEventListener("click", () => $("fileInput").click());
+  $("fileInput").addEventListener("change", e => { const f = e.target.files[0]; if (f) analyzeFile(f); e.target.value = ""; });
+
+  function setWeight(a) {
+    weightA = a;
+    $("wA").setAttribute("aria-pressed", a); $("wZ").setAttribute("aria-pressed", !a);
+    $("unit").textContent = a ? "dB(A)" : "dB(Z)";
+    try { localStorage.setItem("dbm-weight", a ? "A" : "Z"); } catch (e) {}
+    if (mode === "live") { history = []; resetStats(); }
+  }
+  $("wA").addEventListener("click", () => setWeight(true));
+  $("wZ").addEventListener("click", () => setWeight(false));
+  setWeight(weightA);
+
+  $("offset").addEventListener("input", e => {
+    offset = +e.target.value;
+    $("offVal").textContent = "+" + offset + " dB";
+    try { localStorage.setItem("dbm-offset", offset); } catch (e) {}
+    if (mode !== "live") {
+      if (mode === "file" && cntP) setReadout(toDb(sumP / cntP), peak);
+      refreshStatsDisplay(); drawChart();
+    }
+  });
+  $("offVal").textContent = "+" + offset + " dB";
+
+  window.addEventListener("resize", () => { drawChart(); if (mode !== "live") drawGauge(NaN, NaN); });
+
+  // initial example state
+  renderRef(58);
+  drawGauge(58 - offset, 72 - offset);
+  $("num").textContent = "58";
+  $("chip").style.color = css("--mid");
+  drawChart();
+})();
+</script>
+</body>
+</html>
