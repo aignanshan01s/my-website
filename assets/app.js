@@ -687,6 +687,20 @@
     </div>`;
   const BY_WORD = new Map(WORDS.map((w) => [fold(w.w), w]));
   const wordLink = (t) => { const hit = BY_WORD.get(fold(t)); return hit ? `<button class="nym-chip is-link" data-open="${hit.id}">${esc(t)}</button>` : `<span class="nym-chip">${esc(t)}</span>`; };
+  // near-synonyms with a swap verdict and the difference in simple English
+  const SWAP = { Y: ['is-y', '通常可互換'], S: ['is-s', '有時可以'], N: ['is-n', '不能互換'] };
+  function synHtml(w) {
+    const list = (EX.syn && EX.syn[w.id]) || w.syn.map((t) => [t, '', '']);
+    if (!list.length) return '';
+    return `<div class="syn-box">
+      <div class="block-label">近似詞 · 能不能互換？</div>
+      ${list.map(([t, c, note]) => `<div class="syn-row">
+        <span class="syn-w">${wordLink(t)}</span>
+        ${c ? `<span class="swap ${SWAP[c][0]}">${SWAP[c][1]}</span>` : ''}
+        ${note ? `<span class="syn-note">${esc(note)}</span>` : ''}
+      </div>`).join('')}
+    </div>`;
+  }
   function sensesByPos(w) {
     const out = [];
     for (const [pos, zh] of w.s) { const last = out[out.length - 1]; if (last && last[0] === pos) last[1] += '；' + zh; else out.push([pos, zh]); }
@@ -1220,10 +1234,8 @@
             </div>`).join('')}
             ${storyCue(w)}
           </div>
-          ${w.syn.length || w.ant.length ? `<div class="nyms">
-            ${w.syn.length ? `<div class="nym"><span class="block-label">近似詞</span><div class="nym-list">${w.syn.map(wordLink).join('')}</div></div>` : ''}
-            ${w.ant.length ? `<div class="nym"><span class="block-label">相反詞</span><div class="nym-list">${w.ant.map(wordLink).join('')}</div></div>` : ''}
-          </div>` : ''}
+          ${synHtml(w)}
+          ${w.ant.length ? `<div class="nyms"><div class="nym"><span class="block-label">相反詞</span><div class="nym-list">${w.ant.map(wordLink).join('')}</div></div></div>` : ''}
           <div>
             <div class="block-label">更多搭配</div>
             <div class="cols">${w.col.map((cc) => `<div class="col"><b>${esc(cc[0])}</b><span>${esc(cc[1])}</span></div>`).join('')}</div>
@@ -1574,7 +1586,8 @@
   // three English layers: a simpler paraphrase, similar words, then a blanked sentence (or a spelling clue)
   function hintsFor(w, type, f) {
     const x = xw(w);
-    const syn = w.syn.filter((t) => fold(t) !== fold(w.w)).slice(0, 3);
+    // only near-synonyms that can stand in for the word (not ones with a different meaning)
+    const syn = (EX.syn && EX.syn[w.id] ? EX.syn[w.id].filter((x) => x[1] !== 'N').map((x) => x[0]) : w.syn).filter((t) => fold(t) !== fold(w.w)).slice(0, 3);
     const simple = x[0] ? `<b>In simple words:</b> ${esc(x[0])}` : '';
     const synL = syn.length ? `<b>Similar words:</b> ${syn.map(esc).join(', ')}` : '';
     const spell = (s) => `<b>Spelling:</b> it starts with “${esc(s[0])}” and has ${s.replace(/[^A-Za-z]/g, '').length} letters`;
