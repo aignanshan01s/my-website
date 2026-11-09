@@ -12,34 +12,34 @@
   const MIN = 6e4;
 
   const LEVELS = [
-    { lv: 400, name: '起飛', en: 'Take-off', desc: '生活與辦公室最常出現的基礎字，聽懂公告、看懂通知的地基。' },
-    { lv: 600, name: '爬升', en: 'Climb', desc: '職場流程與商務往來的中堅詞，Part 5、6 的常客。' },
-    { lv: 800, name: '巡航', en: 'Cruise', desc: '合約、財務、管理語境，讀懂 Part 7 長篇文章的關鍵。' },
-    { lv: 990, name: '抵達', en: 'Arrival', desc: '高階商業與法務用語，拉開高分差距的決勝字。' },
+    { lv: 400, name: 'Take-off', en: 'Take-off', desc: 'Basic words from daily life and the office: the base for notices and announcements.' },
+    { lv: 600, name: 'Climb', en: 'Climb', desc: 'Core words for work processes and business deals; common in Parts 5 and 6.' },
+    { lv: 800, name: 'Cruise', en: 'Cruise', desc: 'Contracts, finance and management: the key to long Part 7 texts.' },
+    { lv: 990, name: 'Arrival', en: 'Arrival', desc: 'Advanced business and legal words that win the top scores.' },
   ];
   const LV = Object.fromEntries(LEVELS.map((l) => [l.lv, l]));
 
   const TOPICS = [
-    { k: 'off', zh: '辦公行政', en: 'Office' },
-    { k: 'hr', zh: '人資職涯', en: 'Careers' },
-    { k: 'fin', zh: '財務金融', en: 'Finance' },
-    { k: 'mkt', zh: '行銷媒體', en: 'Marketing' },
-    { k: 'biz', zh: '企業經營', en: 'Business' },
-    { k: 'law', zh: '合約法規', en: 'Legal' },
-    { k: 'ops', zh: '製造物流', en: 'Operations' },
-    { k: 'tech', zh: '科技數位', en: 'Tech' },
-    { k: 'evt', zh: '會議活動', en: 'Events' },
-    { k: 'trv', zh: '旅遊交通', en: 'Travel' },
-    { k: 'hos', zh: '餐飲住宿', en: 'Hospitality' },
-    { k: 'shop', zh: '購物消費', en: 'Shopping' },
-    { k: 'home', zh: '房產設施', en: 'Property' },
-    { k: 'med', zh: '醫療健康', en: 'Health' },
-    { k: 'core', zh: '通用核心', en: 'Core' },
+    { k: 'off', zh: 'Office', en: 'Office' },
+    { k: 'hr', zh: 'Careers', en: 'Careers' },
+    { k: 'fin', zh: 'Finance', en: 'Finance' },
+    { k: 'mkt', zh: 'Marketing', en: 'Marketing' },
+    { k: 'biz', zh: 'Business', en: 'Business' },
+    { k: 'law', zh: 'Legal', en: 'Legal' },
+    { k: 'ops', zh: 'Operations', en: 'Operations' },
+    { k: 'tech', zh: 'Tech', en: 'Tech' },
+    { k: 'evt', zh: 'Events', en: 'Events' },
+    { k: 'trv', zh: 'Travel', en: 'Travel' },
+    { k: 'hos', zh: 'Hospitality', en: 'Hospitality' },
+    { k: 'shop', zh: 'Shopping', en: 'Shopping' },
+    { k: 'home', zh: 'Property', en: 'Property' },
+    { k: 'med', zh: 'Health', en: 'Health' },
+    { k: 'core', zh: 'Core', en: 'Core' },
   ];
   const TP = Object.fromEntries(TOPICS.map((t) => [t.k, t]));
-  const STATUS_ZH = { new: '未學', learning: '學習中', mastered: '已熟' };
+  const STATUS_ZH = { new: 'New', learning: 'Learning', mastered: 'Mastered' };
   const POS_EN = { 'n.': 'noun', 'v.': 'verb', 'adj.': 'adjective', 'adv.': 'adverb', 'prep.': 'preposition' };
-  const POS_ZH = { 'n.': '名詞', 'v.': '動詞', 'adj.': '形容詞', 'adv.': '副詞', 'prep.': '介系詞' };
+  const POS_ZH = { 'n.': 'noun', 'v.': 'verb', 'adj.': 'adjective', 'adv.': 'adverb', 'prep.': 'preposition' };
 
   /* ---------- icons ---------- */
   const I = {
@@ -93,7 +93,7 @@
       return `<div class="art is-mono lv-${w.lv} ${opt.cls || ''}" aria-hidden="true"><span>${esc(w.w.charAt(0))}</span></div>`;
     }
     const tag = '';
-    return `<div class="art ${opt.cls || ''}" style="${spriteCss(idx, 'thumb')}" role="img" aria-label="${typeof w === 'object' ? esc(w.w) + ' 插畫' : '場景插畫'}">${opt.full ? `<div class="art-full" data-full="${idx}"></div>` : ''}${tag}</div>`;
+    return `<div class="art ${opt.cls || ''}" style="${spriteCss(idx, 'thumb')}" role="img" aria-label="${typeof w === 'object' ? esc(w.w) + ' picture' : 'scene picture'}">${opt.full ? `<div class="art-full" data-full="${idx}"></div>` : ''}${tag}</div>`;
   }
   const sheetCache = new Map();
   function fullSheet(idx) {
@@ -130,7 +130,8 @@
   const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const hash = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
   const fmt = (n) => n.toLocaleString('en-US');
-  const WEEK = ['日', '一', '二', '三', '四', '五', '六'];
+  const WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const zhMain = (w) => w.s.map((s) => s[1]).join('；');
   const zhShort = (w) => `${w.s[0][0]} ${w.s[0][1]}`;
   const kkHtml = (w) => `[${esc(w.kk)}]`;
@@ -188,11 +189,11 @@
   }
   function ivlLabel(c, now = Date.now()) {
     const d = c.due - now;
-    if (d < 50 * MIN) return `${Math.max(1, Math.round(d / MIN))} 分鐘`;
-    if (d < DAY) return `${Math.round(d / 36e5)} 小時`;
+    if (d < 50 * MIN) return `${Math.max(1, Math.round(d / MIN))} min`;
+    if (d < DAY) return `${Math.round(d / 36e5)} h`;
     const days = Math.round(d / DAY);
-    if (days < 31) return `${days} 天`;
-    return `${(days / 30).toFixed(1).replace(/\.0$/, '')} 個月`;
+    if (days < 31) return `${days} d`;
+    return `${(days / 30).toFixed(1).replace(/\.0$/, '')} mo`;
   }
   function today() {
     const k = ymd();
@@ -325,10 +326,10 @@
   }
   /* ---------- sound: cues, ambience, ducking (Web Audio) ---------- */
   const AMBS = [
-    { k: 'night', zh: '夜航配樂', note: '溫暖電鋼琴與長音鋪底，陪你慢慢背', len: 96 },
-    { k: 'cabin', zh: '機艙巡航', note: '平穩的引擎低鳴，像長途航班上', len: 64 },
-    { k: 'sea', zh: '港邊浪聲', note: '一波波拍上堤岸的海浪', len: 66 },
-    { k: 'rain', zh: '窗邊雨聲', note: '細雨打在窗上，適合專心', len: 60 },
+    { k: 'night', zh: 'Night flight music', note: 'Warm electric piano and soft pads', len: 96 },
+    { k: 'cabin', zh: 'Cabin hum', note: 'A calm engine sound, like a long flight', len: 64 },
+    { k: 'sea', zh: 'Harbor waves', note: 'Waves on the sea wall', len: 66 },
+    { k: 'rain', zh: 'Rain on the window', note: 'Soft rain, good for focus', len: 60 },
   ];
   const CUE_GAIN = { tap: 0.35, key: 0.3, page: 0.4, flip: 0.5, correct: 0.6, wrong: 0.5, streak: 0.55, start: 0.6, ignite: 0.55, complete: 0.65 };
   const SND = { ctx: null, master: null, bufs: new Map(), amb: null, ducked: false, armed: false };
@@ -424,11 +425,11 @@
   });
 
   const LANG = { us: 'en-US', uk: 'en-GB', au: 'en-AU' };
-  const ACC = { us: '美式口音 · US', uk: '英式口音 · UK', au: '澳式口音 · AU' };
+  const ACC = { us: 'US accent', uk: 'UK accent', au: 'Australian accent' };
   // listening questions rotate US, UK and Australian voices unless the learner picks one
   const listenAccent = (i) => (S.set.mix === 'mix' ? ['us', 'uk', 'au'][((i % 3) + 3) % 3] : S.set.mix);
   function speak(text, accent = S.set.accent, rate = S.set.rate, onend) {
-    if (!('speechSynthesis' in window)) { toast('這個瀏覽器不支援語音朗讀，請改用 Chrome、Edge 或 Safari。'); if (onend) setTimeout(onend, 400); return; }
+    if (!('speechSynthesis' in window)) { toast('This browser cannot read text aloud. Please use Chrome, Edge or Safari.'); if (onend) setTimeout(onend, 400); return; }
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
@@ -439,7 +440,7 @@
       duck(true, 15000);
       u.onend = u.onerror = () => { duck(false); if (onend) onend(); };
       speechSynthesis.speak(u);
-    } catch (e) { toast('語音朗讀暫時無法使用。'); if (onend) setTimeout(onend, 400); }
+    } catch (e) { toast('Read-aloud is not working right now.'); if (onend) setTimeout(onend, 400); }
   }
   /* Recorded pronunciations: one audio sprite per accent, seek to [start, duration]. */
   const tracks = {};
@@ -534,34 +535,34 @@
   /* ---------- shell ---------- */
   // a beginner's home holds only today's tasks; the star map, the four legs and the 15 scenes live under 我的
   const NAV = [
-    ['today', '今天', I.today],
-    ['practice', '練習', I.practice],
-    ['work', '職場', I.work],
-    ['atlas', '詞庫', I.atlas],
-    ['me', '我的', I.me],
+    ['today', 'Today', I.today],
+    ['practice', 'Practice', I.practice],
+    ['work', 'Work', I.work],
+    ['atlas', 'Words', I.atlas],
+    ['me', 'Me', I.me],
   ];
   const NAV_PARENT = { learn: 'today', recap: 'today', place: 'today', commute: 'today', sprint: 'practice', story: 'practice', drill: 'practice', docs: 'work', interview: 'work', jd: 'work', map: 'me' };
   const app = document.getElementById('app');
   app.innerHTML = `
     <header class="top"><div class="wrap">
-      <a class="brand" href="#today" aria-label="多益詞旅 TOEIC Voyage 首頁">${LOGO}<span class="brand-zh">多益詞旅</span><span class="brand-en">TOEIC Voyage</span></a>
-      <nav class="nav" aria-label="主要頁面">${NAV.map(([k, t]) => `<a href="#${k}" data-nav="${k}">${t}</a>`).join('')}</nav>
+      <a class="brand" href="#today" aria-label="TOEIC Voyage home">${LOGO}<span class="brand-zh">多益詞旅</span><span class="brand-en">TOEIC Voyage</span></a>
+      <nav class="nav" aria-label="Main pages">${NAV.map(([k, t]) => `<a href="#${k}" data-nav="${k}">${t}</a>`).join('')}</nav>
       <div class="top-tools">
-        <button class="search-btn" id="open-search" aria-label="搜尋單字">${I.search}<span>搜尋單字或中文</span><kbd>⌘K</kbd></button>
+        <button class="search-btn" id="open-search" aria-label="Search words">${I.search}<span>Search words</span><kbd>⌘K</kbd></button>
         <div class="amb">
-          <button class="icon-btn amb-btn" id="amb-btn" aria-expanded="false" aria-controls="amb-pop" aria-label="環境音" title="環境音">${I.wave}<span class="amb-bars" aria-hidden="true"><i></i><i></i><i></i></span></button>
-          <div class="amb-pop" id="amb-pop" role="dialog" aria-label="環境音" hidden></div>
+          <button class="icon-btn amb-btn" id="amb-btn" aria-expanded="false" aria-controls="amb-pop" aria-label="Background sound" title="Background sound">${I.wave}<span class="amb-bars" aria-hidden="true"><i></i><i></i><i></i></span></button>
+          <div class="amb-pop" id="amb-pop" role="dialog" aria-label="Background sound" hidden></div>
         </div>
-        <button class="icon-btn" id="toggle-sfx" aria-label="音效"></button>
-        <button class="icon-btn" id="toggle-theme" aria-label="切換深淺色"></button>
+        <button class="icon-btn" id="toggle-sfx" aria-label="Sound effects"></button>
+        <button class="icon-btn" id="toggle-theme" aria-label="Light or dark"></button>
       </div>
     </div></header>
     <main id="view" tabindex="-1"></main>
     <footer class="foot"><div class="wrap">
-      <span>多益詞旅 TOEIC Voyage · 1,000 個多益職場單字 · 全程用英文思考 · 學習進度只存在你的瀏覽器</span>
-      <span>致敬開源專案 <a href="https://github.com/designfuchen/word-atlas" target="_blank" rel="noopener">詞光 Word Atlas</a></span>
+      <span>TOEIC Voyage · 1,000 workplace words · think in English · your progress stays in this browser</span>
+      <span>Inspired by the open-source project <a href="https://github.com/designfuchen/word-atlas" target="_blank" rel="noopener">Word Atlas</a></span>
     </div></footer>
-    <nav class="tabbar" aria-label="主要頁面">${NAV.map(([k, t, ic]) => `<a href="#${k}" data-nav="${k}">${ic}<span>${t}</span></a>`).join('')}</nav>`;
+    <nav class="tabbar" aria-label="Main pages">${NAV.map(([k, t, ic]) => `<a href="#${k}" data-nav="${k}">${ic}<span>${t}</span></a>`).join('')}</nav>`;
   const view = $('#view');
   // tapping the tab of the page you are on brings that page back to its start (e.g. from a results screen)
   $$('[data-nav]').forEach((a) => a.addEventListener('click', (e) => { if (location.hash === `#${a.dataset.nav}`) { e.preventDefault(); render(); } }));
@@ -571,17 +572,17 @@
     if (!btn) return;
     const playing = !!SND.amb;
     btn.classList.toggle('is-on', playing);
-    btn.title = playing ? `環境音：${AMBS.find((x) => x.k === SND.amb.id).zh}` : '環境音';
+    btn.title = playing ? `Background: ${AMBS.find((x) => x.k === SND.amb.id).zh}` : 'Background sound';
     const pop = $('#amb-pop');
     if (pop.hidden) return;
     pop.innerHTML = `
-      <p class="eyebrow">環境音 · 陪你專心背單字</p>
+      <p class="eyebrow">Background sound · helps you focus</p>
       <ul>
         ${AMBS.map((a) => `<li><button data-amb="${a.k}" aria-pressed="${S.set.amb === a.k}"><b>${a.zh}</b><span>${a.note}</span></button></li>`).join('')}
-        <li><button data-amb="off" aria-pressed="${S.set.amb === 'off'}"><b>關閉</b><span>只保留單字發音與音效</span></button></li>
+        <li><button data-amb="off" aria-pressed="${S.set.amb === 'off'}"><b>Off</b><span>Only word audio and sound effects</span></button></li>
       </ul>
-      <label class="amb-vol" for="amb-vol">音量<input id="amb-vol" type="range" min="0" max="1" step="0.05" value="${S.set.ambVol}"></label>
-      <p class="amb-note">唸單字和例句時，環境音會自動降低。</p>`;
+      <label class="amb-vol" for="amb-vol">Volume<input id="amb-vol" type="range" min="0" max="1" step="0.05" value="${S.set.ambVol}"></label>
+      <p class="amb-note">It gets quieter when a word or sentence is read.</p>`;
     pop.querySelectorAll('[data-amb]').forEach((b) => b.addEventListener('click', () => {
       S.set.amb = b.dataset.amb; save();
       armAudio();
@@ -604,12 +605,12 @@
     const s = $('#toggle-sfx');
     s.innerHTML = S.set.sfx ? I.sound : I.mute;
     s.setAttribute('aria-pressed', String(S.set.sfx));
-    s.title = S.set.sfx ? '音效：開' : '音效：關';
+    s.title = S.set.sfx ? 'Sound effects: on' : 'Sound effects: off';
     const t = $('#toggle-theme');
     t.innerHTML = isDark() ? I.sun : I.moon;
-    t.title = isDark() ? '切換為淺色' : '切換為深色';
+    t.title = isDark() ? 'Light mode' : 'Dark mode';
   }
-  $('#toggle-sfx').addEventListener('click', () => { S.set.sfx = !S.set.sfx; save(); paintTools(); sfx('flip'); toast(S.set.sfx ? '音效已開啟' : '音效已關閉'); });
+  $('#toggle-sfx').addEventListener('click', () => { S.set.sfx = !S.set.sfx; save(); paintTools(); sfx('flip'); toast(S.set.sfx ? 'Sound effects on' : 'Sound effects off'); });
   $('#toggle-theme').addEventListener('click', () => { S.set.theme = isDark() ? 'light' : 'dark'; save(); applyTheme(); paintTools(); if (route.name === 'map') drawMap(); });
   $('#open-search').addEventListener('click', openPalette);
   $('#amb-btn').addEventListener('click', () => toggleAmbPop($('#amb-pop').hidden));
@@ -681,24 +682,34 @@
   const lvBadge = (lv, withName) => `<span class="badge lv-${lv}">${lv}${withName ? ` · ${LV[lv].name}` : ''}</span>`;
   const pron = (w) => `
     <div class="prons">
-      <button class="pron" data-word="${w.id}" data-accent="us" aria-label="美式發音"><span class="spk">${I.speaker}</span><small>US</small><b>${kkHtml(w)}</b></button>
-      <button class="pron" data-word="${w.id}" data-accent="uk" aria-label="英式發音"><span class="spk">${I.speaker}</span><small>UK</small></button>
-      <button class="pron" data-word="${w.id}" data-accent="au" aria-label="澳式發音"><span class="spk">${I.speaker}</span><small>AU</small></button>
+      <button class="pron" data-word="${w.id}" data-accent="us" aria-label="US pronunciation"><span class="spk">${I.speaker}</span><small>US</small><b>${kkHtml(w)}</b></button>
+      <button class="pron" data-word="${w.id}" data-accent="uk" aria-label="UK pronunciation"><span class="spk">${I.speaker}</span><small>UK</small></button>
+      <button class="pron" data-word="${w.id}" data-accent="au" aria-label="Australian pronunciation"><span class="spk">${I.speaker}</span><small>AU</small></button>
     </div>`;
   const BY_WORD = new Map(WORDS.map((w) => [fold(w.w), w]));
   const wordLink = (t) => { const hit = BY_WORD.get(fold(t)); return hit ? `<button class="nym-chip is-link" data-open="${hit.id}">${esc(t)}</button>` : `<span class="nym-chip">${esc(t)}</span>`; };
   // near-synonyms with a swap verdict and the difference in simple English
-  const SWAP = { Y: ['is-y', '通常可互換'], S: ['is-s', '有時可以'], N: ['is-n', '不能互換'] };
+  const SWAP = { Y: ['is-y', 'Usually swaps'], S: ['is-s', 'Sometimes'], N: ['is-n', 'Different meaning'] };
+  // how often people use a word in everyday English (Zipf frequency → 1–5 dots)
+  const FREQ = [[5.3, 5, 'very common'], [4.6, 4, 'common'], [3.9, 3, 'less common'], [3.2, 2, 'rare'], [-1, 1, 'very rare']];
+  const freqOf = (z) => FREQ.find((f) => z >= f[0]);
+  const freqHtml = (z) => { const f = freqOf(z); return `<span class="freq f${f[1]}" title="How often people use it">${'<i></i>'.repeat(f[1])}${'<i class="off"></i>'.repeat(5 - f[1])}<b>${f[2]}</b></span>`; };
   function synHtml(w) {
-    const list = (EX.syn && EX.syn[w.id]) || w.syn.map((t) => [t, '', '']);
+    const list = (EX.syn && EX.syn[w.id]) || w.syn.map((t) => [t, '', '', null]);
     if (!list.length) return '';
+    const self = EX.wz ? EX.wz[w.id] : null;
+    const top = list.filter((x) => x[1] !== 'N' && x[3] != null).reduce((a, x) => (x[3] > a ? x[3] : a), self == null ? -9 : self);
     return `<div class="syn-box">
-      <div class="block-label">近似詞 · 能不能互換？</div>
-      ${list.map(([t, c, note]) => `<div class="syn-row">
+      <div class="block-label">Similar words · can you swap them?</div>
+      ${self != null ? `<div class="syn-row is-self"><span class="syn-w"><b>${esc(w.w)}</b></span>${freqHtml(self)}${self >= top ? '<span class="most">Most used</span>' : ''}</div>` : ''}
+      ${list.map(([t, c, note, z]) => `<div class="syn-row">
         <span class="syn-w">${wordLink(t)}</span>
+        ${z != null ? freqHtml(z) : ''}
+        ${c !== 'N' && z != null && z >= top && (self == null || z > self) ? '<span class="most">Most used</span>' : ''}
         ${c ? `<span class="swap ${SWAP[c][0]}">${SWAP[c][1]}</span>` : ''}
         ${note ? `<span class="syn-note">${esc(note)}</span>` : ''}
       </div>`).join('')}
+      <p class="syn-legend">Dots show how often people use the word in everyday English. Pick the most used one when you are not sure.</p>
     </div>`;
   }
   function sensesByPos(w) {
@@ -745,11 +756,11 @@
      ====================================================== */
   function greeting() {
     const h = new Date().getHours();
-    if (h < 5) return '夜深了，旅人。';
-    if (h < 11) return '早安，旅人。';
-    if (h < 14) return '午安，旅人。';
-    if (h < 18) return '午後好，旅人。';
-    return '晚安，旅人。';
+    if (h < 5) return 'Still up, traveler?';
+    if (h < 11) return 'Good morning, traveler.';
+    if (h < 14) return 'Good afternoon, traveler.';
+    if (h < 18) return 'Good afternoon, traveler.';
+    return 'Good evening, traveler.';
   }
   function viewToday() {
     const now = new Date();
@@ -763,26 +774,26 @@
     const work = pendingNew.length + rv.list.length;
     const earned = earnRepair();
     const tasks = [
-      { k: 'rev', t: rv.list.length ? `複習 ${rv.list.length} 個字` : '複習', done: !rv.list.length, sub: rv.list.length ? (rv.later ? `今天先複習最重要的 ${rv.list.length} 個，其餘 ${rv.later} 個往後排` : '先作答再翻面，答錯的字等一下會再出現') : d.r ? `今天複習了 ${d.r} 次 ✓` : '今天沒有到期的字 ✓', href: '#learn' },
-      { k: 'new', t: pendingNew.length ? `學 ${pendingNew.length} 個新字` : '新字', done: !pendingNew.length, sub: pendingNew.length ? `約 ${mins} 分鐘 · 先看英文詞卡，再用英文作答` : `今天學了 ${d.n} 個新字 ✓`, href: '#learn' },
-      ...(stub.length ? [{ k: 'stub', t: `頑固字 ${stub.length} 個`, done: false, sub: '答錯 3 次以上的字，換題型加強', href: '#practice', act: 'stub' }] : []),
-      { k: 'recap', t: '睡前快掃', done: !!d.recap, sub: d.recap ? '已掃過 ✓' : tw ? `今天的 ${tw} 個字 · 約 3 分鐘` : '學完新字後開放', href: '#recap', off: !tw && !d.recap },
+      { k: 'rev', t: rv.list.length ? `Review ${rv.list.length} words` : 'Review', done: !rv.list.length, sub: rv.list.length ? (rv.later ? `Today, review the ${rv.list.length} most important ones. The other ${rv.later} can wait.` : 'Answer first, then see the card. Missed words come back soon.') : d.r ? `${d.r} review${d.r === 1 ? "" : "s"} today ✓` : 'Nothing due today ✓', href: '#learn' },
+      { k: 'new', t: pendingNew.length ? `Learn ${pendingNew.length} new words` : 'New words', done: !pendingNew.length, sub: pendingNew.length ? `About ${mins} min · read the English card, then answer in English` : `${d.n} new words today ✓`, href: '#learn' },
+      ...(stub.length ? [{ k: 'stub', t: `${stub.length} hard words`, done: false, sub: 'Words you missed 3+ times, with new question types', href: '#practice', act: 'stub' }] : []),
+      { k: 'recap', t: 'Bedtime recap', done: !!d.recap, sub: d.recap ? 'Done ✓' : tw ? `Today’s ${tw} words · about 3 min` : 'Opens after you learn new words', href: '#recap', off: !tw && !d.recap },
     ];
     const n = tasks.filter((x) => x.done).length;
     const st = streak();
     view.innerHTML = `
       <div class="wrap today">
         <header class="page-head">
-          <span class="eyebrow">${now.getMonth() + 1}月${now.getDate()}日 · 星期${WEEK[now.getDay()]}</span>
+          <span class="eyebrow">${WEEK[now.getDay()]} · ${MON[now.getMonth()]} ${now.getDate()}</span>
           <h1>${greeting()}</h1>
         </header>
-        ${!S.place ? `<a class="notice" href="#place"><b>先做 3 分鐘程度測驗</b><span>依結果從 400 或 600 段開始，不用從最簡單的字背起。</span>${I.arrow}</a>` : ''}
-        ${repairable() ? `<div class="notice is-warm"><b>昨天漏了一天</b><span>用一張補救卡把連續天數補回來？你有 ${S.freeze} 張。</span><button class="btn small" id="use-fix">使用補救卡</button></div>` : ''}
-        ${earned ? `<div class="notice is-good"><b>連續 ${st} 天！</b><span>獲得 1 張補救卡，漏掉一天時可以補回來。</span></div>` : ''}
-        <section class="todo card" aria-label="今天要做的事">
+        ${!S.place ? `<a class="notice" href="#place"><b>Take the 3-minute level check</b><span>Start at 400 or 600 based on your result, not always from the easiest words.</span>${I.arrow}</a>` : ''}
+        ${repairable() ? `<div class="notice is-warm"><b>You missed yesterday</b><span>Use a streak saver to fill the gap? You have ${S.freeze}.</span><button class="btn small" id="use-fix">Use a streak saver</button></div>` : ''}
+        ${earned ? `<div class="notice is-good"><b>${st} days in a row!</b><span>You got 1 streak saver. It can fill one missed day.</span></div>` : ''}
+        <section class="todo card" aria-label="Today’s plan">
           <div class="todo-head">
-            <div><span class="eyebrow">今天要做的事</span><h2>${work ? `大約 ${mins} 分鐘` : '今天的份量完成了'}</h2></div>
-            <div class="streak-chip" title="連續學習天數"><b class="num">${st}</b><span>天連續</span>${S.freeze ? `<i title="補救卡">補救卡 ×${S.freeze}</i>` : ''}</div>
+            <div><span class="eyebrow">Today’s plan</span><h2>${work ? `About ${mins} minutes` : 'All done for today'}</h2></div>
+            <div class="streak-chip" title="Days in a row"><b class="num">${st}</b><span>day streak</span>${S.freeze ? `<i title="Streak savers">Saver ×${S.freeze}</i>` : ''}</div>
           </div>
           <div class="meter todo-meter"><i class="m-mastered" style="width:${(n / tasks.length) * 100}%"></i></div>
           <ol class="todo-list">
@@ -793,14 +804,14 @@
             </a></li>`).join('')}
           </ol>
           <div class="todo-cta">
-            ${work ? `<a class="btn" href="#learn">開始 ${I.arrow}</a>` : `<button class="btn" id="extra">再學 5 個新字 ${I.arrow}</button><a class="btn ghost" href="#practice">去練習</a>`}
-            <a class="btn ghost" href="#commute">${I.listen}<span>通勤免持模式</span></a>
+            ${work ? `<a class="btn" href="#learn">Start ${I.arrow}</a>` : `<button class="btn" id="extra">Learn 5 more ${I.arrow}</button><a class="btn ghost" href="#practice">Practice</a>`}
+            <a class="btn ghost" href="#commute">${I.listen}<span>Hands-free commute</span></a>
           </div>
         </section>
-        <p class="today-more">想看進度、星圖、四段航程和 15 個職場場景？在 <a href="#me">我的</a> 頁。</p>
+        <p class="today-more">Progress, the star map, the four levels and the 15 work topics are on the <a href="#me">Me</a> page.</p>
       </div>`;
     const fx = $('#use-fix');
-    if (fx) fx.addEventListener('click', () => { if (useRepair()) { sfx('ignite'); toast(`已補回昨天，連續 ${streak()} 天`); viewToday(); } });
+    if (fx) fx.addEventListener('click', () => { if (useRepair()) { sfx('ignite'); toast(`Yesterday is filled. ${streak()} days in a row.`); viewToday(); } });
     const extra = $('#extra');
     if (extra) extra.addEventListener('click', () => { S.set.goal += 5; save(); plan(); go('learn'); });
     const sb = view.querySelector('[data-act="stub"]');
@@ -838,10 +849,10 @@
     if (P.stage === 'intro') {
       view.innerHTML = `<div class="wrap"><div class="learn sp"><div class="sp-intro">
         <span class="eyebrow mono">LEVEL CHECK · 3 MINUTES</span>
-        <h1>3 分鐘程度測驗</h1>
-        <p>看單字、聽發音，從四個英文解釋選出對的。不會就按「I don't know」，不要猜，結果才準。</p>
-        <ul class="sp-stars-how"><li><b>400</b>基礎字答對 75% 以上，就從 600 段開始</li><li><b>3:00</b>時間到自動結束，答幾題算幾題</li><li><b>✓</b>不會清掉你目前的任何進度</li></ul>
-        <div class="row-btns"><button class="btn" id="pl-go">開始 ${I.arrow}</button>${S.onboarded ? '' : '<button class="btn ghost" id="pl-skip">跳過，從 400 開始</button>'}</div>
+        <h1>3-minute level check</h1>
+        <p>See a word, hear it, and choose the right English meaning. If you don’t know, press “I don’t know”. Don’t guess, so the result is true.</p>
+        <ul class="sp-stars-how"><li><b>400</b>Get 75% of the 400-level words right to start at 600</li><li><b>3:00</b>It stops when time is up. Every answer counts.</li><li><b>✓</b>Your saved progress stays</li></ul>
+        <div class="row-btns"><button class="btn" id="pl-go">Start ${I.arrow}</button>${S.onboarded ? '' : '<button class="btn ghost" id="pl-skip">Skip, start at 400</button>'}</div>
       </div></div></div>`;
       $('#pl-go').addEventListener('click', () => {
         Object.assign(P, { stage: 'run', items: placeItems(), i: 0, t0: Date.now(), res: [] });
@@ -861,16 +872,16 @@
     const left = PLACE_MIN * MIN - (Date.now() - P.t0);
     view.innerHTML = `<div class="wrap"><div class="quiz">
       <div class="learn-top">
-        <a class="icon-btn" href="#today" aria-label="離開測驗">${I.close}</a>
+        <a class="icon-btn" href="#today" aria-label="Leave the check">${I.close}</a>
         <div class="meter"><i style="width:${(P.i / P.items.length) * 100}%"></i></div>
         <span class="count num">${P.i + 1} / ${P.items.length}</span>
         <span class="sp-clock num" id="pl-clock">${Math.floor(left / MIN)}:${pad(Math.floor((left % MIN) / 1000))}</span>
       </div>
       <article class="q-card">
-        <div class="flash-head"><span class="eyebrow">Level check · 選英文解釋</span></div>
-        <div class="q-word"><span class="q-big">${esc(w.w)}</span><button class="pron is-mini" data-word="${w.id}" aria-label="聽發音"><span class="spk">${I.speaker}</span><b>${kkHtml(w)}</b></button><span class="def-tag">${posTag(w)}</span></div>
+        <div class="flash-head"><span class="eyebrow">Level check · choose the meaning</span></div>
+        <div class="q-word"><span class="q-big">${esc(w.w)}</span><button class="pron is-mini" data-word="${w.id}" aria-label="Listen"><span class="spk">${I.speaker}</span><b>${kkHtml(w)}</b></button><span class="def-tag">${posTag(w)}</span></div>
         <div class="opts is-long">${it.opts.map((o, i) => `<button class="opt" data-pl="${i}"><span class="k">${'ABCD'[i]}</span><span class="t def">${esc(o.t)}</span></button>`).join('')}</div>
-        <button class="btn ghost idk" data-pl="-1">I don't know · 不會</button>
+        <button class="btn ghost idk" data-pl="-1">I don’t know</button>
       </article>
     </div></div>`;
     view.querySelectorAll('[data-pl]').forEach((b) => b.addEventListener('click', () => placeAnswer(+b.dataset.pl)));
@@ -908,11 +919,11 @@
     view.innerHTML = `<div class="wrap"><div class="quiz"><div class="done">
       <img src="assets/brand/done.webp" alt="" width="480" height="480">
       <div class="done-body">
-        <span class="eyebrow">測驗完成 · 答了 ${P.res.length} 題</span>
-        <h2>從 ${S.place.start} 段開始${S.place.start === 600 ? '，基礎字你已經很熟了。' : '，把職場基礎字打穩。'}</h2>
+        <span class="eyebrow">Done · ${P.res.length} answers</span>
+        <h2>Start at ${S.place.start}${S.place.start === 600 ? '. You already know the basics well.' : '. Build a strong base first.'}</h2>
         <div class="lv-rows">${LEVELS.map((l) => `<div class="lv-row lv-${l.lv}"><b>${l.lv}</b><div class="meter"><i class="m-mastered" style="width:${(acc[l.lv] || 0) * 100}%"></i></div><span>${acc[l.lv] == null ? '—' : Math.round(acc[l.lv] * 100) + '%'}</span></div>`).join('')}</div>
-        <p style="color:var(--ink-2)">詞彙推估：約 <b class="num">${estScore()}</b> 分（只看單字量，僅供參考）。每天 ${S.set.goal} 個新字，可以在「我的 → 設定」調整。</p>
-        <div class="row-btns"><a class="btn" href="#learn">開始今天的 ${S.set.goal} 個新字 ${I.arrow}</a><a class="btn ghost" href="#today">回到今天</a></div>
+        <p style="color:var(--ink-2)">Estimated score from vocabulary: about <b class="num">${estScore()}</b> (words only, a rough guide). ${S.set.goal} new words a day; change it in Me → Settings.</p>
+        <div class="row-btns"><a class="btn" href="#learn">Start today’s ${S.set.goal} words ${I.arrow}</a><a class="btn ghost" href="#today">Back to Today</a></div>
       </div>
     </div></div></div>`;
   }
@@ -958,29 +969,29 @@
     const C = commute;
     const w = BY_ID.get(C.ids[C.i]);
     if (!w) {
-      view.innerHTML = `<div class="wrap"><div class="learn"><div class="done"><img src="assets/brand/listen.webp" alt="" width="480" height="480"><div class="done-body"><span class="eyebrow">通勤免持模式</span><h2>先學幾個字，這裡才有內容可以播。</h2><div class="row-btns"><a class="btn" href="#learn">去學新字 ${I.arrow}</a></div></div></div></div></div>`;
+      view.innerHTML = `<div class="wrap"><div class="learn"><div class="done"><img src="assets/brand/listen.webp" alt="" width="480" height="480"><div class="done-body"><span class="eyebrow">Hands-free commute</span><h2>Learn a few words first, then they can play here.</h2><div class="row-btns"><a class="btn" href="#learn">Learn new words ${I.arrow}</a></div></div></div></div></div>`;
       return;
     }
     const ex = dailyEx(w);
     view.innerHTML = `<div class="wrap"><div class="learn commute">
       <div class="learn-top">
-        <a class="icon-btn" href="#today" aria-label="離開">${I.close}</a>
+        <a class="icon-btn" href="#today" aria-label="Leave">${I.close}</a>
         <div class="meter"><i style="width:${((C.i + 1) / C.ids.length) * 100}%"></i></div>
         <span class="count num">${C.i + 1} / ${C.ids.length}</span>
       </div>
       <article class="cm-card">
-        <span class="eyebrow">通勤免持 · 單字 → 英文解釋 → 例句 · ${ACC[listenAccent(C.i)]}</span>
+        <span class="eyebrow">Hands-free · word → meaning → example · ${ACC[listenAccent(C.i)]}</span>
         <div class="cm-word ${C.step === 'word' ? 'is-on' : ''}">${esc(w.w)}</div>
         <p class="cm-line ${C.step === 'def' ? 'is-on' : ''}"><span class="def-tag">${posTag(w)}</span>${esc(w.d)}</p>
         <p class="cm-line is-ex ${C.step === 'ex' ? 'is-on' : ''}">${markSentence(ex)}</p>
       </article>
       <div class="cm-ctrl">
-        <button class="icon-btn big" id="cm-prev" aria-label="上一個">${I.prev}</button>
-        <button class="cm-play" id="cm-play" aria-label="${C.on ? '暫停' : '播放'}">${C.on ? I.pause : I.play}</button>
-        <button class="icon-btn big" id="cm-next" aria-label="下一個">${I.next}</button>
+        <button class="icon-btn big" id="cm-prev" aria-label="Previous">${I.prev}</button>
+        <button class="cm-play" id="cm-play" aria-label="${C.on ? 'Pause' : 'Play'}">${C.on ? I.pause : I.play}</button>
+        <button class="icon-btn big" id="cm-next" aria-label="Next">${I.next}</button>
       </div>
-      <div class="cm-set"><label for="cm-rate">速度 <span class="num" id="cm-rate-v">${S.set.rate.toFixed(2)}×</span></label><input id="cm-rate" type="range" min="0.6" max="1.2" step="0.05" value="${S.set.rate}"></div>
-      <p class="kbd-hint">戴上耳機，按播放後可以把手機放進口袋。部分手機在螢幕關閉時會暫停語音，建議開著螢幕或調長自動鎖定時間。</p>
+      <div class="cm-set"><label for="cm-rate">Speed <span class="num" id="cm-rate-v">${S.set.rate.toFixed(2)}×</span></label><input id="cm-rate" type="range" min="0.6" max="1.2" step="0.05" value="${S.set.rate}"></div>
+      <p class="kbd-hint">Put on headphones, press play and keep your phone in your pocket. Some phones stop the voice when the screen turns off; keep it on or make auto-lock longer.</p>
     </div></div>`;
     $('#cm-play').addEventListener('click', toggleCommute);
     $('#cm-prev').addEventListener('click', () => cmStep(-1));
@@ -990,7 +1001,7 @@
     r.addEventListener('change', save);
     try {
       if ('mediaSession' in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({ title: w.w, artist: '多益詞旅 · 通勤免持', album: w.d });
+        navigator.mediaSession.metadata = new MediaMetadata({ title: w.w, artist: 'TOEIC Voyage · hands-free', album: w.d });
         navigator.mediaSession.setActionHandler('play', () => { if (!C.on) toggleCommute(); });
         navigator.mediaSession.setActionHandler('pause', () => { if (C.on) toggleCommute(); });
         navigator.mediaSession.setActionHandler('nexttrack', () => cmStep(1));
@@ -1056,35 +1067,35 @@
       <div class="wrap">
         <header class="page-head atlas-head">
           <div style="display:grid;gap:10px">
-            <span class="eyebrow">詞庫 · ${fmt(WORDS.length)} 詞</span>
-            <h1>每個詞，都停靠在一個職場裡。</h1>
-            <p class="sub">英英釋義只用基礎英文寫成 · ${fmt(WORDS.filter(hasArt).length)} 幅和字義連得起來的插畫 · 美英真人發音 · 字根聯想與詞性家族</p>
+            <span class="eyebrow">Words · ${fmt(WORDS.length)}</span>
+            <h1>Every word has a place at work.</h1>
+            <p class="sub">Meanings in basic English · ${fmt(WORDS.filter(hasArt).length)} pictures that fit · US and UK voices · roots and word families</p>
           </div>
-          <label class="search-field"><span class="sr-only">搜尋單字</span>${I.search}<input id="atlas-q" type="search" placeholder="搜尋英文單字或中文釋義" value="${esc(atlasState.q)}" autocomplete="off"></label>
+          <label class="search-field"><span class="sr-only">Search words</span>${I.search}<input id="atlas-q" type="search" placeholder="Search a word or its meaning" value="${esc(atlasState.q)}" autocomplete="off"></label>
         </header>
         <div class="filters">
-          <div class="chips" role="group" aria-label="分數航段">
-            <button class="chip" data-f="lv" data-v="0" aria-pressed="${atlasState.lv === 0}">所有航段</button>
+          <div class="chips" role="group" aria-label="Level">
+            <button class="chip" data-f="lv" data-v="0" aria-pressed="${atlasState.lv === 0}">All levels</button>
             ${LEVELS.map((l) => `<button class="chip lv-${l.lv}" data-f="lv" data-v="${l.lv}" aria-pressed="${atlasState.lv === l.lv}"><span class="dot"></span>${l.lv} ${l.name}</button>`).join('')}
           </div>
-          <div class="chips scroll" role="group" aria-label="職場場景">
-            <button class="chip" data-f="topic" data-v="all" aria-pressed="${atlasState.topic === 'all'}">所有場景</button>
+          <div class="chips scroll" role="group" aria-label="Topic">
+            <button class="chip" data-f="topic" data-v="all" aria-pressed="${atlasState.topic === 'all'}">All topics</button>
             ${TOPICS.map((t) => `<button class="chip" data-f="topic" data-v="${t.k}" aria-pressed="${atlasState.topic === t.k}">${t.zh}</button>`).join('')}
           </div>
           <div class="filter-bar">
             <div class="chips">
-              <div class="seg" role="group" aria-label="學習狀態">
-                ${[['all', '全部'], ['new', '未學'], ['learning', '學習中'], ['mastered', '已熟'], ['star', '收藏'], ['stub', '頑固字']].map(([v, t]) => `<button data-f="st" data-v="${v}" aria-pressed="${atlasState.st === v}">${t}</button>`).join('')}
+              <div class="seg" role="group" aria-label="Status">
+                ${[['all', 'All'], ['new', 'New'], ['learning', 'Learning'], ['mastered', 'Mastered'], ['star', 'Saved'], ['stub', 'Hard words']].map(([v, t]) => `<button data-f="st" data-v="${v}" aria-pressed="${atlasState.st === v}">${t}</button>`).join('')}
               </div>
-              <div class="seg" role="group" aria-label="詞性">
-                ${[['all', '詞性'], ['n.', 'n.'], ['v.', 'v.'], ['adj.', 'adj.'], ['adv.', 'adv.']].map(([v, t]) => `<button data-f="pos" data-v="${v}" aria-pressed="${atlasState.pos === v}">${t}</button>`).join('')}
+              <div class="seg" role="group" aria-label="Part of speech">
+                ${[['all', 'Part of speech'], ['n.', 'n.'], ['v.', 'v.'], ['adj.', 'adj.'], ['adv.', 'adv.']].map(([v, t]) => `<button data-f="pos" data-v="${v}" aria-pressed="${atlasState.pos === v}">${t}</button>`).join('')}
               </div>
             </div>
             <div class="filter-right">
               <span class="count num" id="atlas-count"></span>
-              <div class="seg" role="group" aria-label="顯示方式">
-                <button data-f="view" data-v="grid" aria-pressed="${atlasState.view === 'grid'}" aria-label="卡片">${I.grid.replace('<svg', '<svg width="16" height="16"')}</button>
-                <button data-f="view" data-v="list" aria-pressed="${atlasState.view === 'list'}" aria-label="清單">${I.list.replace('<svg', '<svg width="16" height="16"')}</button>
+              <div class="seg" role="group" aria-label="View">
+                <button data-f="view" data-v="grid" aria-pressed="${atlasState.view === 'grid'}" aria-label="Cards">${I.grid.replace('<svg', '<svg width="16" height="16"')}</button>
+                <button data-f="view" data-v="list" aria-pressed="${atlasState.view === 'list'}" aria-label="List">${I.list.replace('<svg', '<svg width="16" height="16"')}</button>
               </div>
             </div>
           </div>
@@ -1113,11 +1124,11 @@
   function paintAtlas() {
     const list = filterWords();
     listContext = list.map((w) => w.id);
-    $('#atlas-count').textContent = `${fmt(list.length)} 個結果`;
+    $('#atlas-count').textContent = `${fmt(list.length)} results`;
     const shown = list.slice(0, atlasState.limit);
     const box = $('#atlas-results');
     if (!list.length) {
-      box.innerHTML = `<div class="empty"><img src="assets/brand/empty.webp" alt="" width="480" height="480"><b>沒有符合的單字</b><span>試試放寬航段、場景或狀態篩選，或換個關鍵字。</span><button class="btn ghost small" id="clear-f">清除所有篩選</button></div>`;
+      box.innerHTML = `<div class="empty"><img src="assets/brand/empty.webp" alt="" width="480" height="480"><b>No words found</b><span>Try fewer filters or another search word.</span><button class="btn ghost small" id="clear-f">Clear filters</button></div>`;
       $('#clear-f').addEventListener('click', () => { Object.assign(atlasState, { lv: 0, topic: 'all', pos: 'all', st: 'all', q: '', limit: 60 }); viewAtlas(); });
     } else if (atlasState.view === 'grid') {
       box.innerHTML = `<div class="grid">${shown.map((w) => `
@@ -1126,7 +1137,7 @@
           <div class="wcard-body">
             <div class="wcard-top"><span class="wcard-word">${esc(w.w)}</span><span class="wcard-meta">${lvBadge(w.lv)}<span class="st ${status(w.id)}" title="${STATUS_ZH[status(w.id)]}"></span></span></div>
             <span class="wcard-def">${esc(shortDef(w, 58))}</span>
-            <span class="wcard-zh"><i>${w.s[0][0]}</i>${esc(w.s[0][1])}</span>
+            <span class="wcard-zh"><i>${w.s[0][0]}</i></span>
           </div>
         </button>`).join('')}</div>`;
     } else {
@@ -1135,13 +1146,13 @@
           ${art(w)}
           <span class="w">${esc(w.w)}</span>
           <span class="k">${kkHtml(w)}</span>
-          <span class="z"><i>${w.s[0][0]}</i>${esc(zhMain(w))}</span>
+          <span class="z"><i>${w.s[0][0]}</i>${esc(shortDef(w, 60))}</span>
           ${lvBadge(w.lv)}
           <span class="st ${status(w.id)}" title="${STATUS_ZH[status(w.id)]}"></span>
         </button>`).join('')}</div>`;
     }
     const more = $('#atlas-more');
-    more.innerHTML = list.length > atlasState.limit ? `<button class="btn ghost" id="more-btn">再顯示 ${Math.min(60, list.length - atlasState.limit)} 個</button>` : '';
+    more.innerHTML = list.length > atlasState.limit ? `<button class="btn ghost" id="more-btn">Show ${Math.min(60, list.length - atlasState.limit)} more</button>` : '';
     const mb = $('#more-btn');
     if (mb) mb.addEventListener('click', () => { atlasState.limit += 60; paintAtlas(); });
   }
@@ -1183,7 +1194,7 @@
       ov.addEventListener('click', (e) => { if (e.target === ov) closeEntry(); });
       ov._prevFocus = document.activeElement;
     }
-    ov.setAttribute('aria-label', `${w.w} 詞卡`);
+    ov.setAttribute('aria-label', `${w.w} card`);
     const sheet = ov.querySelector('.sheet');
     const st = status(id);
     const starred = S.stars.includes(id);
@@ -1196,16 +1207,16 @@
     const x = xw(w);
     const pair = EX.pairs.find((pp) => pp.w.some((t) => fold(t) === fold(w.w)));
     sheet.innerHTML = `
-      <button class="sheet-close" aria-label="關閉">${I.close}</button>
+      <button class="sheet-close" aria-label="Off">${I.close}</button>
       <div class="entry">
         <div class="entry-side">
           ${art(w, { full: true })}
           <div class="entry-actions">
-            <button class="btn ghost small" id="e-star" aria-pressed="${starred}">${starred ? I.starOn : I.star}${starred ? '已收藏' : '收藏'}</button>
-            ${st === 'mastered' ? '<button class="btn ghost small" id="e-forget">重新學習</button>' : '<button class="btn ghost small" id="e-known">我已經會了</button>'}
+            <button class="btn ghost small" id="e-star" aria-pressed="${starred}">${starred ? I.starOn : I.star}${starred ? 'Saved' : 'Saved'}</button>
+            ${st === 'mastered' ? '<button class="btn ghost small" id="e-forget">Learn again</button>' : '<button class="btn ghost small" id="e-known">I know this</button>'}
           </div>
-          <p class="entry-state">${st === 'new' ? '還沒學過。加入今天的學習，或直接標為已會。' : st === 'mastered' ? `已熟，下次複習：${new Date(c.due).toLocaleDateString('zh-TW')}` : `學習中，已複習 ${c.reps} 次，下次：${c.due <= Date.now() ? '現在' : ivlLabel(c) + '後'}`}${isStubborn(id) ? '<br><b class="stub-tag">頑固字：已答錯 ' + S.wrong[id] + ' 次</b>' : ''}</p>
-          ${entryCtx ? `<div class="entry-nav"><button class="btn ghost small" id="e-prev" ${prev ? '' : 'disabled'}>${I.left}上一個</button><span>${idx + 1} / ${entryCtx.length}</span><button class="btn ghost small" id="e-next" ${next ? '' : 'disabled'}>下一個${I.right}</button></div>` : ''}
+          <p class="entry-state">${st === 'new' ? 'New word. Add it to today, or mark it as known.' : st === 'mastered' ? `Mastered. Next review: ${new Date(c.due).toLocaleDateString('zh-TW')}` : `Learning. Reviewed ${c.reps} times. Next: ${c.due <= Date.now() ? 'now' : ivlLabel(c) + ''}`}${isStubborn(id) ? '<br><b class="stub-tag">Hard word: missed ' + S.wrong[id] + ' times</b>' : ''}</p>
+          ${entryCtx ? `<div class="entry-nav"><button class="btn ghost small" id="e-prev" ${prev ? '' : 'disabled'}>${I.left}Previous</button><span>${idx + 1} / ${entryCtx.length}</span><button class="btn ghost small" id="e-next" ${next ? '' : 'disabled'}>Next${I.right}</button></div>` : ''}
         </div>
         <div class="entry-main">
           <div class="entry-meta">${lvBadge(w.lv, true)}<span class="badge plain">${TP[w.t].zh}</span><span class="badge plain">${posTag(w)}</span></div>
@@ -1215,18 +1226,18 @@
           <p class="def-line is-big"><span class="def-tag">EN</span>${esc(w.d)}</p>
           ${x[0] ? `<p class="def-simple"><span class="def-tag">simpler</span>${esc(x[0])}</p>` : ''}
           <div class="senses is-small">${sensesByPos(w).map(([pos, zh]) => `<div class="sense"><i>${pos}</i><b>${esc(zh)}</b></div>`).join('')}</div>
-          ${x[4] ? `<div><div class="block-label">先記這組搭配</div><p class="col-line is-key"><b>${esc(x[4])}</b><span>= ${esc(x[5])}</span> <button class="mini-spk" data-say="${esc(x[4])}" aria-label="朗讀">${I.speaker}</button></p></div>` : ''}
+          ${x[4] ? `<div><div class="block-label">Learn this phrase first</div><p class="col-line is-key"><b>${esc(x[4])}</b><span>= ${esc(x[5])}</span> <button class="mini-spk" data-say="${esc(x[4])}" aria-label="Read aloud">${I.speaker}</button></p></div>` : ''}
           <div class="hook-box">
-            <div class="block-label">記憶聯想</div>
+            <div class="block-label">Memory hook</div>
             ${x[1] ? `<div class="roots">${rootsHtml(x[1])}</div>` : ''}
             ${x[2] ? `<p class="hook">${esc(x[2])}</p>` : ''}
-            <label class="mine"><span>我自己的聯想</span><input id="e-mine" maxlength="80" placeholder="用你自己的方式記，例如一個畫面或一句話" value="${esc(S.mine[id] || '')}"></label>
+            <label class="mine"><span>My own hook</span><input id="e-mine" maxlength="80" placeholder="Your own way to remember it: a picture or a line" value="${esc(S.mine[id] || '')}"></label>
           </div>
-          ${x[3] ? `<div><div class="block-label">詞性家族</div><div class="family">${familyHtml(x[3])}<span class="fam is-self"><b>${esc(w.w)}</b><i>${esc(posOf(w))}</i></span></div></div>` : ''}
-          ${pair ? `<div class="pair-box"><div class="block-label">別搞混</div>${pair.w.map((t) => `<p><b>${esc(t)}</b>${esc(pair.n[t])}</p>`).join('')}<button class="btn ghost small" id="e-pair">練習易混淆字 ${I.arrow}</button></div>` : ''}
+          ${x[3] ? `<div><div class="block-label">Word family</div><div class="family">${familyHtml(x[3])}<span class="fam is-self"><b>${esc(w.w)}</b><i>${esc(posOf(w))}</i></span></div></div>` : ''}
+          ${pair ? `<div class="pair-box"><div class="block-label">Don’t mix up</div>${pair.w.map((t) => `<p><b>${esc(t)}</b>${esc(pair.n[t])}</p>`).join('')}<button class="btn ghost small" id="e-pair">Practice confusable words ${I.arrow}</button></div>` : ''}
           <div class="examples">
             ${[dailyEx(w), toeicEx(w)].map((ex) => `<div class="example" data-sh-box>
-              <span class="ex-tag ${ex.k === 't' ? 'is-toeic' : ''}">${ex.k === 't' ? '多益例句' : '日常例句'}</span>
+              <span class="ex-tag ${ex.k === 't' ? 'is-toeic' : ''}">${ex.k === 't' ? 'TOEIC example' : 'Everyday example'}</span>
               <p class="en-line">${markSentence(ex)}</p>
               <p class="zh-line">${esc(ex.zh)}</p>
               ${shadowBtns(ex.en)}
@@ -1235,14 +1246,14 @@
             ${storyCue(w)}
           </div>
           ${synHtml(w)}
-          ${w.ant.length ? `<div class="nyms"><div class="nym"><span class="block-label">相反詞</span><div class="nym-list">${w.ant.map(wordLink).join('')}</div></div></div>` : ''}
+          ${w.ant.length ? `<div class="nyms"><div class="nym"><span class="block-label">Opposites</span><div class="nym-list">${w.ant.map(wordLink).join('')}</div></div></div>` : ''}
           <div>
-            <div class="block-label">更多搭配</div>
+            <div class="block-label">More phrases</div>
             <div class="cols">${w.col.map((cc) => `<div class="col"><b>${esc(cc[0])}</b><span>${esc(cc[1])}</span></div>`).join('')}</div>
           </div>
-          ${w.tip ? `<div class="tip"><div class="block-label">多益考點</div><p>${esc(w.tip)}</p></div>` : ''}
+          ${w.tip ? `<div class="tip"><div class="block-label">TOEIC tip</div><p>${esc(w.tip)}</p></div>` : ''}
           <div>
-            <div class="block-label">同場景單字 · ${TP[w.t].zh}</div>
+            <div class="block-label">Same topic · ${TP[w.t].zh}</div>
             <div class="related">${related.map((r) => `<button data-open="${r.id}">${art(r)}<span style="min-width:0"><b>${esc(r.w)}</b><span>${esc(shortDef(r, 40))}</span></span></button>`).join('')}</div>
           </div>
         </div>
@@ -1250,13 +1261,13 @@
     sheet.scrollTop = 0;
     loadFull(sheet);
     sheet.querySelector('.sheet-close').addEventListener('click', closeEntry);
-    $('#e-star').addEventListener('click', () => { const on = toggleStar(id); toast(on ? `已收藏 ${w.w}` : `已取消收藏 ${w.w}`); openEntry(id); refreshUnder(); });
+    $('#e-star').addEventListener('click', () => { const on = toggleStar(id); toast(on ? `Saved ${w.w}` : `Removed ${w.w}`); openEntry(id); refreshUnder(); });
     const kn = $('#e-known');
-    if (kn) kn.addEventListener('click', () => { markKnown(id); sfx('ignite'); burstFrom(kn, 26, 0.8); toast(`${w.w} 標為已熟，21 天後再複習`); openEntry(id); refreshUnder(); });
+    if (kn) kn.addEventListener('click', () => { markKnown(id); sfx('ignite'); burstFrom(kn, 26, 0.8); toast(`${w.w} is mastered. Next review in 21 days.`); openEntry(id); refreshUnder(); });
     const fg = $('#e-forget');
-    if (fg) fg.addEventListener('click', () => { forget(id); toast(`${w.w} 已重設為未學`); openEntry(id); refreshUnder(); });
+    if (fg) fg.addEventListener('click', () => { forget(id); toast(`${w.w} is new again`); openEntry(id); refreshUnder(); });
     const mine = $('#e-mine');
-    mine.addEventListener('change', () => { const v = mine.value.trim(); if (v) S.mine[id] = v; else delete S.mine[id]; save(); toast(v ? '已存下你的聯想' : '已清除你的聯想'); });
+    mine.addEventListener('change', () => { const v = mine.value.trim(); if (v) S.mine[id] = v; else delete S.mine[id]; save(); toast(v ? 'Your hook is saved' : 'Your hook is cleared'); });
     const ep = $('#e-pair');
     if (ep) ep.addEventListener('click', () => { closeEntryNow(ov); pracState.scope = 'all'; startQuiz('pair'); if (route.name !== 'practice') go('practice'); });
     if (prev) $('#e-prev').addEventListener('click', () => openEntry(prev));
@@ -1297,8 +1308,8 @@
     ov.className = 'overlay';
     ov.setAttribute('role', 'dialog');
     ov.setAttribute('aria-modal', 'true');
-    ov.setAttribute('aria-label', '搜尋單字');
-    ov.innerHTML = `<div class="palette"><label class="search-field"><span class="sr-only">搜尋</span>${I.search}<input id="pal-q" type="search" placeholder="輸入英文或中文，例如 invoice、報價" autocomplete="off"></label><div class="pal-list" role="listbox" id="pal-list"></div><div class="pal-hint"><span>↑↓ 選擇</span><span>Enter 打開詞卡</span><span>Esc 關閉</span></div></div>`;
+    ov.setAttribute('aria-label', 'Search words');
+    ov.innerHTML = `<div class="palette"><label class="search-field"><span class="sr-only">Search</span>${I.search}<input id="pal-q" type="search" placeholder="Type a word, for example invoice" autocomplete="off"></label><div class="pal-list" role="listbox" id="pal-list"></div><div class="pal-hint"><span>↑↓ choose</span><span>Enter opens the card</span><span>Esc closes</span></div></div>`;
     document.body.appendChild(ov);
     document.documentElement.classList.add('is-locked');
     const input = $('#pal-q', ov);
@@ -1319,8 +1330,8 @@
       }
       sel = Math.min(sel, Math.max(0, res.length - 1));
       listEl.innerHTML = res.length
-        ? (q ? '' : '<div class="eyebrow" style="padding:8px 14px">附多益考點的字</div>') + res.map((w, i) => `<button class="pal-item" role="option" data-i="${i}" aria-selected="${i === sel}">${art(w)}<span><b>${esc(w.w)}</b><span>${esc(zhShort(w))}</span></span>${lvBadge(w.lv)}</button>`).join('')
-        : '<div class="empty" style="padding:30px"><span>找不到這個字。目前詞庫收錄 1,000 個多益常考字。</span></div>';
+        ? (q ? '' : '<div class="eyebrow" style="padding:8px 14px">Words with TOEIC tips</div>') + res.map((w, i) => `<button class="pal-item" role="option" data-i="${i}" aria-selected="${i === sel}">${art(w)}<span><b>${esc(w.w)}</b><span>${esc(shortDef(w, 50))}</span></span>${lvBadge(w.lv)}</button>`).join('')
+        : '<div class="empty" style="padding:30px"><span>Not found. This site has 1,000 common TOEIC words.</span></div>';
     };
     const close = () => { ov.remove(); if (!$('.overlay')) document.documentElement.classList.remove('is-locked'); };
     const pick = (i) => { const w = res[i]; if (!w) return; close(); openEntry(w.id, res.map((x) => x.id)); };
@@ -1402,13 +1413,13 @@
       <div class="done">
         <img src="assets/brand/done.webp" alt="" width="480" height="480">
         <div class="done-body">
-          <span class="eyebrow">今天的學習完成</span>
-          <h2>${s.story ? `第 ${s.story} 章的單字都學過一輪了。` : s.total ? '今天的單字都平安降落了。' : '今天沒有待學的單字。'}</h2>
-          <p style="color:var(--ink-2)">${s.total ? `答對後選「記得」${s.tally.ok} 次、「很簡單」${s.tally.easy} 次，記成「忘了」${s.tally.forgot} 次。` : '新字與複習都完成了。'}今天累計新字 ${d.n} 個、複習 ${d.r} 次。${s.later ? `另外 ${s.later} 個到期的字排到之後幾天，不用一次補完。` : ''}</p>
+          <span class="eyebrow">Today’s learning is done</span>
+          <h2>${s.story ? `You have studied every word in chapter ${s.story}.` : s.total ? 'Today’s words have landed safely.' : 'Nothing to learn right now.'}</h2>
+          <p style="color:var(--ink-2)">${s.total ? `Remembered ${s.tally.ok}, easy ${s.tally.easy}, forgot ${s.tally.forgot}. ` : 'New words and reviews are done. '}Today: ${d.n} new, ${d.r} reviews. ${s.later ? `${s.later} more due words are moved to the next days, so you do not have to do them all now.` : ''}</p>
           <div class="row-btns">
             ${s.story
-              ? `<button class="btn" data-cloze="${s.story}">用故事填空驗收 ${I.arrow}</button><button class="btn ghost" data-story="${s.story}">回到第 ${s.story} 章</button>`
-              : `<a class="btn" href="#practice">換個題型再練 ${I.arrow}</a><a class="btn ghost" href="#commute">通勤時用耳朵複習</a><button class="btn ghost" id="more5">再學 5 個新字</button>`}
+              ? `<button class="btn" data-cloze="${s.story}">Check with the story quiz ${I.arrow}</button><button class="btn ghost" data-story="${s.story}">Back to chapter ${s.story}</button>`
+              : `<a class="btn" href="#practice">Practice another way ${I.arrow}</a><a class="btn ghost" href="#commute">Review by listening</a><button class="btn ghost" id="more5">Learn 5 more</button>`}
           </div>
         </div>
       </div></div></div>`;
@@ -1418,7 +1429,7 @@
     if (cz) cz.addEventListener('click', () => { const no = +cz.dataset.cloze; session = null; storyState.cloze = { no, pending: true }; go(`story-${no}`); });
   }
   const learnTop = (s) => `<div class="learn-top">
-      <a class="icon-btn" href="#today" aria-label="離開學習">${I.close}</a>
+      <a class="icon-btn" href="#today" aria-label="Leave">${I.close}</a>
       <div class="meter" role="progressbar" aria-valuenow="${Math.round((s.done / Math.max(1, s.total)) * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${(s.done / Math.max(1, s.total)) * 100}%"></i></div>
       <span class="count num">${s.done} / ${s.total}</span>
     </div>`;
@@ -1434,11 +1445,11 @@
         ${pron(w)}
         <p class="def-line is-big"><span class="def-tag">EN</span>${esc(w.d)}</p>
         ${opt.zh ? `<p class="zh-small" lang="zh-Hant">${esc(zhMain(w))}</p>` : ''}
-        <div class="example"><p class="en-line">${markSentence(ex)} <button class="mini-spk" data-say="${esc(ex.en)}" aria-label="朗讀例句">${I.speaker}</button></p>${opt.zh ? `<p class="zh-line">${esc(ex.zh)}</p>` : ''}</div>
+        <div class="example"><p class="en-line">${markSentence(ex)} <button class="mini-spk" data-say="${esc(ex.en)}" aria-label="Read the example">${I.speaker}</button></p>${opt.zh ? `<p class="zh-line">${esc(ex.zh)}</p>` : ''}</div>
         ${x[4] ? `<p class="col-line"><span class="def-tag">use it</span><b>${esc(x[4])}</b><span>= ${esc(x[5])}</span></p>` : ''}
         ${x[1] || x[3] ? `<div class="word-parts">${x[1] ? `<span class="roots">${rootsHtml(x[1])}</span>` : ''}${x[3] ? `<span class="family">${familyHtml(x[3])}</span>` : ''}</div>` : ''}
-        ${opt.zh && x[2] ? `<p class="hook"><b>記憶聯想</b>${esc(x[2])}</p>` : ''}
-        ${opt.zh && S.mine[w.id] ? `<p class="hook is-mine"><b>我的聯想</b>${esc(S.mine[w.id])}</p>` : ''}
+        ${opt.zh && x[2] ? `<p class="hook"><b>Memory hook</b>${esc(x[2])}</p>` : ''}
+        ${opt.zh && S.mine[w.id] ? `<p class="hook is-mine"><b>My hook</b>${esc(S.mine[w.id])}</p>` : ''}
       </div>
     </article>`;
   }
@@ -1454,8 +1465,8 @@
       view.innerHTML = `<div class="wrap"><div class="learn">
         ${learnTop(s)}
         ${cardFront(w, { badge: '<span class="badge plain lv-800">NEW</span>' })}
-        <div class="learn-cta"><button class="btn" id="got">I've got it · 等一下考你 ${I.arrow}</button></div>
-        <p class="kbd-hint">先聽、唸一次例句，用英文想它的意思。<kbd>Enter</kbd> 下一步</p>
+        <div class="learn-cta"><button class="btn" id="got">I’ve got it · test me later ${I.arrow}</button></div>
+        <p class="kbd-hint">Listen, read the example aloud and think about the meaning in English.<kbd>Enter</kbd> next</p>
       </div></div>`;
       loadFull(view);
       $('#got').addEventListener('click', gotIntro);
@@ -1470,17 +1481,17 @@
     view.innerHTML = `<div class="wrap"><div class="learn">
       ${learnTop(s)}
       <article class="q-card">
-        <div class="flash-head"><span class="eyebrow">${it.isNew ? '新字確認' : '複習'} · ${QLABEL[q.type]}</span>${lvBadge(w.lv)}</div>
+        <div class="flash-head"><span class="eyebrow">${it.isNew ? 'New word check' : 'Review'} · ${QLABEL[q.type]}</span>${lvBadge(w.lv)}</div>
         ${qPrompt(q)}
         ${qChoices(q)}
         ${hintHtml(q)}
       </article>
       ${q.answered ? `${q.ok
           ? `<div class="rates is-two">
-              <button class="rate r3" data-g="3">記得<small>${opts[0]}</small></button>
-              ${q.hinted ? `<button class="rate r4" disabled title="用了提示，先選「記得」">很簡單<small>用了提示</small></button>` : `<button class="rate r4" data-g="4">很簡單<small>${opts[1]}</small></button>`}
-            </div><p class="kbd-hint"><kbd>1</kbd> 記得　<kbd>2</kbd> 很簡單</p>`
-          : `<div class="forgot-row"><span class="forgot-tag">已記成「忘了」· 等一下會再考一次</span><button class="btn" data-g="1">Next ${I.arrow}</button></div>`}
+              <button class="rate r3" data-g="3">Remembered<small>${opts[0]}</small></button>
+              ${q.hinted ? `<button class="rate r4" disabled title="You used a hint, so choose Remembered">Easy<small>hint used</small></button>` : `<button class="rate r4" data-g="4">Easy<small>${opts[1]}</small></button>`}
+            </div><p class="kbd-hint"><kbd>1</kbd> Remembered　<kbd>2</kbd> Easy</p>`
+          : `<div class="forgot-row"><span class="forgot-tag">Saved as forgot · it comes back soon</span><button class="btn" data-g="1">Next ${I.arrow}</button></div>`}
         ${cardFront(w, { zh: true, cls: 'is-back' })}` : ''}
     </div></div>`;
     loadFull(view);
@@ -1650,8 +1661,8 @@
     else if (q.type === 'p2') speak(q.say, q.accent, slow ? 0.75 : S.set.rate);
   }
   const blankSpan = (q, f) => `<span class="blank">${q.answered ? esc(f) : '&nbsp;'}</span>`;
-  const QLABEL = { cloze: 'Part 5 · 例句填空', def: 'English → Word · 英英釋義', spell: 'Spelling · 拼字', type: 'Recall · 打出單字', word2def: 'Word → Meaning · 選英文解釋',
-    hear: 'Listening · 聽字選解釋', dict: 'Listening · 聽寫', p2: 'Listening · Part 2 問答', col: 'Collocation · 常用搭配', pair: 'Confusables · 易混淆字' };
+  const QLABEL = { cloze: 'Part 5 · sentence', def: 'Meaning → word', spell: 'Spelling', type: 'Recall · type the word', word2def: 'Word → meaning',
+    hear: 'Listening · word', dict: 'Listening · dictation', p2: 'Listening · Part 2', col: 'Phrases', pair: 'Confusable words' };
   function qPrompt(q) {
     const w = qWord(q);
     const t = q.type;
@@ -1659,10 +1670,10 @@
     if (t === 'def') return `<div class="q-def"><span class="def-tag">${posTag(w)}</span><p>${esc(w.d)}</p></div>`;
     if (t === 'spell') return `<div class="q-def is-small"><span class="def-tag">${posTag(w)}</span><p>${esc(w.d)}</p></div><p class="q-sent is-mid">${esc(q.ex.en.slice(0, q.ex.a))}<span class="blank">${q.answered ? esc(q.ex.f) : esc(underscores(q.ex.f))}</span>${esc(q.ex.en.slice(q.ex.a + q.ex.f.length))}</p>`;
     if (t === 'type') return `<div class="q-def"><span class="def-tag">${posTag(w)}</span><p>${esc(w.d)}</p></div>`;
-    if (t === 'word2def') return `<div class="q-word"><span class="q-big">${esc(w.w)}</span><button class="pron is-mini" data-word="${w.id}" aria-label="聽發音"><span class="spk">${I.speaker}</span><b>${kkHtml(w)}</b></button><span class="def-tag">${posTag(w)}</span></div><p class="q-ask">Which meaning is right?</p>`;
-    if (t === 'hear') return `<div class="listen-stage is-compact"><button class="big-listen" data-sayq aria-label="再聽一次">${I.listen}</button><span class="acc-tag">${ACC[q.accent]}</span><p class="q-ask">${q.answered ? `<b class="q-reveal">${esc(w.w)}</b>` : 'Listen. What does this word mean?'} <button class="btn ghost small" data-sayq="slow">Slower</button></p></div>`;
-    if (t === 'dict') return `<div class="listen-stage is-compact"><button class="big-listen" data-sayq aria-label="再聽一次">${I.listen}</button><span class="acc-tag">${ACC[q.accent]}</span></div><p class="q-sent is-mid">${esc(q.ex.en.slice(0, q.ex.a))}<span class="blank">${q.answered ? esc(q.ex.f) : esc(underscores(q.ex.f))}</span>${esc(q.ex.en.slice(q.ex.a + q.ex.f.length))}</p><p class="q-ask">Listen and type the missing word. <button class="btn ghost small" data-sayq="slow">Slower</button></p>`;
-    if (t === 'p2') return `<div class="listen-stage is-compact"><button class="big-listen" data-sayq aria-label="再聽一次">${I.listen}</button><span class="acc-tag">${ACC[q.accent]}</span><p class="q-ask">${q.answered ? `<b class="q-reveal">“${esc(q.say)}”</b>` : 'Listen to the question. Choose the best response.'} <button class="btn ghost small" data-sayq="slow">Slower</button></p></div>`;
+    if (t === 'word2def') return `<div class="q-word"><span class="q-big">${esc(w.w)}</span><button class="pron is-mini" data-word="${w.id}" aria-label="Listen"><span class="spk">${I.speaker}</span><b>${kkHtml(w)}</b></button><span class="def-tag">${posTag(w)}</span></div><p class="q-ask">Which meaning is right?</p>`;
+    if (t === 'hear') return `<div class="listen-stage is-compact"><button class="big-listen" data-sayq aria-label="Play again">${I.listen}</button><span class="acc-tag">${ACC[q.accent]}</span><p class="q-ask">${q.answered ? `<b class="q-reveal">${esc(w.w)}</b>` : 'Listen. What does this word mean?'} <button class="btn ghost small" data-sayq="slow">Slower</button></p></div>`;
+    if (t === 'dict') return `<div class="listen-stage is-compact"><button class="big-listen" data-sayq aria-label="Play again">${I.listen}</button><span class="acc-tag">${ACC[q.accent]}</span></div><p class="q-sent is-mid">${esc(q.ex.en.slice(0, q.ex.a))}<span class="blank">${q.answered ? esc(q.ex.f) : esc(underscores(q.ex.f))}</span>${esc(q.ex.en.slice(q.ex.a + q.ex.f.length))}</p><p class="q-ask">Listen and type the missing word. <button class="btn ghost small" data-sayq="slow">Slower</button></p>`;
+    if (t === 'p2') return `<div class="listen-stage is-compact"><button class="big-listen" data-sayq aria-label="Play again">${I.listen}</button><span class="acc-tag">${ACC[q.accent]}</span><p class="q-ask">${q.answered ? `<b class="q-reveal">“${esc(q.say)}”</b>` : 'Listen to the question. Choose the best response.'} <button class="btn ghost small" data-sayq="slow">Slower</button></p></div>`;
     if (t === 'col') return `<p class="q-sent">${esc(q.phrase.slice(0, q.a))}${blankSpan(q, q.f)}${esc(q.phrase.slice(q.a + q.f.length))}</p><p class="q-gloss"><span class="def-tag">means</span>${esc(q.gloss)}</p>`;
     if (t === 'pair') { const k = q.sent.indexOf('___'); return `<p class="q-sent">${esc(q.sent.slice(0, k))}${blankSpan(q, q.f)}${esc(q.sent.slice(k + 3))}</p>`; }
     return '';
@@ -1670,7 +1681,7 @@
   function qChoices(q) {
     if (q.input) {
       const ph = q.type === 'dict' ? 'Type what you hear' : 'Type the word';
-      return `<form class="spell" id="q-form" autocomplete="off"><label class="sr-only" for="q-in">輸入單字</label><input id="q-in" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${ph}" ${q.answered ? `disabled value="${esc(q.typed || '')}"` : ''}><button class="btn" type="submit" ${q.answered ? 'disabled' : ''}>Check</button></form>`;
+      return `<form class="spell" id="q-form" autocomplete="off"><label class="sr-only" for="q-in">Type the word</label><input id="q-in" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${ph}" ${q.answered ? `disabled value="${esc(q.typed || '')}"` : ''}><button class="btn" type="submit" ${q.answered ? 'disabled' : ''}>Check</button></form>`;
     }
     return `<div class="opts ${q.long ? 'is-long' : ''} ${q.opts.length === 3 ? 'is-three' : ''} ${q.opts.length === 2 ? 'is-two' : ''}">${q.opts.map((o, i) => {
       let cls = '';
@@ -1684,7 +1695,7 @@
     const all = n >= q.hints.length;
     return `<div class="hints" aria-live="polite">
       ${q.hints.slice(0, n).map((t, i) => `<p class="qhint"><span class="hint-no">${i + 1}</span><span>${t}</span></p>`).join('')}
-      <button class="hint-btn ${all ? 'is-give' : ''}" data-hint>${I.bulb}<span>${all ? '還是想不起來，看答案' : n ? '再給一點英文提示' : '卡住了？看英文提示'}</span><small>${all ? '記為答錯' : `${n + 1} / ${q.hints.length}`}</small></button>
+      <button class="hint-btn ${all ? 'is-give' : ''}" data-hint>${I.bulb}<span>${all ? 'I still don’t know · show the answer' : n ? 'One more hint' : 'Stuck? Get an English hint'}</span><small>${all ? 'counts as wrong' : `${n + 1} / ${q.hints.length}`}</small></button>
     </div>`;
   }
   // answer check for typed questions: the exact form, or the dictionary form of the word
@@ -1698,27 +1709,27 @@
     if (q.type === 'p2') {
       const right = q.opts.find((o) => o.ok).t;
       return `<div class="feedback is-plain"><div class="fb-main">
-        <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? '答對了' : `Best response: ${esc(right)}`}</span>
-        <span class="fb-q">“${esc(q.say)}” <button class="mini-spk" data-sayq aria-label="再聽一次">${I.speaker}</button></span>
+        <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? 'Correct' : `Best response: ${esc(right)}`}</span>
+        <span class="fb-q">“${esc(q.say)}” <button class="mini-spk" data-sayq aria-label="Play again">${I.speaker}</button></span>
         ${w ? `<span class="fb-def"><button data-open="${w.id}" class="fb-word is-sm">${esc(w.w)}</button> ${esc(w.d)}<small lang="zh-Hant">${esc(zhMain(w))}</small></span>` : ''}
       </div></div>`;
     }
     if (q.type === 'pair') {
       return `<div class="feedback is-plain"><div class="fb-main">
-        <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? '答對了' : `Answer: ${esc(q.f)}`}</span>
+        <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? 'Correct' : `Answer: ${esc(q.f)}`}</span>
         ${q.pair.w.map((t) => { const pw = BY_WORD.get(fold(t)); return `<span class="fb-def"><b class="fb-pw">${pw ? `<button data-open="${pw.id}" class="fb-word is-sm">${esc(t)}</button>` : esc(t)}</b>${esc(q.pair.n[t])}${pw ? `<small lang="zh-Hant">${esc(zhMain(pw))}</small>` : ''}</span>`; }).join('')}
       </div></div>`;
     }
     const x = xw(w);
     const shown = q.f || w.w;
     return `<div class="feedback">
-        <button data-open="${w.id}" aria-label="打開 ${esc(w.w)} 詞卡">${art(w)}</button>
+        <button data-open="${w.id}" aria-label="Open ${esc(w.w)}">${art(w)}</button>
         <div class="fb-main">
-          <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? (q.hinted ? '答對了（用了提示）' : '答對了') : `${q.gaveUp ? '沒關係。' : ''}Answer: ${esc(shown)}`}</span>
-          <span><button data-open="${w.id}" class="fb-word">${esc(w.w)}</button> ${kkHtml(w)} <button class="mini-spk" data-word="${w.id}" aria-label="聽發音">${I.speaker}</button></span>
+          <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? (q.hinted ? 'Correct (with a hint)' : 'Correct') : `${q.gaveUp ? 'No problem. ' : ''}Answer: ${esc(shown)}`}</span>
+          <span><button data-open="${w.id}" class="fb-word">${esc(w.w)}</button> ${kkHtml(w)} <button class="mini-spk" data-word="${w.id}" aria-label="Listen">${I.speaker}</button></span>
           <span class="fb-def">${esc(w.d)}<small lang="zh-Hant">${esc(zhMain(w))}</small></span>
           ${q.type === 'col' ? `<span class="fb-col"><b>${esc(q.phrase)}</b> = ${esc(q.gloss)}</span>` : ''}
-          ${!q.ok && x[2] ? `<span class="fb-hook"><b>記憶聯想</b>${x[1] ? `<i>${esc(x[1].replace(/\+/g, ' + '))}</i>` : ''}${esc(x[2])}</span>` : ''}
+          ${!q.ok && x[2] ? `<span class="fb-hook"><b>Memory hook</b>${x[1] ? `<i>${esc(x[1].replace(/\+/g, ' + '))}</i>` : ''}${esc(x[2])}</span>` : ''}
         </div>
       </div>`;
   }
@@ -1784,14 +1795,14 @@
      PRACTICE
      ====================================================== */
   const MODES = [
-    { k: 'cloze', part: 'Part 5', zh: '例句填空', desc: '職場例句挖空，選出意思和詞性都對的字。每個字 6 種句子輪流出。', img: 'data' },
-    { k: 'def', part: 'English → Word', zh: '英英釋義', desc: '讀一句簡單的英文解釋，選出它在說哪個字。', img: 'topic-thinking' },
-    { k: 'spell', part: 'Spelling', zh: '拼字', desc: '看英文解釋和例句，把單字完整拼出來。', img: 'typing' },
-    { k: 'hear', part: 'Listening', zh: '聽字選解釋', desc: '只聽發音，選出這個字的英文解釋。美、英、澳口音輪流。', img: 'listen' },
-    { k: 'p2', part: 'Listening · Part 2', zh: '聽問句選回應', desc: '聽一句職場問句，從三個回應選出合理的那句。', img: 'listen' },
-    { k: 'dict', part: 'Listening', zh: '聽寫', desc: '聽整句話，打出空格裡的字。', img: 'typing' },
-    { k: 'col', part: 'Collocations', zh: '常用搭配', desc: '用一組字來記，例如 submit a report，選出最自然的搭配。', img: 'topic-education' },
-    { k: 'pair', part: 'Confusables', zh: '易混淆字', desc: 'affect／effect、principal／principle：看句子選對的那個。', img: 'topic-thinking' },
+    { k: 'cloze', part: 'Part 5', zh: 'Sentence gap', desc: 'Choose the word that fits a work sentence. Six different sentences per word.', img: 'data' },
+    { k: 'def', part: 'English → Word', zh: 'Meaning', desc: 'Read a simple English meaning and choose the word.', img: 'topic-thinking' },
+    { k: 'spell', part: 'Spelling', zh: 'Spelling', desc: 'Read the meaning and the sentence, then type the word.', img: 'typing' },
+    { k: 'hear', part: 'Listening', zh: 'Hear a word', desc: 'Listen only and choose its meaning. US, UK and Australian voices.', img: 'listen' },
+    { k: 'p2', part: 'Listening · Part 2', zh: 'Part 2 replies', desc: 'Hear a work question and choose the best reply.', img: 'listen' },
+    { k: 'dict', part: 'Listening', zh: 'Dictation', desc: 'Hear a sentence and type the missing word.', img: 'typing' },
+    { k: 'col', part: 'Collocations', zh: 'Phrases', desc: 'Learn words in groups, like submit a report.', img: 'topic-education' },
+    { k: 'pair', part: 'Confusables', zh: 'Confusables', desc: 'affect / effect, principal / principle: choose the right one.', img: 'topic-thinking' },
   ];
   const pracState = { scope: 'all', mode: null, qs: [], i: 0, results: [] };
   function scopePool(scope) {
@@ -1808,30 +1819,30 @@
     const stub = stubborn();
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">練習 · 題目和提示都只用英文</span>
-        <h1>先想英文意思，再作答。</h1>
-        <p class="sub">每一題都要先想出字義才答得出來；卡住時可以一層層看英文提示。中文只在作答後出現，用來確認意思。</p>
+        <span class="eyebrow">Practice · questions and hints in English</span>
+        <h1>Think of the meaning in English first.</h1>
+        <p class="sub">Every question needs the meaning. If you are stuck, open the English hints one by one. Chinese appears only after you answer.</p>
       </header>
       <div class="drill-row">
         <button class="drill-card ${stub.length ? '' : 'is-empty'}" id="go-stub" ${stub.length ? '' : 'disabled'}>
-          <span class="eyebrow">頑固字加強</span>
+          <span class="eyebrow">Hard words</span>
           <b class="num">${stub.length}</b>
-          <span>${stub.length ? '答錯 3 次以上的字，用不同題型連續答對 3 次就畢業。' : `目前沒有頑固字。${S.tamed ? `已經馴服 ${S.tamed} 個。` : '答錯 3 次的字會自動收進來。'}`}</span>
+          <span>${stub.length ? 'Words you missed 3+ times. Get one right 3 times in a row to finish it.' : `No hard words now. ${S.tamed ? `You have finished ${S.tamed}.` : 'Words you miss 3 times come here.'}`}</span>
         </button>
         <button class="drill-card" id="go-pair">
-          <span class="eyebrow">易混淆字對照</span>
+          <span class="eyebrow">Confusable pairs</span>
           <b class="num">${EX.pairs.length}</b>
-          <span>affect／effect、principal／principle、rise／raise…看句子選對的那個。</span>
+          <span>affect / effect, principal / principle, rise / raise… choose the right one.</span>
         </button>
       </div>
       <section class="section">
-        <div class="section-head"><h2>題型練習</h2><span class="more">每輪 10 題 · 第一次作答計入正確率</span></div>
+        <div class="section-head"><h2>Question types</h2><span class="more">10 questions a round · first answers count</span></div>
         <div style="display:grid;gap:12px">
-          <span class="eyebrow">出題範圍</span>
+          <span class="eyebrow">Words to use</span>
           <div class="chips">
-            ${[['all', '全部 1,000 詞'], ...LEVELS.map((l) => [String(l.lv), `${l.lv} ${l.name}`]), ['learning', '我學過的'], ['star', '我的收藏']].map(([v, t]) => `<button class="chip" data-scope="${v}" aria-pressed="${pracState.scope === v}">${t}</button>`).join('')}
+            ${[['all', 'All 1,000'], ...LEVELS.map((l) => [String(l.lv), `${l.lv} ${l.name}`]), ['learning', 'Learned'], ['star', 'Saved']].map(([v, t]) => `<button class="chip" data-scope="${v}" aria-pressed="${pracState.scope === v}">${t}</button>`).join('')}
           </div>
-          <p style="font-size:13px;color:var(--ink-3)">目前範圍共 <b class="num">${pool.length}</b> 個單字${pool.length < 4 ? '，至少需要 4 個字才能出題。' : '。'}聽力題的口音：${S.set.mix === 'mix' ? '美、英、澳輪流' : ACC[S.set.mix]}（可在「我的 → 設定」更改）。</p>
+          <p style="font-size:13px;color:var(--ink-3)">Words in this set: <b class="num">${pool.length}</b>${pool.length < 4 ? '. You need at least 4.' : '.'} Listening voices: ${S.set.mix === 'mix' ? 'US, UK and Australian in turn' : ACC[S.set.mix]} (change in Me → Settings).</p>
         </div>
         <div class="modes">
           ${MODES.map((m) => `<button class="mode" data-mode="${m.k}" ${pool.length < 4 && !['p2', 'pair'].includes(m.k) ? 'disabled' : ''}><img src="assets/brand/${m.img}.webp" alt="" width="480" height="480" loading="lazy"><span class="mode-txt"><span class="m-part">${m.part}</span><h3>${m.zh}</h3><p>${m.desc}</p></span></button>`).join('')}
@@ -1839,11 +1850,11 @@
       </section>
       ${sprintMap()}
       <section class="section">
-        <div class="section-head"><h2>航程故事</h2><a class="more" href="#story">全部章節 →</a></div>
-        ${storyFeature() || `<a class="card panel story-link" href="#story"><b>《${esc(STORY.series.zh)}》</b><span>讀故事、用 Part 6 填空驗收。</span></a>`}
+        <div class="section-head"><h2>Story</h2><a class="more" href="#story">All chapters →</a></div>
+        ${storyFeature() || `<a class="card panel story-link" href="#story"><b>${esc(STORY.series.title)}</b><span>Read the story, then check with a Part 6 quiz.</span></a>`}
       </section>
       ${S.notes.length ? `<section class="section">
-        <div class="section-head"><h2>我的造句本</h2><span class="more">${S.notes.length} 句</span></div>
+        <div class="section-head"><h2>My sentences</h2><span class="more">${S.notes.length} sentences</span></div>
         <div class="notes" data-list>${S.notes.slice(-12).reverse().map((n) => { const w = BY_ID.get(n.id); return `<div class="note"><button class="note-w" data-open="${w.id}">${esc(w.w)}</button><p>${esc(n.t)}</p><span>${esc(n.at)}</span></div>`; }).join('')}</div>
       </section>` : ''}
     </div>`;
@@ -1855,7 +1866,7 @@
     $('#go-pair').addEventListener('click', () => startQuiz('pair'));
   }
   function startDrill() {
-    if (!stubborn().length) { toast('目前沒有頑固字。'); return; }
+    if (!stubborn().length) { toast('No hard words now.'); return; }
     pracState.scope = 'stub';
     startQuiz('mix');
     if (route.name !== 'practice') go('practice');
@@ -1891,18 +1902,18 @@
     const pct = (P.i / P.qs.length) * 100;
     view.innerHTML = `<div class="wrap"><div class="quiz">
       <div class="learn-top">
-        <button class="icon-btn" id="q-exit" aria-label="結束練習">${I.close}</button>
+        <button class="icon-btn" id="q-exit" aria-label="End practice">${I.close}</button>
         <div class="meter"><i style="width:${pct}%"></i></div>
         <span class="count num">${P.i + 1} / ${P.qs.length}</span>
       </div>
       <article class="q-card">
-        <div class="flash-head"><span class="eyebrow">${P.mode === 'mix' ? '頑固字加強 · ' : ''}${QLABEL[q.type]}</span>${w ? lvBadge(w.lv) : ''}</div>
+        <div class="flash-head"><span class="eyebrow">${P.mode === 'mix' ? 'Hard words · ' : ''}${QLABEL[q.type]}</span>${w ? lvBadge(w.lv) : ''}</div>
         ${qPrompt(q)}
         ${qChoices(q)}
         ${hintHtml(q)}
       </article>
-      ${q.answered ? `${fbHtml(q)}${q.tamed ? `<p class="tamed">${esc(w.w)} 連續答對 3 次，從頑固字畢業了！</p>` : ''}<button class="btn" id="q-next" style="justify-self:end">${P.i === P.qs.length - 1 ? '看結果' : 'Next'} ${I.arrow}</button>` : ''}
-      ${!q.answered && q.opts && !q.input ? `<p class="kbd-hint">鍵盤 <kbd>1</kbd>–<kbd>${q.opts.length}</kbd> 作答</p>` : ''}
+      ${q.answered ? `${fbHtml(q)}${q.tamed ? `<p class="tamed">${esc(w.w)}: right 3 times in a row. It is no longer a hard word!</p>` : ''}<button class="btn" id="q-next" style="justify-self:end">${P.i === P.qs.length - 1 ? 'See results' : 'Next'} ${I.arrow}</button>` : ''}
+      ${!q.answered && q.opts && !q.input ? `<p class="kbd-hint">Keys <kbd>1</kbd>–<kbd>${q.opts.length}</kbd> to answer</p>` : ''}
     </div></div>`;
     loadFull(view);
     $('#q-exit').addEventListener('click', () => { P.mode = null; P.qs = []; if (P.scope === 'stub') P.scope = 'all'; viewPractice(); });
@@ -1931,8 +1942,8 @@
     sfx('complete');
     if (right / P.results.length >= 0.8) setTimeout(() => burst(innerWidth / 2, innerHeight * 0.35, 70, 1.4), 120);
     const score = Math.round((right / P.results.length) * 100);
-    const mode = MODES.find((m) => m.k === P.mode) || { part: 'Stubborn words', zh: '頑固字加強' };
-    const msg = score === 100 ? '全對，這組單字已經穩定。' : score >= 80 ? '表現穩定，把錯的幾個再看一次。' : score >= 50 ? '一半以上答對。錯的字會再排進複習。' : '先回到詞卡把這些字看熟，再回來挑戰。';
+    const mode = MODES.find((m) => m.k === P.mode) || { part: 'Stubborn words', zh: 'Hard words' };
+    const msg = score === 100 ? 'All correct. You know these words well.' : score >= 80 ? 'Good job. Look at the missed ones again.' : score >= 50 ? 'More than half correct. Missed words come back in reviews.' : 'Study these word cards first, then try again.';
     view.innerHTML = `<div class="wrap"><div class="quiz">
       <div class="done">
         <img src="assets/brand/${score >= 80 ? 'done' : 'night'}.webp" alt="" width="480" height="480">
@@ -1941,22 +1952,22 @@
           <span class="score num">${right}<small style="font-size:28px;color:var(--ink-3)"> / ${P.results.length}</small></span>
           <h2>${msg}</h2>
           <div class="row-btns">
-            <button class="btn" id="again">再來一輪 ${I.arrow}</button>
-            <button class="btn ghost" id="other">換個題型</button>
+            <button class="btn" id="again">Another round ${I.arrow}</button>
+            <button class="btn ghost" id="other">Other type</button>
           </div>
         </div>
       </div>
       ${wrong.length ? `<div class="result-list" data-list>
-        <span class="eyebrow">答錯的單字</span>
+        <span class="eyebrow">Missed words</span>
         ${wrong.map((w) => `<button class="result-row" data-open="${w.id}">${art(w)}<b>${esc(w.w)}</b><span>${esc(shortDef(w, 70))}</span></button>`).join('')}
-        <button class="btn ghost small" id="star-wrong" style="justify-self:start">${I.star}把答錯的字加入收藏</button>
+        <button class="btn ghost small" id="star-wrong" style="justify-self:start">${I.star}Save the missed words</button>
       </div>` : ''}
     </div></div>`;
     listContext = wrong.map((w) => w.id);
     $('#again').addEventListener('click', () => { if (P.mode === 'mix') startDrill(); else startQuiz(P.mode); });
     $('#other').addEventListener('click', () => { P.mode = null; P.qs = []; if (P.scope === 'stub') P.scope = 'all'; viewPractice(); });
     const sw = $('#star-wrong');
-    if (sw) sw.addEventListener('click', () => { wrong.forEach((w) => { if (!S.stars.includes(w.id)) S.stars.push(w.id); }); save(); toast(`已收藏 ${wrong.length} 個單字`); sw.disabled = true; });
+    if (sw) sw.addEventListener('click', () => { wrong.forEach((w) => { if (!S.stars.includes(w.id)) S.stars.push(w.id); }); save(); toast(`Saved ${wrong.length} words`); sw.disabled = true; });
   }
   document.addEventListener('keydown', (e) => {
     if (route.name !== 'practice' || !pracState.mode || $('.overlay') || e.target.matches('input, textarea')) return;
@@ -1991,9 +2002,9 @@
     if (!h) return '';
     const sent = esc(h.sent).replace(MARK_RE, (m, id, f) => (+id === w.id ? `<mark>${f}</mark>` : f));
     return `<button class="story-cue ${compact ? 'is-compact' : ''}" data-story="${h.no}">
-      <span class="ex-tag is-story">${I.book}故事 · 第 ${h.no} 章</span>
+      <span class="ex-tag is-story">${I.book}Story · chapter ${h.no}</span>
       <span class="story-cue-en">${sent}</span>
-      <span class="story-cue-go">回到《${esc(STORY.series.zh)}》第 ${h.no} 章 ${I.arrow}</span>
+      <span class="story-cue-go">Back to chapter ${h.no} ${I.arrow}</span>
     </button>`;
   }
   function storyFeature() {
@@ -2002,14 +2013,14 @@
     const prev = chapterOf(ch.no - 1);
     const n = learnedIn(ch);
     return `<section class="section">
-      <div class="section-head"><h2>航程故事</h2><a class="more" href="#story">全部章節 →</a></div>
+      <div class="section-head"><h2>Story</h2><a class="more" href="#story">All chapters →</a></div>
       <a class="tale-feature" href="#story-${ch.no}">
         ${art(ch.cover, { full: true })}
         <div class="tale-feature-body">
           <span class="eyebrow mono">${esc(STORY.series.title)} · CHAPTER ${pad(ch.no)}</span>
-          <h3>${esc(ch.zh)}<small>${esc(ch.title)}</small></h3>
-          <p>${esc(prev ? prev.next : STORY.series.blurb)}</p>
-          <div class="tale-feature-foot"><span>本章 ${ch.words.length} 個單字 · 已學 ${n}</span><span class="btn small">${S.story.read[ch.no] ? '重讀' : n ? '讀下去' : '先讀故事'} ${I.arrow}</span></div>
+          <h3>${esc(ch.title)}</h3>
+          <p>${esc(prev ? prev.nextEn || prev.next : STORY.series.blurbEn || STORY.series.blurb)}</p>
+          <div class="tale-feature-foot"><span>${ch.words.length} words · ${n} learned</span><span class="btn small">${S.story.read[ch.no] ? 'Read again' : n ? 'Keep reading' : 'Read first'} ${I.arrow}</span></div>
         </div>
       </a>
     </section>`;
@@ -2029,17 +2040,17 @@
     const learned = CH.reduce((a, c) => a + learnedIn(c), 0);
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">航程故事 · 400 起飛段 · 試讀五章</span>
-        <h1>${esc(STORY.series.zh)}</h1>
-        <p class="sub">${esc(STORY.series.blurb)}</p>
+        <span class="eyebrow">Story · 400 level · first five chapters</span>
+        <h1>${esc(STORY.series.title)}</h1>
+        <p class="sub">${esc(STORY.series.blurbEn || STORY.series.blurb)}</p>
       </header>
       <div class="tale-how">
-        <div><b>1</b><span><strong>讀故事</strong>每章把 9–10 個 400 分段單字藏進劇情，點亮的字一按就打開詞卡。</span></div>
-        <div><b>2</b><span><strong>學單字</strong>每天的新詞會照章節順序排，今天學的字，就是下一章會遇見的字。</span></div>
-        <div><b>3</b><span><strong>故事填空</strong>用多益 Part 6 的考法，把字放回劇情裡。記住情節，就記住了字。</span></div>
+        <div><b>1</b><span><strong>Read</strong>Each chapter hides 9–10 words from the 400 level. Tap a word to open its card.</span></div>
+        <div><b>2</b><span><strong>Learn</strong>New words follow the chapters, so today you learn the words of the next chapter.</span></div>
+        <div><b>3</b><span><strong>Story quiz</strong>Put the words back into the story, like TOEIC Part 6.</span></div>
       </div>
       <section class="section">
-        <div class="section-head"><h2>章節</h2><span class="more">已學 ${learned} / ${total} 個故事單字</span></div>
+        <div class="section-head"><h2>Chapters</h2><span class="more">${learned} / ${total} story words learned</span></div>
         <div class="tale-list">
           ${CH.map((c) => {
             const n = learnedIn(c);
@@ -2047,25 +2058,24 @@
             return `<a class="tale-row" href="#story-${c.no}">
               ${art(c.cover)}
               <div class="tale-row-body">
-                <span class="eyebrow mono">CHAPTER ${pad(c.no)} · ${esc(c.genre)}</span>
-                <b>${esc(c.zh)}</b>
-                <span class="tale-row-en">${esc(c.title)}</span>
+                <span class="eyebrow mono">CHAPTER ${pad(c.no)} · ${esc(c.genreEn || c.genre)}</span>
+                <b>${esc(c.title)}</b>
                 <div class="meter"><i class="m-mastered" style="width:${(n / c.words.length) * 100}%"></i></div>
               </div>
               <div class="tale-row-state">
-                ${S.story.read[c.no] ? '<span class="badge plain lv-600">已讀</span>' : c === nextChapter() ? '<span class="badge plain lv-800">下一章</span>' : ''}
-                ${best != null ? `<span class="num">填空 ${best}/${c.words.length}</span>` : `<span class="num">${n}/${c.words.length} 字</span>`}
+                ${S.story.read[c.no] ? '<span class="badge plain lv-600">Read</span>' : c === nextChapter() ? '<span class="badge plain lv-800">Next chapter</span>' : ''}
+                ${best != null ? `<span class="num">Quiz ${best}/${c.words.length}</span>` : `<span class="num">${n}/${c.words.length} words</span>`}
               </div>
             </a>`;
           }).join('')}
           <div class="tale-row is-soon">
             <div class="art tale-soon-art">${I.book}</div>
             <div class="tale-row-body">
-              <span class="eyebrow mono">CHAPTER 06 · 600 爬升段</span>
-              <b>目的地那一欄，為什麼是空白的？</b>
+              <span class="eyebrow mono">CHAPTER 06 · 600 CLIMB</span>
+              <b>Why is the destination field empty?</b>
               <span class="tale-row-en">To be continued</span>
             </div>
-            <div class="tale-row-state"><span class="badge plain">即將啟航</span></div>
+            <div class="tale-row-state"><span class="badge plain">Coming soon</span></div>
           </div>
         </div>
       </section>
@@ -2093,7 +2103,7 @@
     return `<div class="st-block st-${b.k}" data-i="${i}">
       ${en}
       <p class="st-zh">${zh}</p>
-      <div class="st-tools"><button class="mini-spk" data-say="${say}" aria-label="朗讀這段">${I.speaker}</button><button class="st-tr" aria-label="顯示這段的中文">譯</button></div>
+      <div class="st-tools"><button class="mini-spk" data-say="${say}" aria-label="Read this part">${I.speaker}</button><button class="st-tr" aria-label="Show Chinese for this part">中</button></div>
     </div>`;
   }
   function paintChapter(ch) {
@@ -2103,36 +2113,35 @@
     listContext = ch.words.slice();
     view.innerHTML = `<div class="wrap tale">
       <div class="tale-bar">
-        <a class="icon-btn" href="#story" aria-label="回到章節列表">${I.left}</a>
-        <span class="eyebrow">《${esc(STORY.series.zh)}》 · 第 ${ch.no} / ${CH.length} 章</span>
+        <a class="icon-btn" href="#story" aria-label="All chapters">${I.left}</a>
+        <span class="eyebrow">${esc(STORY.series.title)} · chapter ${ch.no} / ${CH.length}</span>
         <span class="tale-bar-tools">
-          <button class="btn ghost small" id="tale-read">${I.speaker}<span>朗讀全章</span></button>
+          <button class="btn ghost small" id="tale-read">${I.speaker}<span>Read it all</span></button>
         </span>
       </div>
       <header class="tale-head">
         ${art(ch.cover, { full: true })}
         <div class="tale-head-txt">
-          <span class="eyebrow mono">CHAPTER ${pad(ch.no)} · ${esc(ch.genre)}</span>
+          <span class="eyebrow mono">CHAPTER ${pad(ch.no)} · ${esc(ch.genreEn || ch.genre)}</span>
           <h1>${esc(ch.title)}</h1>
-          <p>${esc(ch.zh)}</p>
         </div>
       </header>
       <div class="tale-words" data-list>
-        <span class="block-label">本章單字 · 點字看詞卡</span>
+        <span class="block-label">Words in this chapter · tap to open</span>
         <div class="tale-chips">${ch.words.map((id) => { const w = BY_ID.get(id); return `<button class="tale-chip st-${status(id)}" data-open="${id}"><b>${esc(w.w)}</b><span>${esc(shortDef(w, 34))}</span></button>`; }).join('')}</div>
       </div>
       <article class="tale-body ${showZh ? 'show-zh' : ''}" data-list>
         ${ch.blocks.map(blockHtml).join('')}
-        <p class="tale-end">— 第 ${ch.no} 章 完 —</p>
+        <p class="tale-end">— End of chapter ${ch.no} —</p>
       </article>
       <aside class="tale-next">
-        <span class="eyebrow">${next ? '下一章預告' : '未完待續'}</span>
-        <p>${esc(ch.next)}</p>
+        <span class="eyebrow">${next ? 'Next time' : 'To be continued'}</span>
+        <p>${esc(ch.nextEn || ch.next)}</p>
       </aside>
       <div class="tale-actions">
-        <button class="btn" id="tale-cloze">故事填空 · Part 6 ${I.arrow}</button>
-        ${todo ? `<button class="btn ghost" id="tale-learn">學這章的 ${todo} 個字</button>` : '<span class="tale-done">本章單字都已熟 ✓</span>'}
-        ${next ? `<a class="btn ghost" href="#story-${next.no}">第 ${next.no} 章 ${I.right}</a>` : ''}
+        <button class="btn" id="tale-cloze">Story quiz · Part 6 ${I.arrow}</button>
+        ${todo ? `<button class="btn ghost" id="tale-learn">Learn ${todo} words</button>` : '<span class="tale-done">All words mastered ✓</span>'}
+        ${next ? `<a class="btn ghost" href="#story-${next.no}">Chapter ${next.no} ${I.right}</a>` : ''}
       </div>
     </div>`;
     loadFull(view);
@@ -2160,7 +2169,7 @@
   }
   function readTale(blocks, btn) {
     if (taleBtn) { stopTale(); return; }
-    if (!('speechSynthesis' in window)) { toast('這個瀏覽器不支援語音朗讀，請改用 Chrome、Edge 或 Safari。'); return; }
+    if (!('speechSynthesis' in window)) { toast('This browser cannot read text aloud. Please use Chrome, Edge or Safari.'); return; }
     speechSynthesis.cancel();
     taleBtn = btn;
     btn.classList.add('is-on');
@@ -2245,7 +2254,7 @@
     const w = BY_ID.get(q.id);
     view.innerHTML = `<div class="wrap tale cz">
       <div class="learn-top">
-        <button class="icon-btn" id="cz-exit" aria-label="結束填空">${I.close}</button>
+        <button class="icon-btn" id="cz-exit" aria-label="End quiz">${I.close}</button>
         <div class="meter"><i style="width:${(C.i / C.blanks.length) * 100}%"></i></div>
         <span class="count num">${C.i + 1} / ${C.blanks.length}</span>
       </div>
@@ -2254,17 +2263,17 @@
         ${passage}
       </article>
       <div class="cz-panel q-card">
-        <div class="flash-head"><span class="eyebrow">第 (${C.i + 1}) 格該填哪個字？</span>${lvBadge(w.lv)}</div>
+        <div class="flash-head"><span class="eyebrow">Which word goes in gap (${C.i + 1})?</span>${lvBadge(w.lv)}</div>
         <div class="opts">${q.opts.map((o, k) => {
           let cls = '';
           if (C.answered) { if (o.id === q.id) cls = 'ok'; else if (o.id === q.picked) cls = 'no'; }
           return `<button class="opt ${cls}" data-o="${k}" ${C.answered ? 'disabled' : ''}><span class="k">${'ABCD'[k]}</span><span class="t en">${esc(o.t)}</span></button>`;
         }).join('')}</div>
         ${C.answered ? `<div class="cz-fb">
-          <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? '答對了' : `正確答案：${esc(q.f)}`}</span>
+          <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? 'Correct' : `Answer: ${esc(q.f)}`}</span>
           <span><button data-open="${w.id}" class="cz-word">${esc(w.w)}</button> ${kkHtml(w)} · ${esc(zhMain(w))}</span>
-          <button class="btn" id="cz-next">${C.i === C.blanks.length - 1 ? '看結果' : '下一格'} ${I.arrow}</button>
-        </div>` : '<p class="kbd-hint">鍵盤 <kbd>1</kbd>–<kbd>4</kbd> 或 <kbd>A</kbd>–<kbd>D</kbd> 作答</p>'}
+          <button class="btn" id="cz-next">${C.i === C.blanks.length - 1 ? 'See results' : 'Next gap'} ${I.arrow}</button>
+        </div>` : '<p class="kbd-hint">Keys <kbd>1</kbd>–<kbd>4</kbd> or <kbd>A</kbd>–<kbd>D</kbd> to answer</p>'}
       </div>
     </div>`;
     $('#cz-exit').addEventListener('click', () => { storyState.cloze = null; paintChapter(ch); window.scrollTo(0, 0); });
@@ -2314,24 +2323,24 @@
     sfx('complete');
     if (C.right / n >= 0.8) setTimeout(() => burst(innerWidth / 2, innerHeight * 0.35, 70, 1.4), 120);
     const next = chapterOf(ch.no + 1);
-    const msg = C.right === n ? '全部填回原位。這一章的字，已經和劇情綁在一起了。' : C.right / n >= 0.7 ? '大部分都放對了，錯的字回到故事裡再讀一次。' : '先回去重讀這一章，留意亮起來的字，再挑戰一次。';
+    const msg = C.right === n ? 'All correct. These words now live in the story for you.' : C.right / n >= 0.7 ? 'Most are right. Read the missed words in the story again.' : 'Read the chapter again, watch the marked words, then try again.';
     view.innerHTML = `<div class="wrap"><div class="quiz">
       <div class="done">
         <img src="assets/brand/${C.right / n >= 0.8 ? 'done' : 'night'}.webp" alt="" width="480" height="480">
         <div class="done-body">
-          <span class="eyebrow">故事填空 · 第 ${ch.no} 章 ${esc(ch.zh)}</span>
+          <span class="eyebrow">Story quiz · chapter ${ch.no}</span>
           <span class="score num">${C.right}<small style="font-size:28px;color:var(--ink-3)"> / ${n}</small></span>
           <h2>${msg}</h2>
           <div class="row-btns">
-            ${next ? `<a class="btn" href="#story-${next.no}">讀第 ${next.no} 章 ${I.arrow}</a>` : `<a class="btn" href="#story">回到章節列表 ${I.arrow}</a>`}
-            <button class="btn ghost" id="cz-again">再填一次</button>
-            <button class="btn ghost" data-story="${ch.no}">重讀本章</button>
+            ${next ? `<a class="btn" href="#story-${next.no}">Read chapter ${next.no} ${I.arrow}</a>` : `<a class="btn" href="#story">All chapters ${I.arrow}</a>`}
+            <button class="btn ghost" id="cz-again">Try again</button>
+            <button class="btn ghost" data-story="${ch.no}">Read again</button>
           </div>
         </div>
       </div>
       ${wrong.length ? `<div class="result-list" data-list>
-        <span class="eyebrow">填錯的單字</span>
-        ${wrong.map((w) => `<button class="result-row" data-open="${w.id}">${art(w)}<b>${esc(w.w)}</b><span>${esc(zhShort(w))}</span></button>`).join('')}
+        <span class="eyebrow">Missed words</span>
+        ${wrong.map((w) => `<button class="result-row" data-open="${w.id}">${art(w)}<b>${esc(w.w)}</b><span>${esc(shortDef(w, 70))}</span></button>`).join('')}
       </div>` : ''}
     </div></div>`;
     listContext = wrong.map((w) => w.id);
@@ -2389,22 +2398,22 @@
     const stars = L.reduce((a, x) => a + (S.sprint[x.no]?.stars || 0), 0);
     const nx = nextSprint();
     return `<section class="section">
-      <div class="section-head"><h2>衝刺關卡</h2><span class="more">已過 ${passed} / ${L.length} 關 · ★ ${stars} / ${L.length * 3}</span></div>
+      <div class="section-head"><h2>Sprint levels</h2><span class="more">${passed} / ${L.length} passed · ★ ${stars} / ${L.length * 3}</span></div>
       <div class="sp-how">
-        <div><b>1</b><span><strong>看・唸</strong>英文解釋、例句和搭配一起看，跟著發音大聲唸出來。</span></div>
-        <div><b>2</b><span><strong>回想</strong>輪流用例句挖空、英文解釋、聽字選意思、常用搭配考你，答錯立刻放回牌堆。</span></div>
-        <div><b>3</b><span><strong>造句</strong>挑 3 個最容易錯的字，自己寫一句。會用，才算真的會。</span></div>
+        <div><b>1</b><span><strong>See & say</strong>Read the meaning, example and phrase, then say them aloud.</span></div>
+        <div><b>2</b><span><strong>Recall</strong>Sentence gaps, meanings, listening and phrases. Missed words go back in the pile.</span></div>
+        <div><b>3</b><span><strong>Use it</strong>Write your own sentence with the 3 hardest words.</span></div>
       </div>
       <div class="sp-rule">
-        <span>每個字要連續答對</span>
-        <div class="seg">${[2, 3, 6].map((n) => `<button data-passn="${n}" aria-pressed="${S.set.passN === n}">${n} 次</button>`).join('')}</div>
-        <span>才算過關 · 建議 3 次</span>
+        <span>Each word needs</span>
+        <div class="seg">${[2, 3, 6].map((n) => `<button data-passn="${n}" aria-pressed="${S.set.passN === n}">${n} in a row</button>`).join('')}</div>
+        <span>to pass · we suggest 3</span>
       </div>
       <div class="sp-grid">
         ${L.map((x) => {
           const r = S.sprint[x.no];
-          if (!sprintOpen(x.no)) return `<span class="sp-tile lv-${x.lv} is-locked" aria-label="第 ${x.no} 關未解鎖"><b>${pad(x.no)}</b><i>${x.lv}</i></span>`;
-          return `<a class="sp-tile lv-${x.lv} ${r ? 'is-done' : ''} ${nx && nx.no === x.no ? 'is-next' : ''}" href="#sprint-${x.no}" aria-label="第 ${x.no} 關${r ? `，${r.stars} 顆星` : ''}"><b>${pad(x.no)}</b><i>${x.lv}</i><span class="sp-stars">${r ? starStr(r.stars) : nx && nx.no === x.no ? '出發' : '☆☆☆'}</span></a>`;
+          if (!sprintOpen(x.no)) return `<span class="sp-tile lv-${x.lv} is-locked" aria-label="Level ${x.no} is locked"><b>${pad(x.no)}</b><i>${x.lv}</i></span>`;
+          return `<a class="sp-tile lv-${x.lv} ${r ? 'is-done' : ''} ${nx && nx.no === x.no ? 'is-next' : ''}" href="#sprint-${x.no}" aria-label="Level ${x.no}${r ? `, ${r.stars} stars` : ''}"><b>${pad(x.no)}</b><i>${x.lv}</i><span class="sp-stars">${r ? starStr(r.stars) : nx && nx.no === x.no ? 'Go' : '☆☆☆'}</span></a>`;
         }).join('')}
       </div>
     </section>`;
@@ -2415,7 +2424,7 @@
   function viewSprint() {
     const no = route.sub;
     const L = sprints()[no - 1];
-    if (!L || !sprintOpen(no)) { toast('先完成前一關，這一關才會解鎖。'); go('practice'); return; }
+    if (!L || !sprintOpen(no)) { toast('Finish the level before this one to open it.'); go('practice'); return; }
     if (!sprint || sprint.no !== no || sprint.stage === 'done') sprint = { no, ids: L.ids.slice(), lv: L.lv, stage: 'intro', i: 0 };
     paintSprint();
     const onKey = (e) => {
@@ -2442,12 +2451,12 @@
   function spTop(label, done, total) {
     const over = sprint.t0 && Date.now() - sprint.t0 > SPRINT_MIN * MIN;
     return `<div class="learn-top">
-        <a class="icon-btn" href="#practice" aria-label="離開這一關">${I.close}</a>
+        <a class="icon-btn" href="#practice" aria-label="Leave this level">${I.close}</a>
         <div class="meter" role="progressbar" aria-valuenow="${Math.round((done / total) * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${(done / total) * 100}%"></i></div>
         <span class="count num">${label}</span>
-        <span class="sp-clock num ${over ? 'is-over' : ''}" id="sp-clock" aria-label="剩餘時間">${spClock()}</span>
+        <span class="sp-clock num ${over ? 'is-over' : ''}" id="sp-clock" aria-label="Time left">${spClock()}</span>
       </div>
-      <ol class="sp-steps">${['看・唸', '回想', '造句'].map((t, k) => `<li class="${['see', 'recall', 'make'].indexOf(sprint.stage) === k ? 'is-on' : ['see', 'recall', 'make'].indexOf(sprint.stage) > k ? 'is-past' : ''}"><b>${k + 1}</b>${t}</li>`).join('')}</ol>`;
+      <ol class="sp-steps">${['See & say', 'Recall', 'Use it'].map((t, k) => `<li class="${['see', 'recall', 'make'].indexOf(sprint.stage) === k ? 'is-on' : ['see', 'recall', 'make'].indexOf(sprint.stage) > k ? 'is-past' : ''}"><b>${k + 1}</b>${t}</li>`).join('')}</ol>`;
   }
   function spStartClock() {
     clearInterval(spTick);
@@ -2473,15 +2482,15 @@
     view.innerHTML = `<div class="wrap"><div class="learn sp">
       <div class="sp-intro">
         <span class="eyebrow mono">LEVEL ${pad(P.no)} · ${P.lv} ${LV[P.lv].name}</span>
-        <h1>第 ${P.no} 關</h1>
-        <p>${words.length} 個字 · 倒數 ${SPRINT_MIN} 分鐘 · 題目只用英文線索 · 每個字連續答對 ${S.set.passN} 次${best ? ` · 最佳 ${starStr(best.stars)}` : ''}</p>
+        <h1>Level ${P.no}</h1>
+        <p>${words.length} words · ${SPRINT_MIN} minutes · English clues only · ${S.set.passN} in a row each${best ? ` · best ${starStr(best.stars)}` : ''}</p>
         <div class="sp-faces">${words.map((w) => art(w)).join('')}</div>
         <ul class="sp-stars-how">
-          <li><b>★</b>完成三步就過關</li>
-          <li><b>★★</b>第一次作答的正確率達 80%</li>
-          <li><b>★★★</b>${SPRINT_MIN} 分鐘內完成，而且 3 句都自己寫</li>
+          <li><b>★</b>Finish all three steps</li>
+          <li><b>★★</b>80% right on the first try</li>
+          <li><b>★★★</b>Finish in ${SPRINT_MIN} minutes and write all 3 sentences</li>
         </ul>
-        <button class="btn" id="sp-go">開始倒數 ${I.arrow}</button>
+        <button class="btn" id="sp-go">Start the clock ${I.arrow}</button>
       </div>
     </div></div>`;
     $('#sp-go').addEventListener('click', () => {
@@ -2508,16 +2517,16 @@
           <div class="flash-word">${esc(w.w)}</div>
           ${pron(w)}
           <p class="def-line"><span class="def-tag">EN</span>${esc(w.d)}</p>
-          <div class="example"><p class="en-line">${markSentence(ex)} <button class="mini-spk" data-say="${esc(ex.en)}" aria-label="朗讀例句">${I.speaker}</button></p></div>
+          <div class="example"><p class="en-line">${markSentence(ex)} <button class="mini-spk" data-say="${esc(ex.en)}" aria-label="Read the example">${I.speaker}</button></p></div>
           ${xw(w)[4] ? `<p class="col-line"><span class="def-tag">use it</span><b>${esc(xw(w)[4])}</b><span>= ${esc(xw(w)[5])}</span></p>` : ''}
           ${xw(w)[1] ? `<div class="word-parts"><span class="roots">${rootsHtml(xw(w)[1])}</span></div>` : ''}
         </div>
       </article>
       <div class="sp-actions">
-        ${SR ? `<button class="btn ghost" id="sp-mic">${I.listen}<span>跟讀檢查</span></button>` : ''}
-        <button class="btn" id="sp-said">我唸出來了 ${I.arrow}</button>
+        ${SR ? `<button class="btn ghost" id="sp-mic">${I.listen}<span>Check my speaking</span></button>` : ''}
+        <button class="btn" id="sp-said">I said it ${I.arrow}</button>
       </div>
-      <p class="kbd-hint">大聲唸單字，再唸一次例句。<kbd>Enter</kbd> 下一個</p>
+      <p class="kbd-hint">Say the word aloud, then the example.<kbd>Enter</kbd> Next</p>
     </div></div>`;
     loadFull(view);
     $('#sp-said').addEventListener('click', spNextSee);
@@ -2528,26 +2537,26 @@
   function spListen(w, btn) {
     if (spRec) { try { spRec.abort(); } catch (e) { /* ignore */ } spRec = null; }
     let r;
-    try { r = new SR(); } catch (e) { toast('這個瀏覽器無法使用語音辨識。'); return; }
+    try { r = new SR(); } catch (e) { toast('This browser cannot recognize speech.'); return; }
     spRec = r;
     r.lang = S.set.accent === 'uk' ? 'en-GB' : 'en-US';
     r.maxAlternatives = 5;
     r.interimResults = false;
     const label = btn.querySelector('span');
     btn.classList.add('is-on');
-    label.textContent = '請唸出單字…';
+    label.textContent = 'Say the word…';
     const target = fold(w.w);
     const stem = target.length > 5 ? target.slice(0, -2) : target;
     r.onresult = (e) => {
       const alts = Array.from(e.results[0]).map((a) => fold(a.transcript));
       const ok = alts.some((t) => t.includes(target) || t.split(/\s+/).some((x) => x.startsWith(stem)));
       btn.classList.remove('is-on');
-      if (ok) { label.textContent = '發音辨識通過 ✓'; btn.classList.add('is-ok'); sprint.voice++; sfx('correct'); burstFrom(btn, 18, 0.6); }
-      else { label.textContent = `聽成「${alts[0] || '…'}」，再試一次`; sfx('wrong'); }
+      if (ok) { label.textContent = 'Heard it ✓'; btn.classList.add('is-ok'); sprint.voice++; sfx('correct'); burstFrom(btn, 18, 0.6); }
+      else { label.textContent = `Heard "${alts[0] || '…'}". Try again.`; sfx('wrong'); }
     };
-    r.onerror = (e) => { btn.classList.remove('is-on'); label.textContent = e.error === 'not-allowed' || e.error === 'service-not-allowed' ? '麥克風未開放' : '沒聽到，再試一次'; };
+    r.onerror = (e) => { btn.classList.remove('is-on'); label.textContent = e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'Microphone is blocked' : 'Didn’t hear you. Try again.'; };
     r.onend = () => { btn.classList.remove('is-on'); if (spRec === r) spRec = null; };
-    try { r.start(); } catch (e) { label.textContent = '跟讀檢查'; btn.classList.remove('is-on'); }
+    try { r.start(); } catch (e) { label.textContent = 'Check my speaking'; btn.classList.remove('is-on'); }
   }
   function spNextSee() {
     const P = sprint;
@@ -2579,16 +2588,16 @@
     const need = S.set.passN;
     const prog = P.cleared * need + P.queue.reduce((a, c) => a + Math.min(c.streak, need), 0);
     view.innerHTML = `<div class="wrap"><div class="quiz sp">
-      ${spTop(`剩 ${P.queue.length} 字`, prog, P.ids.length * need)}
+      ${spTop(`${P.queue.length} left`, prog, P.ids.length * need)}
       <article class="q-card">
-        <div class="flash-head"><span class="eyebrow">${QLABEL[q.type]}</span><span class="sp-dots" aria-label="這個字已連續答對 ${card.streak} 次">${Array.from({ length: need }, (_, k) => `<i class="${k < card.streak ? 'on' : ''}"></i>`).join('')}</span></div>
+        <div class="flash-head"><span class="eyebrow">${QLABEL[q.type]}</span><span class="sp-dots" aria-label="${card.streak} in a row for this word">${Array.from({ length: need }, (_, k) => `<i class="${k < card.streak ? 'on' : ''}"></i>`).join('')}</span></div>
         ${qPrompt(q)}
         ${qChoices(q)}
         ${hintHtml(q)}
       </article>
-      ${q.answered && !q.ok ? `${fbHtml(q)}<p class="sp-again">這個字稍後會再出現</p>
-      <button class="btn" id="sp-next" style="justify-self:end">知道了 ${I.arrow}</button>` : ''}
-      ${P.combo >= 3 ? `<div class="sp-combo" aria-live="polite">連對 ×${P.combo}</div>` : ''}
+      ${q.answered && !q.ok ? `${fbHtml(q)}<p class="sp-again">This word comes back soon</p>
+      <button class="btn" id="sp-next" style="justify-self:end">Got it ${I.arrow}</button>` : ''}
+      ${P.combo >= 3 ? `<div class="sp-combo" aria-live="polite">Combo ×${P.combo}</div>` : ''}
     </div></div>`;
     loadFull(view); // before focus(), which forces a style pass and would make the plate fade in again
     wireQ(q, { paint: spRecall, after: () => spAnswer() });
@@ -2637,17 +2646,17 @@
     const w = BY_ID.get(P.makeIds[P.mi]);
     const shown = P.shown;
     view.innerHTML = `<div class="wrap"><div class="learn sp">
-      ${spTop(`${P.mi + 1} / 3 句`, P.mi, 3)}
+      ${spTop(`${P.mi + 1} / 3`, P.mi, 3)}
       <article class="q-card sp-make">
         <div class="sp-make-head">${hasArt(w) ? art(w) : ''}<div><div class="flash-word">${esc(w.w)}</div><p class="def-line"><span class="def-tag">${POS_EN[posOf(w)] || posOf(w)}</span>${esc(w.d)}</p></div></div>
-        <p class="sp-make-hint">用 <b>${esc(w.w)}</b> 寫一句跟你自己有關的話：你的工作、學校、昨天發生的事都可以。至少 5 個英文字，字形可以變化（如 ${esc(applyForm(w.w, posOf(w) === 'v.' ? 'ed' : posOf(w) === 'n.' ? 's' : '', false))}）。</p>
+        <p class="sp-make-hint">Write a sentence with <b>${esc(w.w)}</b> about your life: your job, school or yesterday. At least 5 words; you can change the form (like ${esc(applyForm(w.w, posOf(w) === 'v.' ? 'ed' : posOf(w) === 'n.' ? 's' : '', false))}）。</p>
         <form id="sp-form" class="sp-form" autocomplete="off">
-          <label class="sr-only" for="sp-in">你的句子</label>
+          <label class="sr-only" for="sp-in">Your sentence</label>
           <textarea id="sp-in" rows="3" spellcheck="true" placeholder="I ..." ${shown ? 'disabled' : ''}>${shown ? esc(shown) : ''}</textarea>
-          ${shown ? '' : '<div class="row-btns"><button class="btn" type="submit">寫好了</button><button class="btn ghost" type="button" id="sp-skip">跳過</button></div>'}
+          ${shown ? '' : '<div class="row-btns"><button class="btn" type="submit">Done</button><button class="btn ghost" type="button" id="sp-skip">Skip</button></div>'}
         </form>
         <p class="sp-make-msg" id="sp-msg" aria-live="polite"></p>
-        ${shown ? `<div class="example"><span class="ex-tag is-toeic">參考例句</span><p class="en-line">${markSentence(toeicEx(w))}</p></div><button class="btn" id="sp-mnext" style="justify-self:end">${P.mi === 2 ? '看成績' : '下一句'} ${I.arrow}</button>` : ''}
+        ${shown ? `<div class="example"><span class="ex-tag is-toeic">Example</span><p class="en-line">${markSentence(toeicEx(w))}</p></div><button class="btn" id="sp-mnext" style="justify-self:end">${P.mi === 2 ? 'See results' : 'Next'} ${I.arrow}</button>` : ''}
       </article>
     </div></div>`;
     if (shown) { $('#sp-mnext').addEventListener('click', () => { P.mi++; P.shown = null; vt('card', paintSprint); }); $('#sp-mnext').focus({ preventScroll: true }); return; }
@@ -2662,8 +2671,8 @@
       const base = fold(w.w);
       const stem = /\s|-/.test(base) ? base : base.replace(/(e|y)$/, '').slice(0, Math.max(3, base.length - 2));
       const has = fold(t).includes(base) || fold(t).split(/[^a-z'-]+/).some((x) => x.startsWith(stem));
-      if (!has) { msg.textContent = `句子裡還沒有 ${w.w} 喔。`; sfx('wrong'); return; }
-      if (t.split(' ').length < 5) { msg.textContent = '再多寫幾個字，至少 5 個英文字。'; sfx('wrong'); return; }
+      if (!has) { msg.textContent = `Your sentence does not use ${w.w} yet.`; sfx('wrong'); return; }
+      if (t.split(' ').length < 5) { msg.textContent = 'Write a little more: at least 5 words.'; sfx('wrong'); return; }
       P.made.push(w.id);
       S.notes.push({ id: w.id, t, at: ymd() });
       save();
@@ -2699,23 +2708,23 @@
     setTimeout(() => burst(innerWidth / 2, innerHeight * 0.35, 40 + P.stars * 25, 1 + P.stars * 0.2), 160);
     view.innerHTML = `<div class="wrap"><div class="quiz">
       <div class="done sp-done">
-        <div class="sp-stamp lv-${P.lv}"><span class="eyebrow mono">LEVEL ${pad(P.no)}</span><b>${starStr(P.stars)}</b><span>${P.stars === 3 ? '完美通關' : P.stars === 2 ? '漂亮過關' : '過關'}</span></div>
+        <div class="sp-stamp lv-${P.lv}"><span class="eyebrow mono">LEVEL ${pad(P.no)}</span><b>${starStr(P.stars)}</b><span>${P.stars === 3 ? 'Perfect' : P.stars === 2 ? 'Great' : 'Passed'}</span></div>
         <div class="done-body">
-          <span class="eyebrow">第 ${P.no} 關完成${P.isBest ? ' · 新紀錄' : ''}</span>
+          <span class="eyebrow">Level ${P.no} done${P.isBest ? ' · new best' : ''}</span>
           <div class="sp-stats">
-            <div><b class="num">${Math.floor(P.ms / MIN)}:${pad(Math.floor((P.ms % MIN) / 1000))}</b><span>用時 / ${SPRINT_MIN}:00</span></div>
-            <div><b class="num">${Math.round(P.acc * 100)}%</b><span>首答正確率</span></div>
-            <div><b class="num">${P.bestCombo}</b><span>最長連對</span></div>
-            <div><b class="num">${P.made.length}</b><span>自己造的句子</span></div>
+            <div><b class="num">${Math.floor(P.ms / MIN)}:${pad(Math.floor((P.ms % MIN) / 1000))}</b><span>time / ${SPRINT_MIN}:00</span></div>
+            <div><b class="num">${Math.round(P.acc * 100)}%</b><span>first-try accuracy</span></div>
+            <div><b class="num">${P.bestCombo}</b><span>best combo</span></div>
+            <div><b class="num">${P.made.length}</b><span>your sentences</span></div>
           </div>
-          <p style="color:var(--ink-2)">這 20 個字已排進間隔複習：明天早上的「晨間複習」會再見到答錯過的字，今晚睡前用「睡前快掃」再看一遍。</p>
+          <p style="color:var(--ink-2)">These 20 words are now in your reviews. Missed ones come back tomorrow; look at them again in the bedtime recap tonight.</p>
           <div class="row-btns">
-            ${next && sprintOpen(next.no) ? `<a class="btn" href="#sprint-${next.no}">下一關 ${I.arrow}</a>` : `<a class="btn" href="#practice">回關卡地圖 ${I.arrow}</a>`}
-            <button class="btn ghost" id="sp-again">再挑戰一次</button>
+            ${next && sprintOpen(next.no) ? `<a class="btn" href="#sprint-${next.no}">Next level ${I.arrow}</a>` : `<a class="btn" href="#practice">All levels ${I.arrow}</a>`}
+            <button class="btn ghost" id="sp-again">Try again</button>
           </div>
         </div>
       </div>
-      ${hard.length ? `<div class="result-list" data-list><span class="eyebrow">第一次答錯的字</span>${hard.map((w) => `<button class="result-row" data-open="${w.id}">${art(w)}<b>${esc(w.w)}</b><span>${esc(w.d)}</span></button>`).join('')}</div>` : ''}
+      ${hard.length ? `<div class="result-list" data-list><span class="eyebrow">Missed on the first try</span>${hard.map((w) => `<button class="result-row" data-open="${w.id}">${art(w)}<b>${esc(w.w)}</b><span>${esc(w.d)}</span></button>`).join('')}</div>` : ''}
       ${rewardLine()}
     </div></div>`;
     listContext = hard.map((w) => w.id);
@@ -2734,22 +2743,22 @@
     const nx = nextSprint();
     const tw = todaysWords().length;
     return [
-      { k: 'review', t: '晨間複習', done: due === 0, sub: due ? `${due} 個字到期 · 約 ${Math.max(1, Math.round(due * 0.3))} 分鐘` : d.r ? `複習了 ${d.r} 次 ✓` : '今天沒有到期的字 ✓', href: '#learn', go: '開始複習' },
-      { k: 'sprint', t: '衝刺一關', done: (d.sp || 0) > 0, sub: (d.sp || 0) > 0 ? `今天過了 ${d.sp} 關 ✓` : nx ? `第 ${nx.no} 關 · 20 字 · ${SPRINT_MIN} 分鐘` : '50 關全部完成', href: nx ? `#sprint-${nx.no}` : '#practice', go: '出發' },
-      { k: 'recap', t: '睡前快掃', done: !!d.recap, sub: d.recap ? '已掃過 ✓' : tw ? `今天的 ${tw} 個字 · 約 3 分鐘` : '學完新字後開放', href: '#recap', go: '快掃', off: !tw && !d.recap },
+      { k: 'review', t: 'Morning review', done: due === 0, sub: due ? `${due} due · about ${Math.max(1, Math.round(due * 0.3))} min` : d.r ? `${d.r} reviews ✓` : 'Nothing due today ✓', href: '#learn', go: 'Review' },
+      { k: 'sprint', t: 'One sprint', done: (d.sp || 0) > 0, sub: (d.sp || 0) > 0 ? `${d.sp} passed today ✓` : nx ? `Level ${nx.no} · 20 words · ${SPRINT_MIN} min` : 'All 50 levels done', href: nx ? `#sprint-${nx.no}` : '#practice', go: 'Go' },
+      { k: 'recap', t: 'Bedtime recap', done: !!d.recap, sub: d.recap ? 'Done ✓' : tw ? `Today’s ${tw} words · about 3 min` : 'Opens after you learn new words', href: '#recap', go: 'Recap', off: !tw && !d.recap },
     ];
   }
   function rewardLine() {
     const steps = rhythm();
     if (!steps.every((x) => x.done) || !S.set.reward) return '';
-    return `<p class="reward-line">今天三步都完成了，去享受你的「${esc(S.set.reward)}」吧。</p>`;
+    return `<p class="reward-line">All three steps done. Enjoy your "${esc(S.set.reward)}".</p>`;
   }
   function rhythmCard() {
     const steps = rhythm();
     const n = steps.filter((x) => x.done).length;
     const h = new Date().getHours();
     return `<section class="section">
-      <div class="section-head"><h2>今日節奏</h2><span class="more">完成 ${n} / 3</span></div>
+      <div class="section-head"><h2>Today’s rhythm</h2><span class="more">${n} / 3 done</span></div>
       <div class="rhythm">
         <div class="meter rhythm-meter"><i class="m-mastered" style="width:${(n / 3) * 100}%"></i></div>
         ${steps.map((x, k) => `<a class="rh-step ${x.done ? 'is-done' : ''} ${x.off ? 'is-off' : ''} ${!x.done && !x.off && ((x.k === 'recap' && h >= 20) || (x.k !== 'recap' && steps.slice(0, k).every((y) => y.done))) ? 'is-now' : ''}" href="${x.off ? '#today' : x.href}">
@@ -2757,8 +2766,8 @@
           <span class="rh-txt"><b>${x.t}</b><span>${x.sub}</span></span>
           ${x.done || x.off ? '' : `<span class="rh-go">${x.go} ${I.arrow}</span>`}
         </a>`).join('')}
-        <label class="reward"><span>三步完成，我要犒賞自己：</span><input id="reward-in" maxlength="24" placeholder="一杯手搖、一集影集…" value="${esc(S.set.reward)}"></label>
-        ${n === 3 ? `<p class="reward-line">${S.set.reward ? `三步都完成了，去享受你的「${esc(S.set.reward)}」吧。` : '三步都完成了。今天的字，交給睡眠去鞏固。'}</p>` : '<p class="rh-note">早上先複習前一天的字，睡前再掃一遍當天的字，睡眠會幫你把它們存進長期記憶。</p>'}
+        <label class="reward"><span>My reward after three steps:</span><input id="reward-in" maxlength="24" placeholder="a bubble tea, a TV show…" value="${esc(S.set.reward)}"></label>
+        ${n === 3 ? `<p class="reward-line">${S.set.reward ? `All three steps done. Enjoy your "${esc(S.set.reward)}".` : 'All three steps done. Sleep will help you keep today’s words.'}</p>` : '<p class="rh-note">Review yesterday’s words in the morning and today’s at bedtime. Sleep helps you remember.</p>'}
       </div>
     </section>`;
   }
@@ -2788,7 +2797,7 @@
   function paintRecap() {
     const R = recap;
     if (!R.ids.length) {
-      view.innerHTML = `<div class="wrap"><div class="learn"><div class="done"><img src="assets/brand/night.webp" alt="" width="480" height="480"><div class="done-body"><span class="eyebrow">睡前快掃</span><h2>今天還沒有學新字。</h2><p style="color:var(--ink-2)">先闖一關或完成今日航程，睡前再回來掃一遍。</p><div class="row-btns"><a class="btn" href="#practice">去闖關 ${I.arrow}</a></div></div></div></div></div>`;
+      view.innerHTML = `<div class="wrap"><div class="learn"><div class="done"><img src="assets/brand/night.webp" alt="" width="480" height="480"><div class="done-body"><span class="eyebrow">Bedtime recap</span><h2>No new words yet today.</h2><p style="color:var(--ink-2)">Learn some words first, then come back before bed.</p><div class="row-btns"><a class="btn" href="#practice">Practice ${I.arrow}</a></div></div></div></div></div>`;
       return;
     }
     if (R.i >= R.ids.length) {
@@ -2796,32 +2805,32 @@
       view.innerHTML = `<div class="wrap"><div class="learn"><div class="done">
         <img src="assets/brand/night.webp" alt="" width="480" height="480">
         <div class="done-body">
-          <span class="eyebrow">睡前快掃完成</span>
-          <h2>晚安，旅人。剩下的交給睡眠。</h2>
-          <p style="color:var(--ink-2)">掃過 ${R.ids.length} 個字${R.unsure.length ? `，${R.unsure.length} 個不太確定的已加入收藏，明天練習時可以只練它們` : '，每個都還記得'}。</p>
+          <span class="eyebrow">Recap done</span>
+          <h2>Good night. Let sleep do the rest.</h2>
+          <p style="color:var(--ink-2)">${R.ids.length} words${R.unsure.length ? `. ${R.unsure.length} unsure ones are saved, so you can practice just those tomorrow` : ', and you remembered every one'}。</p>
           ${rewardLine()}
-          <div class="row-btns"><a class="btn" href="#today">回到啟程 ${I.arrow}</a></div>
+          <div class="row-btns"><a class="btn" href="#today">Back to Today ${I.arrow}</a></div>
         </div></div></div></div>`;
       return;
     }
     const w = BY_ID.get(R.ids[R.i]);
     view.innerHTML = `<div class="wrap"><div class="learn">
       <div class="learn-top">
-        <a class="icon-btn" href="#today" aria-label="離開快掃">${I.close}</a>
+        <a class="icon-btn" href="#today" aria-label="Leave">${I.close}</a>
         <div class="meter"><i style="width:${(R.i / R.ids.length) * 100}%"></i></div>
         <span class="count num">${R.i + 1} / ${R.ids.length}</span>
       </div>
       <article class="flash rc-card ${hasArt(w) ? '' : 'no-art'}">
         ${hasArt(w) ? art(w, { full: true }) : ''}
         <div class="flash-body">
-          <span class="eyebrow">睡前快掃 · 想得起是哪個字嗎？</span>
+          <span class="eyebrow">Bedtime recap · which word is it?</span>
           <p class="def-line is-big"><span class="def-tag">${POS_EN[posOf(w)] || posOf(w)}</span>${esc(w.d)}</p>
           ${R.shown ? `<div class="flash-back"><div class="flash-word">${esc(w.w)}</div>${pron(w)}<p class="en-line rc-sent">${markSentence(dailyEx(w))}</p></div>` : ''}
         </div>
       </article>
       ${R.shown
-        ? `<div class="rates rc-rates"><button class="rate r1" id="rc-no">不太確定<small>加入收藏</small></button><button class="rate r4" id="rc-yes">記得<small>下一個</small></button></div><p class="kbd-hint"><kbd>1</kbd> 不太確定　<kbd>2</kbd> 記得</p>`
-        : `<button class="btn reveal-btn" id="rc-show">看答案</button><p class="kbd-hint"><kbd>Space</kbd> 看答案</p>`}
+        ? `<div class="rates rc-rates"><button class="rate r1" id="rc-no">Not sure<small>save it</small></button><button class="rate r4" id="rc-yes">Remembered<small>Next</small></button></div><p class="kbd-hint"><kbd>1</kbd> 不太確定　<kbd>2</kbd> Remembered</p>`
+        : `<button class="btn reveal-btn" id="rc-show">Show answer</button><p class="kbd-hint"><kbd>Space</kbd> Show answer</p>`}
     </div></div>`;
     loadFull(view);
     const sh = $('#rc-show');
@@ -3122,22 +3131,22 @@
     const all = counts();
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">星圖 · 四條航道 · 十四條職場旋臂</span>
-        <h1>每學會一個字，就點亮一顆星。</h1>
-        <p class="sub">由內到外四條軌道是 400、600、800、990 四段航程，每條旋臂是一個職場場景，通用核心字散布在整片星盤。學習中的字會亮起，已熟的字會燃成金白色。</p>
+        <span class="eyebrow">Star map · 4 levels · 14 work topics</span>
+        <h1>Every word you learn lights a star.</h1>
+        <p class="sub">The four rings from the center out are the 400, 600, 800 and 990 levels. Each arm is a work topic. Learning words light up; mastered words shine gold.</p>
       </header>
-      <div class="chips" style="margin-bottom:16px" role="group" aria-label="分數航段">
-        <button class="chip" data-mlv="0" aria-pressed="${mapState.lv === 0}">全部航段</button>
+      <div class="chips" style="margin-bottom:16px" role="group" aria-label="Level">
+        <button class="chip" data-mlv="0" aria-pressed="${mapState.lv === 0}">All levels</button>
         ${LEVELS.map((l) => `<button class="chip lv-${l.lv}" data-mlv="${l.lv}" aria-pressed="${mapState.lv === l.lv}"><span class="dot"></span>${l.lv} ${l.name}</button>`).join('')}
       </div>
-      <div class="map-wrap" id="map-wrap" role="img" aria-label="千詞星圖：已學 ${all.learning + all.mastered} 個，已熟 ${all.mastered} 個">
+      <div class="map-wrap" id="map-wrap" role="img" aria-label="Star map: ${all.learning + all.mastered} learned, ${all.mastered} mastered">
         <canvas id="map"></canvas>
-        <div class="map-legend"><span><i style="background:rgba(214,220,240,.5)"></i>未學</span><span><i style="background:rgb(240,196,100);box-shadow:0 0 6px rgb(240,196,100)"></i>學習中</span><span><i style="background:#fff8e8;box-shadow:0 0 8px #ffe0a0"></i>已熟</span></div>
-        <div class="gx-hint" id="gx-hint"><span class="gx-hint-long">拖曳旋轉 · 滾輪或雙指縮放 · 點星星打開詞卡 · 雙擊回正</span><span class="gx-hint-short">拖曳旋轉 · 雙指縮放 · 點星星看詞卡</span></div>
+        <div class="map-legend"><span><i style="background:rgba(214,220,240,.5)"></i>New</span><span><i style="background:rgb(240,196,100);box-shadow:0 0 6px rgb(240,196,100)"></i>Learning</span><span><i style="background:#fff8e8;box-shadow:0 0 8px #ffe0a0"></i>Mastered</span></div>
+        <div class="gx-hint" id="gx-hint"><span class="gx-hint-long">Drag to turn · scroll or pinch to zoom · tap a star to open it · double-click to reset</span><span class="gx-hint-short">Drag · pinch · tap a star</span></div>
       </div>
       <section class="section">
         <div class="map-stats">
-          ${LEVELS.map((l) => { const c = counts(WORDS.filter((w) => w.lv === l.lv)); return `<div class="map-stat lv-${l.lv}"><b class="num">${c.learning + c.mastered}<small style="font-size:14px;color:var(--ink-3)"> / ${c.total}</small></b><span>${l.lv} ${l.name} · 已熟 ${c.mastered}</span></div>`; }).join('')}
+          ${LEVELS.map((l) => { const c = counts(WORDS.filter((w) => w.lv === l.lv)); return `<div class="map-stat lv-${l.lv}"><b class="num">${c.learning + c.mastered}<small style="font-size:14px;color:var(--ink-3)"> / ${c.total}</small></b><span>${l.lv} ${l.name} · ${c.mastered} mastered</span></div>`; }).join('')}
         </div>
       </section>
     </div>`;
@@ -3148,7 +3157,7 @@
     wrap.appendChild(tip);
     const showTip = (w, x, y) => {
       if (!w) { tip.hidden = true; return; }
-      tip.innerHTML = `${art(w)}<span><b>${esc(w.w)}</b>${esc(w.s[0][1])} · ${w.lv}</span>`;
+      tip.innerHTML = `${art(w)}<span><b>${esc(w.w)}</b>${esc(shortDef(w, 40))} · ${w.lv}</span>`;
       tip.hidden = false;
       const r = wrap.getBoundingClientRect();
       tip.style.left = `${Math.max(8, Math.min(x + 16, r.width - tip.offsetWidth - 8))}px`;
@@ -3315,28 +3324,28 @@
   /* ======================================================
      WORKPLACE — emails, Teams chats and meeting invites; interview prep; job-ad checker
      ====================================================== */
-  const DOC_KIND = { email: 'Email', teams: 'Teams', invite: '會議邀請' };
+  const DOC_KIND = { email: 'Email', teams: 'Teams', invite: 'Invite' };
   // texts in the order they are drawn: invite header values first, then the body
   const docTexts = (doc) => [...(doc.k === 'invite' ? doc.h.map((x) => x[1]) : []), ...doc.b.map((x) => x[1])];
   const docWords = (doc) => [...docTexts(doc).join(' ').matchAll(MARK_RE)].map((m) => +m[1]);
   function viewWork() {
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">職場 · 把學過的字用在外商的日常</span>
-        <h1>在真的工作情境裡用英文。</h1>
-        <p class="sub">填 Email、Teams 訊息和會議邀請；準備英文面試；貼上一份職缺說明，看看你已經會多少字。</p>
+        <span class="eyebrow">Work · use your words at an international company</span>
+        <h1>Use English at real work.</h1>
+        <p class="sub">Fill in emails, Teams chats and invites; get ready for interviews; check how many words of a job ad you know.</p>
       </header>
       <div class="work-tiles">
-        <a class="work-tile" href="#interview"><span class="eyebrow">外商面試專區</span><b>自我介紹與 12 題常見問題</b><span>範本裡放進你學過的字，可以跟讀練口說。</span></a>
-        <a class="work-tile" href="#jd"><span class="eyebrow">職缺說明檢測器</span><b>貼上職缺說明，看你會幾個字</b><span>一鍵把還不會的字加入學習。</span></a>
+        <a class="work-tile" href="#interview"><span class="eyebrow">Job interviews</span><b>Self-introductions and 12 common questions</b><span>Answers use your words. Listen and repeat to practice speaking.</span></a>
+        <a class="work-tile" href="#jd"><span class="eyebrow">Job ad checker</span><b>Paste a job ad and see what you know</b><span>Add the new words to your learning in one tap.</span></a>
       </div>
       <section class="section">
-        <div class="section-head"><h2>職場情境練習</h2><span class="more">${EX.docs.length} 份 · 選出空格裡最合適的字</span></div>
+        <div class="section-head"><h2>Work documents</h2><span class="more">${EX.docs.length} documents · choose the best word for each gap</span></div>
         <div class="doc-list">${EX.docs.map((doc, i) => {
           const ids = docWords(doc);
           const known = ids.filter((id) => S.cards[id]).length;
           const best = S.docs[i + 1];
-          return `<a class="doc-tile is-${doc.k}" href="#docs-${i + 1}"><span class="doc-kind">${DOC_KIND[doc.k]}</span><b>${esc(doc.t)}</b><span>${ids.length} 個空格 · 你學過 ${known} 個${best != null ? ` · 最佳 ${best}/${ids.length}` : ''}</span></a>`;
+          return `<a class="doc-tile is-${doc.k}" href="#docs-${i + 1}"><span class="doc-kind">${DOC_KIND[doc.k]}</span><b>${esc(doc.t)}</b><span>${ids.length} gaps · you know ${known}${best != null ? ` · best ${best}/${ids.length}` : ''}</span></a>`;
         }).join('')}</div>
       </section>
     </div>`;
@@ -3380,18 +3389,18 @@
     const all = D.blanks.every((x) => x.picked != null);
     const right = D.blanks.filter((x) => x.ok).length;
     view.innerHTML = `<div class="wrap"><div class="quiz doc-wrap">
-      <div class="learn-top"><a class="icon-btn" href="#work" aria-label="回到職場">${I.left}</a><div class="meter"><i style="width:${(D.blanks.filter((x) => x.picked != null).length / D.blanks.length) * 100}%"></i></div><span class="count num">${D.blanks.filter((x) => x.picked != null).length} / ${D.blanks.length}</span></div>
+      <div class="learn-top"><a class="icon-btn" href="#work" aria-label="Back to Work">${I.left}</a><div class="meter"><i style="width:${(D.blanks.filter((x) => x.picked != null).length / D.blanks.length) * 100}%"></i></div><span class="count num">${D.blanks.filter((x) => x.picked != null).length} / ${D.blanks.length}</span></div>
       <article class="doc is-${doc.k}">
         <div class="doc-top"><span class="doc-kind">${DOC_KIND[doc.k]}</span><b>${esc(doc.t)}</b></div>
         ${head}
         <div class="doc-body">${body}</div>
       </article>
-      ${all ? `<div class="done doc-done"><div class="done-body"><span class="eyebrow">完成</span><span class="score num">${right}<small style="font-size:28px;color:var(--ink-3)"> / ${D.blanks.length}</small></span>
+      ${all ? `<div class="done doc-done"><div class="done-body"><span class="eyebrow">Done</span><span class="score num">${right}<small style="font-size:28px;color:var(--ink-3)"> / ${D.blanks.length}</small></span>
           <div class="result-list" data-list>${D.blanks.map((x) => { const w = BY_ID.get(x.id); return `<button class="result-row ${x.ok ? '' : 'is-no'}" data-open="${w.id}">${art(w)}<b>${esc(w.w)}</b><span>${esc(shortDef(w, 60))}<small lang="zh-Hant">${esc(w.s[0][1])}</small></span></button>`; }).join('')}</div>
-          <div class="row-btns">${EX.docs[D.no] ? `<a class="btn" href="#docs-${D.no + 1}">下一份 ${I.arrow}</a>` : ''}<button class="btn ghost" id="doc-again">重新作答</button><a class="btn ghost" href="#work">全部情境</a></div></div></div>`
-        : `<div class="q-card doc-pick"><span class="eyebrow">空格 ${D.cur + 1} · 選出最合適的字</span>${b.picked == null
+          <div class="row-btns">${EX.docs[D.no] ? `<a class="btn" href="#docs-${D.no + 1}">Next ${I.arrow}</a>` : ''}<button class="btn ghost" id="doc-again">Try again</button><a class="btn ghost" href="#work">All documents</a></div></div></div>`
+        : `<div class="q-card doc-pick"><span class="eyebrow">Gap ${D.cur + 1} · choose the best word</span>${b.picked == null
           ? `<div class="opts">${b.opts.map((o, i) => `<button class="opt" data-dp="${i}"><span class="k">${'ABCD'[i]}</span><span class="t en">${esc(o.t)}</span></button>`).join('')}</div>`
-          : `${fbHtml({ type: 'cloze', id: b.id, f: b.f, ok: b.ok, answered: true, ex: { en: '' } })}<button class="btn" id="doc-next" style="justify-self:end">下一格 ${I.arrow}</button>`}</div>`}
+          : `${fbHtml({ type: 'cloze', id: b.id, f: b.f, ok: b.ok, answered: true, ex: { en: '' } })}<button class="btn" id="doc-next" style="justify-self:end">Next gap ${I.arrow}</button>`}</div>`}
     </div></div>`;
     listContext = D.blanks.map((x) => x.id);
     view.querySelectorAll('[data-b]').forEach((el) => el.addEventListener('click', () => { D.cur = +el.dataset.b; paintDoc(); }));
@@ -3413,10 +3422,10 @@
 
   /* ---------- speaking: listen, repeat, see what the browser heard (for reference only) ---------- */
   function shadow(text, btn, out) {
-    if (!SR) { out.innerHTML = '<p class="sh-res">這個瀏覽器不支援語音辨識，建議用電腦或 Android 的 Chrome、Edge。</p>'; return; }
+    if (!SR) { out.innerHTML = '<p class="sh-res">This browser cannot recognize speech. Try Chrome or Edge on a computer or Android.</p>'; return; }
     if (spRec) { try { spRec.abort(); } catch (e) { /* ignore */ } spRec = null; }
     let r;
-    try { r = new SR(); } catch (e) { toast('這個瀏覽器無法使用語音辨識。'); return; }
+    try { r = new SR(); } catch (e) { toast('This browser cannot recognize speech.'); return; }
     spRec = r;
     r.lang = LANG[S.set.accent] || 'en-US';
     r.interimResults = false;
@@ -3424,17 +3433,17 @@
     btn.classList.add('is-on');
     const label = btn.querySelector('span');
     const was = label ? label.textContent : '';
-    if (label) label.textContent = '請跟著唸…';
+    if (label) label.textContent = 'Say it now…';
     const want = fold(text).replace(/[^a-z' ]+/g, ' ').split(/\s+/).filter(Boolean);
     r.onresult = (e) => {
       const said = e.results[0][0].transcript;
       const got = new Set(fold(said).replace(/[^a-z' ]+/g, ' ').split(/\s+/).filter(Boolean));
       const hit = want.filter((x) => got.has(x)).length;
       const pct = want.length ? Math.round((hit / want.length) * 100) : 0;
-      out.innerHTML = `<p class="sh-res"><b>瀏覽器聽到：</b>${esc(said)}</p><p class="sh-words">${text.split(/\s+/).map((t) => `<span class="${got.has(fold(t).replace(/[^a-z']/g, '')) ? 'is-hit' : ''}">${esc(t)}</span>`).join(' ')}</p><p class="sh-score">字詞吻合 ${pct}% · 辨識結果僅供參考，口音和環境噪音都會影響。</p>`;
+      out.innerHTML = `<p class="sh-res"><b>The browser heard:</b>${esc(said)}</p><p class="sh-words">${text.split(/\s+/).map((t) => `<span class="${got.has(fold(t).replace(/[^a-z']/g, '')) ? 'is-hit' : ''}">${esc(t)}</span>`).join(' ')}</p><p class="sh-score">${pct}% of the words match · only a guide; accents and noise affect it.</p>`;
       sfx(pct >= 70 ? 'correct' : 'tap');
     };
-    r.onerror = (e) => { out.innerHTML = `<p class="sh-res">${e.error === 'not-allowed' || e.error === 'service-not-allowed' ? '需要允許瀏覽器使用麥克風。' : '沒聽到聲音，再試一次。'}</p>`; };
+    r.onerror = (e) => { out.innerHTML = `<p class="sh-res">${e.error === 'not-allowed' || e.error === 'service-not-allowed' ? 'Please allow the microphone.' : 'Didn’t hear you. Try again.'}</p>`; };
     r.onend = () => { btn.classList.remove('is-on'); if (label) label.textContent = was; if (spRec === r) spRec = null; };
     try { r.start(); } catch (e) { btn.classList.remove('is-on'); if (label) label.textContent = was; }
   }
@@ -3447,7 +3456,7 @@
     const out = box ? box.querySelector('.sh-out') : null;
     if (out) shadow(b.dataset.shadow, b, out);
   });
-  const shadowBtns = (text) => `<span class="sh-tools"><button class="btn ghost small" data-say="${esc(text)}">${I.speaker}<span>聽</span></button>${SR ? `<button class="btn ghost small" data-shadow="${esc(text)}">${I.mic}<span>跟讀</span></button>` : ''}</span>`;
+  const shadowBtns = (text) => `<span class="sh-tools"><button class="btn ghost small" data-say="${esc(text)}">${I.speaker}<span>Listen</span></button>${SR ? `<button class="btn ghost small" data-shadow="${esc(text)}">${I.mic}<span>Repeat</span></button>` : ''}</span>`;
 
   /* ---------- interview ---------- */
   const ivState = { tab: 'intro', tpl: 'fresh' };
@@ -3462,24 +3471,24 @@
     const fields = [...new Set(T.p.flatMap(([en]) => [...en.matchAll(/\{([a-z ]+)\}/g)].map((m) => m[1])))];
     view.innerHTML = `<div class="wrap iv">
       <header class="page-head">
-        <span class="eyebrow">外商面試專區</span>
-        <h1>用學過的字，說好你的故事。</h1>
-        <p class="sub">底線的字是本站的單字，點一下看詞卡。每段都可以先聽、再跟讀；辨識結果只當參考。中文在每段下方，需要時再展開。</p>
+        <span class="eyebrow">Job interviews</span>
+        <h1>Tell your story with your words.</h1>
+        <p class="sub">Marked words are from this site; tap to open them. Listen, then repeat; the result is only a guide. Open the Chinese under each part if you need it.</p>
       </header>
-      <div class="seg iv-tabs" role="tablist">${[['intro', '自我介紹'], ['qa', '常見問題']].map(([v, t]) => `<button data-ivtab="${v}" aria-pressed="${ivState.tab === v}">${t}</button>`).join('')}</div>
+      <div class="seg iv-tabs" role="tablist">${[['intro', 'Self-introduction'], ['qa', 'Common questions']].map(([v, t]) => `<button data-ivtab="${v}" aria-pressed="${ivState.tab === v}">${t}</button>`).join('')}</div>
       ${ivState.tab === 'intro' ? `
-        <div class="chips">${EX.iv.intro.map((x) => `<button class="chip" data-tpl="${x.k}" aria-pressed="${x.k === T.k}">${esc(x.zh)} · ${esc(x.t)}</button>`).join('')}</div>
+        <div class="chips">${EX.iv.intro.map((x) => `<button class="chip" data-tpl="${x.k}" aria-pressed="${x.k === T.k}">${esc(x.t)}</button>`).join('')}</div>
         <form class="iv-fields" autocomplete="off">${fields.map((f) => `<label><span>${esc(IV_FIELDS[f] || f)}</span><input data-ivf="${esc(f)}" value="${esc(S.ivf[f] || '')}" placeholder="${esc(IV_FIELDS[f] || f)}"></label>`).join('')}</form>
         <article class="card panel iv-card" data-list>
           ${T.p.map(([en, zh]) => `<div class="iv-p" data-sh-box><p class="iv-en">${ivHtml(en)}</p>${shadowBtns(ivPlain(en))}<div class="sh-out"></div><details class="iv-zh"><summary>中文</summary><p>${esc(ivFill(zh))}</p></details></div>`).join('')}
         </article>`
       : `<div class="iv-qa" data-list>${EX.iv.qa.map((x, i) => `<article class="card panel iv-q" data-sh-box>
           <span class="eyebrow">Q${i + 1}</span>
-          <h3 class="iv-question">${esc(x.q)} <button class="mini-spk" data-say="${esc(x.q)}" aria-label="聽問題">${I.speaker}</button></h3>
+          <h3 class="iv-question">${esc(x.q)} <button class="mini-spk" data-say="${esc(x.q)}" aria-label="Listen to the question">${I.speaker}</button></h3>
           <p class="iv-en">${ivHtml(x.a)}</p>
           ${shadowBtns(ivPlain(x.a))}
           <div class="sh-out"></div>
-          <details class="iv-zh"><summary>中文與小提醒</summary><p>${esc(ivFill(x.zh))}</p><p class="iv-tip">${esc(x.tip || '')}</p></details>
+          <details class="iv-zh"><summary>中文 · tip</summary><p>${esc(ivFill(x.zh))}</p><p class="iv-tip">${esc(x.tip || '')}</p></details>
         </article>`).join('')}</div>`}
     </div>`;
     listContext = [...view.querySelectorAll('[data-open]')].map((b) => +b.dataset.open);
@@ -3538,23 +3547,23 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
     const R = t.trim() ? analyzeJD(t) : null;
     view.innerHTML = `<div class="wrap jd">
       <header class="page-head">
-        <span class="eyebrow">職缺說明檢測器</span>
-        <h1>這份職缺，你已經會幾個字？</h1>
-        <p class="sub">貼上外商的英文職缺說明（Job Description）。本站 1,000 字裡你學過的標成綠色，還沒學的標成橘色，可以一鍵加入學習。內容只在你的瀏覽器裡分析，不會上傳。</p>
+        <span class="eyebrow">Job ad checker</span>
+        <h1>How many words of this job ad do you know?</h1>
+        <p class="sub">Paste an English job description. Words you know are green; new ones are orange and can be added to your learning. Nothing is uploaded.</p>
       </header>
       <div class="card panel jd-input">
-        <label class="sr-only" for="jd-text">職缺說明</label>
+        <label class="sr-only" for="jd-text">Job description</label>
         <textarea id="jd-text" rows="9" placeholder="Paste a job description here…">${esc(t)}</textarea>
-        <div class="row-btns"><button class="btn" id="jd-go">檢測 ${I.arrow}</button><button class="btn ghost" id="jd-sample">貼上範例</button>${t ? '<button class="btn ghost" id="jd-clear">清除</button>' : ''}</div>
+        <div class="row-btns"><button class="btn" id="jd-go">Check ${I.arrow}</button><button class="btn ghost" id="jd-sample">Use an example</button>${t ? '<button class="btn ghost" id="jd-clear">Clear</button>' : ''}</div>
       </div>
       ${R ? `<section class="section jd-out">
         <div class="jd-kpis">
-          <div><b class="num">${R.ids.length}</b><span>本站的多益字</span></div>
-          <div class="is-known"><b class="num">${R.known.length}</b><span>已經學過</span></div>
-          <div class="is-new"><b class="num">${R.unknown.length + R.queued.length}</b><span>還不會</span></div>
+          <div><b class="num">${R.ids.length}</b><span>TOEIC words found</span></div>
+          <div class="is-known"><b class="num">${R.known.length}</b><span>already learned</span></div>
+          <div class="is-new"><b class="num">${R.unknown.length + R.queued.length}</b><span>still new</span></div>
         </div>
-        ${R.unknown.length ? `<div class="jd-add"><div class="chips" data-list>${R.unknown.map((id) => `<button class="chip" data-open="${id}">${esc(BY_ID.get(id).w)}</button>`).join('')}</div><button class="btn" id="jd-add">把 ${R.unknown.length} 個不會的字加入學習 ${I.arrow}</button></div>`
-          : R.queued.length ? `<p class="jd-note">這份職缺裡不會的 ${R.queued.length} 個字已經排在新字最前面了。</p>` : R.ids.length ? '<p class="jd-note">這份職缺裡的多益字你都學過了，太好了。</p>' : ''}
+        ${R.unknown.length ? `<div class="jd-add"><div class="chips" data-list>${R.unknown.map((id) => `<button class="chip" data-open="${id}">${esc(BY_ID.get(id).w)}</button>`).join('')}</div><button class="btn" id="jd-add">Learn these ${R.unknown.length} words ${I.arrow}</button></div>`
+          : R.queued.length ? `<p class="jd-note">The ${R.queued.length} new words from this ad are first in your new words.</p>` : R.ids.length ? '<p class="jd-note">You have learned every TOEIC word in this ad. Great!</p>' : ''}
         <article class="card panel jd-text" data-list>${R.html.replace(/\n/g, '<br>')}</article>
       </section>` : ''}
     </div>`;
@@ -3571,7 +3580,7 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
       const d = today(); d.plan = (d.plan || []).filter((id) => S.cards[id]);
       save(); plan();
       sfx('ignite');
-      toast(`已加入 ${ids.length} 個字，會排在新字最前面（每天 ${S.set.goal} 個）`);
+      toast(`Added ${ids.length} words. They come first in your new words (${S.set.goal} a day).`);
       viewJD();
     });
   }
@@ -3599,112 +3608,112 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
     const sc = estScore();
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">我的 · 進度與設定</span>
-        <h1>看得見的進步。</h1>
-        <p class="sub">所有進度只存在這台裝置的瀏覽器裡，不需要註冊。換裝置或清除瀏覽資料前，記得先匯出備份。</p>
+        <span class="eyebrow">Me · progress and settings</span>
+        <h1>See your progress.</h1>
+        <p class="sub">Your progress lives only in this browser. No sign-up. Export a backup before you change devices or clear your browser.</p>
       </header>
       <div class="me-grid">
         <div style="display:grid;gap:20px">
           <section class="card panel">
             <div class="score-est">
-              <div><span class="eyebrow">詞彙推估多益分數</span><b class="num">${showScore ? `${Math.max(10, sc - 50)}–${Math.min(990, sc + 50)}` : '—'}</b><span class="hint">${showScore ? '依你已學、已熟的字和程度測驗推估，只看單字量，僅供參考。' : '學滿 20 個字或做完程度測驗後顯示。'}</span></div>
-              <a class="btn ghost small" href="#place">${S.place && !S.place.skipped ? '重做程度測驗' : '做 3 分鐘程度測驗'}</a>
+              <div><span class="eyebrow">Estimated TOEIC score (vocabulary)</span><b class="num">${showScore ? `${Math.max(10, sc - 50)}–${Math.min(990, sc + 50)}` : '—'}</b><span class="hint">${showScore ? 'Based on your words and the level check. Words only, a rough guide.' : 'Shows after 20 words or the level check.'}</span></div>
+              <a class="btn ghost small" href="#place">${S.place && !S.place.skipped ? 'Retake the level check' : 'Take the 3-minute level check'}</a>
             </div>
             <div class="kpis">
-              <div class="kpi"><b class="num">${all.learning + all.mastered}</b><span>已學單字</span></div>
-              <div class="kpi"><b class="num">${all.mastered}</b><span>已熟單字</span></div>
-              <div class="kpi"><b class="num">${ret(7)}</b><span>7 天後記住率<small>${S.ret[7][1]} 次</small></span></div>
-              <div class="kpi"><b class="num">${ret(30)}</b><span>30 天後記住率<small>${S.ret[30][1]} 次</small></span></div>
+              <div class="kpi"><b class="num">${all.learning + all.mastered}</b><span>Words learned</span></div>
+              <div class="kpi"><b class="num">${all.mastered}</b><span>Words mastered</span></div>
+              <div class="kpi"><b class="num">${ret(7)}</b><span>Remembered after 7 days<small>${S.ret[7][1]} checks</small></span></div>
+              <div class="kpi"><b class="num">${ret(30)}</b><span>Remembered after 30 days<small>${S.ret[30][1]} checks</small></span></div>
             </div>
-            <p class="hint">記住率＝隔了約 7 天（5–12 天）或 30 天（21–45 天）再遇到這個字時，第一次就答對的比例。</p>
+            <p class="hint">How often you get a word right the first time when you see it again about 7 days (5–12) or 30 days (21–45) later.</p>
             <div class="kpis is-three">
-              <div class="kpi"><b class="num">${streak()}</b><span>連續天數</span></div>
-              <div class="kpi"><b class="num">${S.freeze}</b><span>補救卡<small>連續 7 天得 1 張，最多 2 張</small></span></div>
-              <div class="kpi"><b class="num">${totalQ ? Math.round((totalC / totalQ) * 100) + '%' : '—'}</b><span>答題正確率</span></div>
+              <div class="kpi"><b class="num">${streak()}</b><span>Days in a row</span></div>
+              <div class="kpi"><b class="num">${S.freeze}</b><span>Streak savers<small>1 for every 7 days, up to 2</small></span></div>
+              <div class="kpi"><b class="num">${totalQ ? Math.round((totalC / totalQ) * 100) + '%' : '—'}</b><span>Accuracy</span></div>
             </div>
             <div>
-              <div class="heat" aria-label="近 18 週學習熱度">${cells.map((c) => `<i class="${c.fix ? 'is-fix' : lvl(c.v)}" title="${c.k}：${c.fix ? '補救卡' : c.v}"></i>`).join('')}</div>
-              <div class="heat-foot"><span>18 週前</span><span>少 <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--paper-2)"></i> <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--ochre)"></i> 多</span><span>今天</span></div>
+              <div class="heat" aria-label="Last 18 weeks">${cells.map((c) => `<i class="${c.fix ? 'is-fix' : lvl(c.v)}" title="${c.k}：${c.fix ? 'Streak savers' : c.v}"></i>`).join('')}</div>
+              <div class="heat-foot"><span>18 weeks ago</span><span>less <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--paper-2)"></i> <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--ochre)"></i> more</span><span>Today</span></div>
             </div>
           </section>
           <section class="card panel">
-            <div class="section-head" style="margin:0"><h2>四段航程</h2><a class="more" href="#map">看千詞星圖 →</a></div>
+            <div class="section-head" style="margin:0"><h2>Four levels</h2><a class="more" href="#map">Star map →</a></div>
             <div class="lv-rows">
-              ${LEVELS.map((l) => { const c = counts(WORDS.filter((w) => w.lv === l.lv)); return `<button class="lv-row lv-${l.lv}" data-leg="${l.lv}"><b>${l.lv}</b><div class="meter"><i class="m-mastered" style="width:${(c.mastered / c.total) * 100}%"></i><i class="m-learning" style="width:${(c.learning / c.total) * 100}%"></i></div><span>${c.mastered} 熟 · ${c.learning} 學</span></button>`; }).join('')}
+              ${LEVELS.map((l) => { const c = counts(WORDS.filter((w) => w.lv === l.lv)); return `<button class="lv-row lv-${l.lv}" data-leg="${l.lv}"><b>${l.lv}</b><div class="meter"><i class="m-mastered" style="width:${(c.mastered / c.total) * 100}%"></i><i class="m-learning" style="width:${(c.learning / c.total) * 100}%"></i></div><span>${c.mastered} mastered · ${c.learning} learning</span></button>`; }).join('')}
             </div>
           </section>
           <section class="card panel">
-            <h2>十五個職場場景</h2>
+            <h2>15 work topics</h2>
             <div class="topics is-compact">
               ${TOPICS.map((t) => { const list = WORDS.filter((w) => w.t === t.k); const c = counts(list); return `<button class="topic" data-topic="${t.k}">${art(coverIdx(t.k))}<span class="topic-txt"><b>${t.zh}</b><span class="num">${c.learning + c.mastered}/${list.length}</span></span></button>`; }).join('')}
             </div>
-            <div class="row-btns"><a class="btn ghost small" href="#map">${I.map}<span>千詞星圖</span></a><a class="btn ghost small" href="#story">${I.book}<span>航程故事</span></a></div>
+            <div class="row-btns"><a class="btn ghost small" href="#map">${I.map}<span>Star map</span></a><a class="btn ghost small" href="#story">${I.book}<span>Story</span></a></div>
           </section>
         </div>
         <section class="card panel">
-          <h2>設定</h2>
-          <div class="setting"><span class="lab">每日新字</span><div class="chips">${[5, 10, 15, 20, 30].map((n) => `<button class="chip" data-goal="${n}" aria-pressed="${S.set.goal === n}">${n} 個${n === 10 ? '（建議）' : ''}</button>`).join('')}</div><span class="hint">新手建議 10 個，一次大約 5–10 分鐘。</span></div>
-          <div class="setting"><span class="lab">每天複習上限</span><div class="chips">${[20, 30, 50, 100].map((n) => `<button class="chip" data-cap="${n}" aria-pressed="${S.set.cap === n}">${n} 個</button>`).join('')}</div><span class="hint">到期的字超過上限時，先複習最重要的，其餘往後排，漏背幾天也不會被壓垮。</span></div>
-          <div class="setting"><span class="lab">新字從哪一段開始</span><div class="chips">${LEVELS.map((l) => `<button class="chip lv-${l.lv}" data-start="${l.lv}" aria-pressed="${S.set.start === l.lv}"><span class="dot"></span>${l.lv} ${l.name}</button>`).join('')}</div><span class="hint">這一段學完後，會自動接著下一段。</span></div>
-          <div class="setting"><span class="lab">聽力題口音</span><div class="seg">${[['mix', '美英澳輪流'], ['us', '美式'], ['uk', '英式'], ['au', '澳式']].map(([v, t]) => `<button data-mix="${v}" aria-pressed="${S.set.mix === v}">${t}</button>`).join('')}</div><span class="hint">多益聽力有美、英、加、澳口音。美式和英式的單字是真人錄音，澳式和句子使用裝置內建語音，依裝置而定。</span></div>
-          <div class="setting"><span class="lab">詞卡預設發音</span><div class="seg">${[['us', '美式'], ['uk', '英式'], ['au', '澳式']].map(([v, t]) => `<button data-accent-set="${v}" aria-pressed="${S.set.accent === v}">${t}</button>`).join('')}</div></div>
-          <div class="setting"><label for="rate">朗讀速度 <span class="num" id="rate-v">${S.set.rate.toFixed(2)}×</span></label><input id="rate" type="range" min="0.6" max="1.2" step="0.05" value="${S.set.rate}"></div>
-          <div class="setting"><span class="lab">省電模式</span><div class="seg">${[[false, '關閉'], [true, '開啟']].map(([v, t]) => `<button data-lite="${v}" aria-pressed="${!!S.set.lite === v}">${t}</button>`).join('')}</div><span class="hint">關掉開場動畫、紙張紋理、環境音、彩帶和換頁動畫，讓中低階手機也順。</span></div>
-          <div class="setting"><span class="lab">開場動畫</span><div class="seg">${[[true, '每天第一次播放'], [false, '關閉']].map(([v, t]) => `<button data-splash-set="${v}" aria-pressed="${S.set.splash === v}">${t}</button>`).join('')}</div></div>
-          <div class="setting"><span class="lab">外觀</span><div class="seg">${[['system', '跟隨系統'], ['light', '淺色'], ['dark', '深色']].map(([v, t]) => `<button data-theme-set="${v}" aria-pressed="${S.set.theme === v}">${t}</button>`).join('')}</div></div>
+          <h2>Settings</h2>
+          <div class="setting"><span class="lab">New words a day</span><div class="chips">${[5, 10, 15, 20, 30].map((n) => `<button class="chip" data-goal="${n}" aria-pressed="${S.set.goal === n}">${n}${n === 10 ? ' (suggested)' : ''}</button>`).join('')}</div><span class="hint">10 is good to start: about 5–10 minutes.</span></div>
+          <div class="setting"><span class="lab">Most reviews a day</span><div class="chips">${[20, 30, 50, 100].map((n) => `<button class="chip" data-cap="${n}" aria-pressed="${S.set.cap === n}">${n}</button>`).join('')}</div><span class="hint">When more words are due, the most important come first and the rest wait. Missing a few days will not bury you.</span></div>
+          <div class="setting"><span class="lab">Start new words at</span><div class="chips">${LEVELS.map((l) => `<button class="chip lv-${l.lv}" data-start="${l.lv}" aria-pressed="${S.set.start === l.lv}"><span class="dot"></span>${l.lv} ${l.name}</button>`).join('')}</div><span class="hint">The next level follows when this one is done.</span></div>
+          <div class="setting"><span class="lab">Listening voices</span><div class="seg">${[['mix', 'Mix'], ['us', 'US'], ['uk', 'UK'], ['au', 'Australian']].map(([v, t]) => `<button data-mix="${v}" aria-pressed="${S.set.mix === v}">${t}</button>`).join('')}</div><span class="hint">TOEIC uses US, UK, Canadian and Australian voices. US and UK words are real recordings; Australian voices and sentences use your device voice.</span></div>
+          <div class="setting"><span class="lab">Word card voice</span><div class="seg">${[['us', 'US'], ['uk', 'UK'], ['au', 'Australian']].map(([v, t]) => `<button data-accent-set="${v}" aria-pressed="${S.set.accent === v}">${t}</button>`).join('')}</div></div>
+          <div class="setting"><label for="rate">Reading speed <span class="num" id="rate-v">${S.set.rate.toFixed(2)}×</span></label><input id="rate" type="range" min="0.6" max="1.2" step="0.05" value="${S.set.rate}"></div>
+          <div class="setting"><span class="lab">Power saving</span><div class="seg">${[[false, 'Off'], [true, 'On']].map(([v, t]) => `<button data-lite="${v}" aria-pressed="${!!S.set.lite === v}">${t}</button>`).join('')}</div><span class="hint">Turns off the intro, paper texture, background sound, confetti and page animations, so older phones run smoothly.</span></div>
+          <div class="setting"><span class="lab">Intro animation</span><div class="seg">${[[true, 'Once a day'], [false, 'Off']].map(([v, t]) => `<button data-splash-set="${v}" aria-pressed="${S.set.splash === v}">${t}</button>`).join('')}</div></div>
+          <div class="setting"><span class="lab">Look</span><div class="seg">${[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']].map(([v, t]) => `<button data-theme-set="${v}" aria-pressed="${S.set.theme === v}">${t}</button>`).join('')}</div></div>
           <div class="setting">
-            <span class="lab">備份與還原</span>
-            <div class="backup"><img src="assets/brand/data.webp" alt="" width="480" height="480" loading="lazy"><span class="hint">進度只存在這個瀏覽器。匯出後貼到記事本或雲端硬碟保存，換裝置時再貼回來還原。</span></div>
+            <span class="lab">Backup</span>
+            <div class="backup"><img src="assets/brand/data.webp" alt="" width="480" height="480" loading="lazy"><span class="hint">Progress lives only in this browser. Export it, keep it in notes or cloud storage, and paste it back on a new device.</span></div>
             <div class="row-btns">
-              <button class="btn ghost small" id="export">匯出進度</button>
-              <button class="btn ghost small" id="import">貼上備份還原</button>
-              <label class="btn ghost small" for="import-file" style="cursor:pointer">從檔案還原</label>
+              <button class="btn ghost small" id="export">Export</button>
+              <button class="btn ghost small" id="import">Paste a backup</button>
+              <label class="btn ghost small" for="import-file" style="cursor:pointer">Restore from a file</label>
               <input id="import-file" type="file" accept="application/json,.json" hidden>
             </div>
-            <textarea class="data-box" id="data-box" hidden aria-label="進度資料"></textarea>
+            <textarea class="data-box" id="data-box" hidden aria-label="Progress data"></textarea>
             <div class="row-btns" id="data-actions" hidden></div>
           </div>
-          <div class="setting"><span class="lab">清除進度</span><button class="btn ghost small" id="reset" style="color:var(--bad);justify-self:start">清除所有學習紀錄</button></div>
+          <div class="setting"><span class="lab">Reset</span><button class="btn ghost small" id="reset" style="color:var(--bad);justify-self:start">Delete all progress</button></div>
         </section>
       </div>
 
       <section class="section about">
         <article class="card panel">
-          <h2>多益怎麼計分</h2>
-          <p>TOEIC Listening &amp; Reading 測驗共 200 題、約 2 小時：聽力 Part 1–4 共 100 題，閱讀 Part 5–7 共 100 題，各 495 分，總分 10–990。證書依分數分為五種顏色：</p>
+          <h2>How TOEIC is scored</h2>
+          <p>The TOEIC Listening &amp; Reading test has 200 questions in about 2 hours: 100 listening (Parts 1–4) and 100 reading (Parts 5–7), 495 points each, 10–990 in total. Certificates come in five colors:</p>
           <div class="score-bands">
-            <div class="band"><i style="background:#c9a227"></i><b>860–990</b><span>金色證書，能流暢處理專業議題</span></div>
-            <div class="band"><i style="background:#3466a4"></i><b>730–855</b><span>藍色證書，可勝任多數職場溝通</span></div>
-            <div class="band"><i style="background:#3c8657"></i><b>470–725</b><span>綠色證書，能處理日常與例行工作</span></div>
-            <div class="band"><i style="background:#8a5a3c"></i><b>220–465</b><span>棕色證書，具備基本溝通能力</span></div>
-            <div class="band"><i style="background:#d9752f"></i><b>10–215</b><span>橘色證書，入門階段</span></div>
+            <div class="band"><i style="background:#c9a227"></i><b>860–990</b><span>Gold: handles professional topics with ease</span></div>
+            <div class="band"><i style="background:#3466a4"></i><b>730–855</b><span>Blue: handles most work communication</span></div>
+            <div class="band"><i style="background:#3c8657"></i><b>470–725</b><span>Green: handles daily and routine work</span></div>
+            <div class="band"><i style="background:#8a5a3c"></i><b>220–465</b><span>Brown: basic communication</span></div>
+            <div class="band"><i style="background:#d9752f"></i><b>10–215</b><span>Orange: beginner</span></div>
           </div>
-          <p>本站把 1,000 個字依難度分成 400、600、800、990 四段航程，每段 250 字，由淺入深。</p>
+          <p>This site puts its 1,000 words into four levels, 400, 600, 800 and 990, with 250 words each.</p>
         </article>
         <article class="card panel">
-          <h2>關於多益詞旅</h2>
+          <h2>About TOEIC Voyage</h2>
           <ul>
-            <li>全程用英文思考：題目和提示只用英文，中文只在作答後出現，用來確認意思。</li>
-            <li>每個字的英英釋義都只用最常見的約 2,000 個英文字寫成，不會比要學的字還難；另有更簡單的英文換句話說、字根與記憶聯想、詞性家族和常用搭配，皆為本站原創。</li>
-            <li>填空題使用的 5,000 句多益情境例句、${EX.part2.length} 題 Part 2 問答、${EX.pairs.length} 組易混淆字、${EX.docs.length} 份職場文件與面試範本，皆為本站原創撰寫。</li>
-            <li>航程故事《NS-014 號航班》是本站原創的連載小說，人物、情節與中文翻譯皆為原創。</li>
-            <li>KK 音標依 CMU Pronouncing Dictionary 自動轉寫並人工校對；${WORDS.filter((w) => w.tip).length} 則「多益考點」由本站編輯整理。</li>
-            <li>單字插畫與美英發音錄音取自 Word Atlas（Word Atlas contributors，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>），本站已縮放並合併成圖集與音訊檔。插畫逐張檢查後保留 ${fmt(WORDS.filter(hasArt).length)} 張和字義連得起來的，其餘詞卡改為顯示例句；有真人錄音的字共 ${fmt(WORDS.filter((w) => w.u).length)} 個，其餘使用裝置內建語音。</li>
-            <li>複習排程採 SM-2 式間隔重複：答對選「記得」的字間隔會逐次拉長，連續記得到 21 天以上視為「已熟」。</li>
-            <li>背景配樂、環境音與介面音效皆為本站以程式原創合成，可在頂部的環境音選單切換或關閉。</li>
-            <li>介面與學習流程致敬開源雅思單字專案 <a href="https://github.com/designfuchen/word-atlas" target="_blank" rel="noopener">詞光 Word Atlas</a>（MIT 授權），本站為獨立實作的多益版本。</li>
+            <li>Think in English: questions and hints are in English; Chinese appears only after you answer.</li>
+            <li>Every meaning uses only the 2,000 most common English words. Simpler paraphrases, roots, memory hooks, word families and phrases are all original.</li>
+            <li>The 5,000 quiz sentences, ${EX.part2.length} Part 2 questions, ${EX.pairs.length} confusable pairs, ${EX.docs.length} work documents and the interview answers are all original.</li>
+            <li>The story "Flight NS-014" and its translation are original.</li>
+            <li>KK phonetics come from the CMU Pronouncing Dictionary, checked by hand; ${WORDS.filter((w) => w.tip).length} TOEIC tips are written by this site.</li>
+            <li>Pictures and US/UK recordings come from Word Atlas (Word Atlas contributors,<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>), resized and combined. After checking each one, ${fmt(WORDS.filter(hasArt).length)} pictures that fit their word are kept; the other cards show an example. Real recordings: ${fmt(WORDS.filter((w) => w.u).length)} words; the rest use your device voice.</li>
+            <li>Reviews use SM-2 spaced repetition: each time you remember a word, the gap grows. A word is mastered after 21 days.</li>
+            <li>Music, background sounds and sound effects are made by this site; change them in the top menu.</li>
+            <li>Design inspired by the open-source IELTS project <a href="https://github.com/designfuchen/word-atlas" target="_blank" rel="noopener">Word Atlas</a>(MIT license). This is an independent TOEIC version.</li>
           </ul>
         </article>
       </section>
     </div>`;
     view.querySelectorAll('[data-leg]').forEach((b) => b.addEventListener('click', () => { atlasState.lv = +b.dataset.leg; atlasState.topic = 'all'; go('atlas'); }));
     view.querySelectorAll('[data-topic]').forEach((b) => b.addEventListener('click', () => { atlasState.topic = b.dataset.topic; atlasState.lv = 0; go('atlas'); }));
-    view.querySelectorAll('[data-goal]').forEach((b) => b.addEventListener('click', () => { S.set.goal = +b.dataset.goal; save(); plan(); viewMe(); toast(`每日新字改為 ${S.set.goal} 個`); }));
-    view.querySelectorAll('[data-cap]').forEach((b) => b.addEventListener('click', () => { S.set.cap = +b.dataset.cap; save(); viewMe(); toast(`每天最多複習 ${S.set.cap} 個`); }));
-    view.querySelectorAll('[data-start]').forEach((b) => b.addEventListener('click', () => { S.set.start = +b.dataset.start; const d = today(); d.plan = (d.plan || []).filter((id) => S.cards[id]); save(); plan(); viewMe(); toast(`新字改從 ${S.set.start} 分段開始`); }));
+    view.querySelectorAll('[data-goal]').forEach((b) => b.addEventListener('click', () => { S.set.goal = +b.dataset.goal; save(); plan(); viewMe(); toast(`${S.set.goal} new words a day`); }));
+    view.querySelectorAll('[data-cap]').forEach((b) => b.addEventListener('click', () => { S.set.cap = +b.dataset.cap; save(); viewMe(); toast(`Up to ${S.set.cap} reviews a day`); }));
+    view.querySelectorAll('[data-start]').forEach((b) => b.addEventListener('click', () => { S.set.start = +b.dataset.start; const d = today(); d.plan = (d.plan || []).filter((id) => S.cards[id]); save(); plan(); viewMe(); toast(`New words start at ${S.set.start}`); }));
     view.querySelectorAll('[data-mix]').forEach((b) => b.addEventListener('click', () => { S.set.mix = b.dataset.mix; save(); viewMe(); if (S.set.mix !== 'mix') speak('When will the shipment arrive?', S.set.mix); }));
     view.querySelectorAll('[data-accent-set]').forEach((b) => b.addEventListener('click', () => { S.set.accent = b.dataset.accentSet; save(); viewMe(); playWord(BY_ID.get(1)); }));
-    view.querySelectorAll('[data-lite]').forEach((b) => b.addEventListener('click', () => { S.set.lite = b.dataset.lite === 'true'; save(); applyLite(); viewMe(); toast(S.set.lite ? '已開啟省電模式' : '已關閉省電模式'); }));
+    view.querySelectorAll('[data-lite]').forEach((b) => b.addEventListener('click', () => { S.set.lite = b.dataset.lite === 'true'; save(); applyLite(); viewMe(); toast(S.set.lite ? 'Power saving on' : 'Power saving off'); }));
     view.querySelectorAll('[data-splash-set]').forEach((b) => b.addEventListener('click', () => { S.set.splash = b.dataset.splashSet === 'true'; save(); viewMe(); }));
     view.querySelectorAll('[data-theme-set]').forEach((b) => b.addEventListener('click', () => { S.set.theme = b.dataset.themeSet; save(); applyTheme(); paintTools(); viewMe(); }));
     const rate = $('#rate');
@@ -3716,11 +3725,11 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
       const json = JSON.stringify(S);
       box.hidden = false; acts.hidden = false;
       box.value = json;
-      acts.innerHTML = '<button class="btn small" id="copy-data">複製到剪貼簿</button><button class="btn ghost small" id="dl-data">下載 JSON 檔</button>';
+      acts.innerHTML = '<button class="btn small" id="copy-data">Copy</button><button class="btn ghost small" id="dl-data">Download JSON</button>';
       $('#copy-data').addEventListener('click', () => {
-        const done = () => toast('已複製，貼到記事本或雲端硬碟保存');
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(json).then(done, () => { box.select(); toast('請按 Ctrl/⌘ + C 複製選取的文字'); });
-        else { box.select(); toast('請按 Ctrl/⌘ + C 複製選取的文字'); }
+        const done = () => toast('Copied. Keep it in notes or cloud storage.');
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(json).then(done, () => { box.select(); toast('Press Ctrl/⌘ + C to copy'); });
+        else { box.select(); toast('Press Ctrl/⌘ + C to copy'); }
       });
       $('#dl-data').addEventListener('click', () => {
         try {
@@ -3728,7 +3737,7 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
           a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
           a.download = `toeic-voyage-${ymd()}.json`;
           document.body.appendChild(a); a.click(); a.remove();
-        } catch (e) { toast('這個環境無法下載檔案，請改用「複製到剪貼簿」。'); }
+        } catch (e) { toast('Downloads do not work here. Please use Copy.'); }
       });
     });
     const restore = (text) => {
@@ -3737,15 +3746,15 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
         if (!raw || raw.v !== 1 || typeof raw.cards !== 'object') throw new Error('bad');
         S = { ...fresh(), ...raw, ret: { 7: [0, 0], 30: [0, 0], ...(raw.ret || {}) }, set: { ...DEFAULT_SET, ...(raw.set || {}) } };
         save(); applyTheme(); paintTools(); viewMe();
-        toast(`已還原：${Object.keys(S.cards).length} 個單字的紀錄`);
-      } catch (e) { toast('這不是多益詞旅的備份資料，請確認貼上的是完整的 JSON。'); }
+        toast(`Restored ${Object.keys(S.cards).length} words`);
+      } catch (e) { toast('This is not a TOEIC Voyage backup. Please paste the whole JSON.'); }
     };
     $('#import').addEventListener('click', () => {
       box.hidden = false; acts.hidden = false;
       box.value = '';
-      box.placeholder = '把先前匯出的 JSON 貼在這裡';
+      box.placeholder = 'Paste your exported JSON here';
       box.focus();
-      acts.innerHTML = '<button class="btn small" id="do-import">還原這份備份</button>';
+      acts.innerHTML = '<button class="btn small" id="do-import">Restore</button>';
       $('#do-import').addEventListener('click', () => restore(box.value));
     });
     $('#import-file').addEventListener('change', (e) => {
@@ -3755,9 +3764,9 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
       r.onload = () => restore(String(r.result));
       r.readAsText(f);
     });
-    $('#reset').addEventListener('click', () => confirmDialog('清除所有學習紀錄？', '已學單字、複習排程、收藏、造句本與每日紀錄都會刪除，無法復原。建議先匯出備份。', '清除', () => {
+    $('#reset').addEventListener('click', () => confirmDialog('Delete all progress?', 'Your words, reviews, saved words, sentences and daily records will be deleted for good. Export a backup first.', 'Clear', () => {
       const keep = S.set;
-      S = fresh(); S.set = keep; S.onboarded = true; save(); session = null; viewMe(); toast('已清除學習紀錄');
+      S = fresh(); S.set = keep; S.onboarded = true; save(); session = null; viewMe(); toast('Progress deleted');
     }));
   }
 
@@ -3767,7 +3776,7 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
     ov.className = 'overlay';
     ov.setAttribute('role', 'alertdialog');
     ov.setAttribute('aria-modal', 'true');
-    ov.innerHTML = `<div class="dialog" style="width:min(460px,100%)"><div class="dialog-body"><h2 style="font-size:24px">${esc(title)}</h2><p class="sub">${esc(body)}</p><div class="dialog-foot"><button class="btn ghost" data-x>取消</button><button class="btn" data-ok style="background:var(--bad);color:var(--card)">${esc(okText)}</button></div></div></div>`;
+    ov.innerHTML = `<div class="dialog" style="width:min(460px,100%)"><div class="dialog-body"><h2 style="font-size:24px">${esc(title)}</h2><p class="sub">${esc(body)}</p><div class="dialog-foot"><button class="btn ghost" data-x>Cancel</button><button class="btn" data-ok style="background:var(--bad);color:var(--card)">${esc(okText)}</button></div></div></div>`;
     document.body.appendChild(ov);
     const close = () => ov.remove();
     ov._close = close;
@@ -3782,14 +3791,14 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
     ov.className = 'overlay';
     ov.setAttribute('role', 'dialog');
     ov.setAttribute('aria-modal', 'true');
-    ov.setAttribute('aria-label', '歡迎');
+    ov.setAttribute('aria-label', 'Welcome');
     ov.innerHTML = `<div class="dialog">
-      <div class="dialog-art" style="background-image:url(assets/brand/og.webp)" role="img" aria-label="攤開的書頁上浮現一座島嶼地圖"></div>
+      <div class="dialog-art" style="background-image:url(assets/brand/og.webp)" role="img" aria-label="An island map on an open book"></div>
       <div class="dialog-body">
-        <span class="eyebrow">WELCOME ABOARD · 歡迎登機</span>
-        <h2>用英文想，不用在腦中翻譯。</h2>
-        <p class="sub">這裡的題目和提示都只用英文，中文只在你作答之後出現。先花 3 分鐘做個程度測驗，決定從 400 還是 600 段開始；之後每天 10 個新字，一次 5–10 分鐘。</p>
-        <div class="dialog-foot"><button class="btn ghost" data-skip>跳過，從 400 開始</button><button class="btn" data-go>做 3 分鐘程度測驗 ${I.arrow}</button></div>
+        <span class="eyebrow">WELCOME ABOARD</span>
+        <h2>Think in English. No translating in your head.</h2>
+        <p class="sub">Questions and hints are in English; Chinese appears only after you answer. Take a 3-minute level check to start at 400 or 600. Then learn 10 new words a day, 5–10 minutes at a time.</p>
+        <div class="dialog-foot"><button class="btn ghost" data-skip>Skip, start at 400</button><button class="btn" data-go>Take the level check ${I.arrow}</button></div>
       </div>
     </div>`;
     document.body.appendChild(ov);
@@ -3837,13 +3846,13 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
     const ov = document.createElement('div');
     ov.className = 'splash';
     ov.setAttribute('role', 'dialog');
-    ov.setAttribute('aria-label', '多益詞旅 歡迎登機');
+    ov.setAttribute('aria-label', 'TOEIC Voyage welcome');
     ov.innerHTML = `<canvas class="splash-cv" aria-hidden="true"></canvas>
       <p class="splash-en" aria-hidden="true">TOEIC VOYAGE</p>
       <div class="splash-ui">
-        <p class="splash-tag">一千個職場單字，一段從 400 飛到 990 的航程</p>
-        <button class="splash-go" id="splash-go">點一下，登機出發</button>
-        <button class="splash-skip" id="splash-skip">略過</button>
+        <p class="splash-tag">1,000 workplace words · a flight from 400 to 990</p>
+        <button class="splash-go" id="splash-go">Tap to board</button>
+        <button class="splash-skip" id="splash-skip">Skip</button>
       </div>`;
     document.body.appendChild(ov);
     document.documentElement.classList.add('is-locked');

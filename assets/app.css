@@ -34,8 +34,8 @@
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 1px 2px rgba(30, 38, 64, 0.05), 0 18px 40px -24px rgba(30, 38, 64, 0.28);
   --shadow-lg: 0 30px 80px -30px rgba(20, 26, 46, 0.45), 0 8px 24px -12px rgba(20, 26, 46, 0.2);
   --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
-  --serif-zh: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
-  --sans: -apple-system, BlinkMacSystemFont, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", "Segoe UI", sans-serif;
+  --serif-zh: "Fraunces", "Noto Serif TC", "Songti TC", "PMingLiU", serif; /* English headings use Fraunces; Chinese falls back to Noto Serif TC */
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   --r-sm: 10px;
   --r: 16px;
@@ -257,7 +257,8 @@ img { max-width: 100%; display: block; }
 .tabbar { display: none; }
 @media (max-width: 860px) {
   :root { --top: 58px; --tabbar: 64px; }
-  .nav, .search-btn span, .search-btn kbd, .brand-en { display: none; }
+  .nav, .search-btn span, .search-btn kbd, .brand-zh { display: none; }
+  .brand-en { display: inline; font: 600 20px/1 var(--serif); font-style: normal; color: var(--ink); }
   .search-btn { min-width: 0; border: 0; background: none; padding: 10px; }
   .tabbar {
     display: grid;
@@ -1441,11 +1442,22 @@ button.lv-row { width: 100%; text-align: left; }
 
 /* near-synonyms: swap verdict + the difference in simple English */
 .syn-box { display: grid; gap: 8px; }
-.syn-row { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 6px 10px; align-items: center; padding: 8px 12px; border-radius: 14px; background: var(--card-2); box-shadow: inset 0 0 0 1px var(--line); }
+.syn-row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 8px 12px; border-radius: 14px; background: var(--card-2); box-shadow: inset 0 0 0 1px var(--line); }
 .syn-row .nym-chip { margin: 0; }
 .swap { justify-self: start; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
 .swap.is-y { background: var(--sage-soft); color: var(--good); }
 .swap.is-s { background: var(--ochre-soft); color: var(--ochre); }
 .swap.is-n { background: var(--terra-soft); color: var(--terra); }
 .syn-note { font: italic 400 15px/1.45 var(--serif); color: var(--ink-2); }
-@media (max-width: 600px) { .syn-row { grid-template-columns: auto minmax(0, 1fr); } .syn-note { grid-column: 1 / -1; } }
+
+
+.syn-note { flex-basis: 100%; }
+.syn-row.is-self { background: var(--mark); box-shadow: none; }
+.syn-row.is-self .syn-w b { font: 600 17px var(--serif); padding: 0 6px; }
+.freq { display: inline-flex; align-items: center; gap: 3px; }
+.freq i { width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
+.freq i.off { background: var(--line-strong); }
+.freq b { margin-left: 5px; font: 500 11px var(--sans); color: var(--ink-3); }
+.freq.f2 i:not(.off), .freq.f1 i:not(.off) { background: var(--ink-4); }
+.most { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--ink); color: var(--paper); }
+.syn-legend { font-size: 12px; color: var(--ink-3); }
