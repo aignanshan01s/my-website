@@ -11,7 +11,7 @@
   --ink: #1a2035;
   --ink-2: #434b65;
   --ink-3: #7a7d8a;
-  --ink-4: #aba79f;
+  --ink-4: #8f8a80;
   --line: rgba(26, 32, 53, 0.1);
   --line-strong: rgba(26, 32, 53, 0.16);
   --terra: #c4573a;
@@ -56,8 +56,8 @@
     --card-2: #19213a;
     --ink: #f2ebdd;
     --ink-2: #c8c1b3;
-    --ink-3: #8d8c94;
-    --ink-4: #5f6372;
+    --ink-3: #aeacb3;
+    --ink-4: #8b8fa0;
     --line: rgba(242, 235, 221, 0.08);
     --line-strong: rgba(242, 235, 221, 0.14);
     --terra: #e57c5a;
@@ -89,8 +89,8 @@
   --card-2: #19213a;
   --ink: #f2ebdd;
   --ink-2: #c8c1b3;
-  --ink-3: #8d8c94;
-  --ink-4: #5f6372;
+  --ink-3: #aeacb3;
+  --ink-4: #8b8fa0;
   --line: rgba(242, 235, 221, 0.08);
   --line-strong: rgba(242, 235, 221, 0.14);
   --terra: #e57c5a;
@@ -1187,7 +1187,7 @@ a.sp-tile:hover { transform: translateY(-3px); box-shadow: inset 0 0 0 1.5px var
   .sp-make-head .art { width: 72px; }
   .sp .learn-top { gap: 10px; }
   .sp-clock { min-width: 0; padding: 4px 8px; font-size: 13px; }
-  .rh-step { grid-template-columns: 34px minmax(0, 1fr); }
+  .rh-step { grid-template-columns: 34px minmax(0, 1fr) auto; }
   .rh-go { display: none; }
   .def-line { font-size: 17px; }
 }
@@ -1461,3 +1461,77 @@ button.lv-row { width: 100%; text-align: left; }
 .freq.f2 i:not(.off), .freq.f1 i:not(.off) { background: var(--ink-4); }
 .most { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--ink); color: var(--paper); }
 .syn-legend { font-size: 12px; color: var(--ink-3); }
+
+/* ---------- fixed action bar: answering never pushes the question off screen ---------- */
+.dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: color-mix(in srgb, var(--card) 94%, transparent); border-top: 1px solid var(--line); box-shadow: 0 -8px 24px -12px rgba(20, 26, 46, 0.25); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.dock-in { max-width: 800px; margin: 0 auto; display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
+.dock-in > .btn { margin-left: auto; }
+.dock-note { font-size: 13px; color: var(--ink-2); flex: 1 1 200px; }
+.dock .rates { flex: 1 1 100%; margin: 0; max-width: none; }
+.dock .rate { padding: 10px 6px; }
+.dock .rate small { font: 400 12px var(--sans); }
+.wrap.has-dock { padding-bottom: 150px; }
+@media (max-width: 860px) { .dock { bottom: calc(var(--tabbar) + env(safe-area-inset-bottom, 0px)); padding-bottom: 10px; } }
+.verdict { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 15px; }
+.verdict svg { width: 20px; height: 20px; }
+.verdict.is-ok { color: var(--good); }
+.verdict.is-no { color: var(--bad); }
+.done-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.done-stats div { display: grid; gap: 2px; padding: 10px 12px; border-radius: 14px; background: var(--card-2); }
+.done-stats b { font: 600 26px/1.1 var(--serif); }
+.done-stats span { font-size: 12px; color: var(--ink-3); }
+.done-note { font-size: 14px; color: var(--ink-2); }
+.done-note a { font-weight: 600; }
+.todo-count { font-size: 12px; color: var(--ink-3); margin-top: -8px; }
+.rh-ok { color: var(--good); display: inline-flex; }
+.rh-ok svg { width: 20px; height: 20px; }
+.rh-step.is-done .rh-no { background: var(--sage-soft); color: var(--good); }
+.rh-step.is-bonus { border-style: dashed; box-shadow: inset 0 0 0 1px var(--ochre); }
+.rh-step.is-bonus .rh-no { background: var(--ochre-soft); color: var(--ochre); }
+
+/* ---------- Me page fixes ---------- */
+.heat-months { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; font-size: 10px; color: var(--ink-3); margin-bottom: 4px; }
+.heat-months span { white-space: nowrap; overflow: visible; }
+.topics.is-compact { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; }
+.topics.is-compact .topic { gap: 6px; padding: 6px 6px 8px; border-radius: 16px; min-width: 0; }
+.topics.is-compact .topic-txt { flex-direction: column; align-items: flex-start; gap: 0; padding: 0 2px; min-width: 0; }
+.topics.is-compact .topic-txt b { font-size: 12px; line-height: 1.25; overflow-wrap: anywhere; }
+.backup { grid-template-columns: 56px minmax(0, 1fr); }
+.backup img { width: 56px; height: 56px; object-fit: cover; border-radius: 12px; }
+.btn.is-danger { background: var(--bad); color: #fff; }
+.btn.is-danger svg { width: 16px; height: 16px; }
+.data-msg { font-size: 13px; color: var(--good); flex-basis: 100%; }
+.data-msg.is-bad { color: var(--bad); }
+.score-est b.is-empty { font-size: 22px; color: var(--ink-2); }
+.notice.is-resume { background: var(--ochre-soft); }
+.notice.is-resume .row-btns { grid-column: 1 / -1; }
+.feedback.no-art { grid-template-columns: 1fr; }
+.result-row.no-art { grid-template-columns: minmax(0, 1fr) auto; padding-left: 16px; }
+.you-chose { display: block; color: var(--bad) !important; font-size: 12px; margin-top: 2px; }
+.syn-msg { font-size: 14px; color: var(--ochre); }
+.q-sent.is-hidden { filter: blur(7px); user-select: none; }
+.sp-count { font-size: 12px; color: var(--ink-3); text-align: center; }
+.done-stats.is-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fb-title svg { width: 18px; height: 18px; vertical-align: -3px; margin-right: 4px; }
+.art.is-mono svg { width: 42%; height: 42%; opacity: 0.55; }
+.jd-msg { color: var(--bad); font-weight: 600; font-size: 14px; }
+.jd-note.is-empty { color: var(--ink-2); padding: 12px 16px; border-radius: 14px; background: var(--card-2); }
+.jd-text.is-short .jd-body { max-height: 220px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
+/* hands-free: the example is plain running text (the marked word stays inline) */
+.cm-card { gap: 12px; }
+.cm-line.is-ex { display: block; }
+.cm-line.is-ex mark { padding: 0 2px; }
+.cm-word { margin: 4px 0; }
+@media (max-width: 860px) {
+  /* a fixed tab bar height, so the action bar can sit exactly on top of it */
+  .tabbar { box-sizing: border-box; height: calc(var(--tabbar) + env(safe-area-inset-bottom, 0px)); align-items: center; padding-top: 4px; padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px)); }
+  .tabbar a { padding: 4px 0; }
+}
+@media (max-width: 440px) {
+  /* keep the header inside a 360–375px phone with the English name */
+  .brand { gap: 8px; min-width: 0; }
+  .brand-en { font-size: 16px !important; white-space: nowrap; }
+  .brand-mark { width: 30px; height: 30px; }
+  .top-tools { gap: 0; }
+  .top-tools .icon-btn, .top-tools .search-btn { width: 36px; height: 36px; padding: 8px; }
+}

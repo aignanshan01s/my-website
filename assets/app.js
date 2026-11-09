@@ -64,6 +64,9 @@
     map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3ZM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16Z"/></svg>',
     me: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5 7.2 4.5 3.5 5v13c3.7-.5 6.5 0 8.5 1.5 2-1.5 4.8-2 8.5-1.5V5c-3.7-.5-6.5 0-8.5 1.5ZM12 6.5v13"/></svg>',
+    quote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4h0A2.5 2.5 0 0 1 4 13.5v-7Z"/><path d="M8.5 9h7M8.5 12h4.5"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    cross: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></svg>',
     work: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/></svg>',
     mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
     bulb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z"/></svg>',
@@ -90,7 +93,7 @@
     // words whose picture did not fit their meaning show a lettered tile (small) or their example sentence (large)
     if (typeof w === 'object' && w.ar === 'x') {
       if (opt.full) return `<div class="art is-text lv-${w.lv} ${opt.cls || ''}"><span class="eyebrow">In a sentence</span><p>${markSentence(dailyEx(w))}</p></div>`;
-      return `<div class="art is-mono lv-${w.lv} ${opt.cls || ''}" aria-hidden="true"><span>${esc(w.w.charAt(0))}</span></div>`;
+      return `<div class="art is-mono lv-${w.lv} ${opt.cls || ''}" aria-hidden="true">${I.quote}</div>`;
     }
     const tag = '';
     return `<div class="art ${opt.cls || ''}" style="${spriteCss(idx, 'thumb')}" role="img" aria-label="${typeof w === 'object' ? esc(w.w) + ' picture' : 'scene picture'}">${opt.full ? `<div class="art-full" data-full="${idx}"></div>` : ''}${tag}</div>`;
@@ -136,6 +139,7 @@
   const zhShort = (w) => `${w.s[0][0]} ${w.s[0][1]}`;
   const kkHtml = (w) => `[${esc(w.kk)}]`;
   const posOf = (w) => w.s[0][0];
+  const pl = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
   // learning extras: [simpler English hint, roots, memory hook, word family, key collocation, collocation meaning]
   const EX = window.TOEIC_EXTRA || { w: {}, pairs: [], part2: [], docs: [], iv: { intro: [], qa: [] } };
   const xw = (w) => EX.w[w.id] || ['', '', '', '', '', ''];
@@ -195,6 +199,16 @@
     if (days < 31) return `${days} d`;
     return `${(days / 30).toFixed(1).replace(/\.0$/, '')} mo`;
   }
+  // "in 10 minutes", "in 1 day", "in 3 days", "in 2 months"
+  function ivlLong(c, now = Date.now()) {
+    const d = c.due - now;
+    if (d < 50 * MIN) { const m = Math.max(1, Math.round(d / MIN)); return `in ${m} minute${m === 1 ? '' : 's'}`; }
+    if (d < DAY) { const h = Math.round(d / 36e5); return `in ${h} hour${h === 1 ? '' : 's'}`; }
+    const days = Math.round(d / DAY);
+    if (days < 31) return days === 1 ? 'tomorrow' : `in ${days} days`;
+    const mo = +(days / 30).toFixed(1);
+    return `in ${mo} month${mo === 1 ? '' : 's'}`;
+  }
   function today() {
     const k = ymd();
     if (!S.days[k]) S.days[k] = { n: 0, r: 0, q: 0, c: 0, plan: null };
@@ -208,7 +222,7 @@
   }
   function plan() {
     const d = today();
-    const goal = S.set.goal;
+    const goal = S.set.goal + (d.bonus || 0);
     if (!d.plan) d.plan = [];
     const keep = d.plan.filter((id) => S.cards[id] && (S.cards[id].first || '') === ymd());
     if (keep.length >= goal) { d.plan = keep; return d.plan; }
@@ -253,7 +267,13 @@
   /* stubborn words: three or more misses; they get their own drill until answered right three times in a row */
   const isStubborn = (id) => (S.wrong[id] || 0) >= 3;
   const stubborn = () => Object.keys(S.wrong).filter((id) => S.wrong[id] >= 3).map(Number).filter((id) => BY_ID.has(id));
-  function miss(id) { S.wrong[id] = (S.wrong[id] || 0) + 1; S.stubOk[id] = 0; }
+  function miss(id) {
+    S.missDay = S.missDay || {};
+    S.stubOk[id] = 0;
+    if (S.missDay[id] === ymd()) return;
+    S.missDay[id] = ymd();
+    S.wrong[id] = (S.wrong[id] || 0) + 1;
+  }
   function drillHit(id) {
     if (!isStubborn(id)) return false;
     S.stubOk[id] = (S.stubOk[id] || 0) + 1;
@@ -268,7 +288,8 @@
     if (isNew) c.first = ymd();
     S.cards[id] = c;
     const d = today();
-    if (isNew) d.n++; else d.r++;
+    if (isNew) d.n++;
+    else { d.r++; d.rv = d.rv || []; if (!d.rv.includes(id)) d.rv.push(id); }
     save();
     return c;
   }
@@ -523,6 +544,7 @@
   }
   function applyTheme() {
     applyLite();
+    document.documentElement.lang = 'en';
     const t = S.set.theme;
     if (t === 'system') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', t);
@@ -548,13 +570,13 @@
       <a class="brand" href="#today" aria-label="TOEIC Voyage home">${LOGO}<span class="brand-zh">多益詞旅</span><span class="brand-en">TOEIC Voyage</span></a>
       <nav class="nav" aria-label="Main pages">${NAV.map(([k, t]) => `<a href="#${k}" data-nav="${k}">${t}</a>`).join('')}</nav>
       <div class="top-tools">
-        <button class="search-btn" id="open-search" aria-label="Search words">${I.search}<span>Search words</span><kbd>⌘K</kbd></button>
+        <button class="search-btn" id="open-search" aria-label="Search words" title="Search words (⌘K or /)">${I.search}<span>Search words</span><kbd>⌘K</kbd></button>
         <div class="amb">
           <button class="icon-btn amb-btn" id="amb-btn" aria-expanded="false" aria-controls="amb-pop" aria-label="Background sound" title="Background sound">${I.wave}<span class="amb-bars" aria-hidden="true"><i></i><i></i><i></i></span></button>
           <div class="amb-pop" id="amb-pop" role="dialog" aria-label="Background sound" hidden></div>
         </div>
-        <button class="icon-btn" id="toggle-sfx" aria-label="Sound effects"></button>
-        <button class="icon-btn" id="toggle-theme" aria-label="Light or dark"></button>
+        <button class="icon-btn" id="toggle-sfx" aria-label="Sound effects" title="Sound effects"></button>
+        <button class="icon-btn" id="toggle-theme" aria-label="Light or dark" title="Light or dark"></button>
       </div>
     </div></header>
     <main id="view" tabindex="-1"></main>
@@ -773,13 +795,19 @@
     const mins = Math.max(3, Math.round(pendingNew.length * 0.7 + rv.list.length * 0.25));
     const work = pendingNew.length + rv.list.length;
     const earned = earnRepair();
+    const baseLeft = Math.max(0, Math.min(pendingNew.length, S.set.goal - d.n));
+    const bonusLeft = pendingNew.length - baseLeft;
+    const reviewed = (d.rv || []).length;
     const tasks = [
-      { k: 'rev', t: rv.list.length ? `Review ${rv.list.length} words` : 'Review', done: !rv.list.length, sub: rv.list.length ? (rv.later ? `Today, review the ${rv.list.length} most important ones. The other ${rv.later} can wait.` : 'Answer first, then see the card. Missed words come back soon.') : d.r ? `${d.r} review${d.r === 1 ? "" : "s"} today ✓` : 'Nothing due today ✓', href: '#learn' },
-      { k: 'new', t: pendingNew.length ? `Learn ${pendingNew.length} new words` : 'New words', done: !pendingNew.length, sub: pendingNew.length ? `About ${mins} min · read the English card, then answer in English` : `${d.n} new words today ✓`, href: '#learn' },
-      ...(stub.length ? [{ k: 'stub', t: `${stub.length} hard words`, done: false, sub: 'Words you missed 3+ times, with new question types', href: '#practice', act: 'stub' }] : []),
-      { k: 'recap', t: 'Bedtime recap', done: !!d.recap, sub: d.recap ? 'Done ✓' : tw ? `Today’s ${tw} words · about 3 min` : 'Opens after you learn new words', href: '#recap', off: !tw && !d.recap },
+      { k: 'rev', t: rv.list.length ? `Review ${pl(rv.list.length, 'word')}` : 'Review', done: !rv.list.length, sub: rv.list.length ? (rv.later ? `Today, review the ${rv.list.length} most important ones. The other ${rv.later} can wait.` : 'Answer first, then see the card. Missed words come back soon.') : reviewed ? `${pl(reviewed, 'word')} reviewed today` : 'Nothing due today', href: '#learn' },
+      { k: 'new', t: baseLeft ? `Learn ${pl(baseLeft, 'new word')}` : 'New words', done: !baseLeft, sub: baseLeft ? `About ${Math.max(3, Math.round(baseLeft * 0.7))} min · read the English card, then answer in English` : `${pl(Math.min(d.n, S.set.goal), 'new word')} today`, href: '#learn' },
+      ...(d.bonus ? [{ k: 'bonus', bonus: true, t: `+${d.bonus} bonus words`, done: !bonusLeft, sub: bonusLeft ? `${bonusLeft} left · extra for today, your daily goal stays ${S.set.goal}` : 'Done · extra for today', href: '#learn' }] : []),
+      ...(stub.length ? [{ k: 'stub', t: pl(stub.length, 'hard word'), done: false, sub: 'Words you missed on 3 different days, with new question types', href: '#practice', act: 'stub' }] : []),
+      { k: 'recap', t: 'Bedtime recap', done: !!d.recap, sub: d.recap ? 'Done' : tw ? `Today’s ${pl(tw, 'word')} · about 3 min` : 'Opens after you learn new words', href: '#recap', off: !tw && !d.recap },
     ];
-    const n = tasks.filter((x) => x.done).length;
+    const core = tasks.filter((x) => !x.bonus);
+    const saved = session && session.queue.length ? session : restoreSession();
+    const n = core.filter((x) => x.done).length;
     const st = streak();
     view.innerHTML = `
       <div class="wrap today">
@@ -792,19 +820,20 @@
         ${earned ? `<div class="notice is-good"><b>${st} days in a row!</b><span>You got 1 streak saver. It can fill one missed day.</span></div>` : ''}
         <section class="todo card" aria-label="Today’s plan">
           <div class="todo-head">
-            <div><span class="eyebrow">Today’s plan</span><h2>${work ? `About ${mins} minutes` : 'All done for today'}</h2></div>
+            <div><span class="eyebrow">Today’s plan</span><h2>${work ? `About ${mins} minutes` : n === core.length ? 'All done for today' : 'Almost done'}</h2></div>
             <div class="streak-chip" title="Days in a row"><b class="num">${st}</b><span>day streak</span>${S.freeze ? `<i title="Streak savers">Saver ×${S.freeze}</i>` : ''}</div>
           </div>
-          <div class="meter todo-meter"><i class="m-mastered" style="width:${(n / tasks.length) * 100}%"></i></div>
+          <div class="meter todo-meter"><i class="m-mastered" style="width:${(n / core.length) * 100}%"></i></div>
+          <p class="todo-count">${n} of ${core.length} done</p>
           <ol class="todo-list">
-            ${tasks.map((x, k) => `<li><a class="todo-item rh-step ${x.done ? 'is-done' : ''} ${x.off ? 'is-off' : ''}" href="${x.off ? '#today' : x.href}" ${x.act ? `data-act="${x.act}"` : ''}>
-              <span class="rh-no">${x.done ? '✓' : k + 1}</span>
+            ${tasks.map((x, k) => `<li><a class="todo-item rh-step ${x.done ? 'is-done' : ''} ${x.off ? 'is-off' : ''} ${x.bonus ? 'is-bonus' : ''}" href="${x.off ? '#today' : x.href}" ${x.act ? `data-act="${x.act}"` : ''}>
+              <span class="rh-no">${x.bonus ? '+' : k + 1 - (tasks.slice(0, k).some((y) => y.bonus) ? 1 : 0)}</span>
               <span class="rh-txt"><b>${x.t}</b><span>${x.sub}</span></span>
-              ${x.done || x.off ? '' : `<span class="rh-go">${I.arrow}</span>`}
+              ${x.done ? `<span class="rh-ok">${I.check}<span class="sr-only">done</span></span>` : x.off ? '' : `<span class="rh-go">${I.arrow}</span>`}
             </a></li>`).join('')}
           </ol>
           <div class="todo-cta">
-            ${work ? `<a class="btn" href="#learn">Start ${I.arrow}</a>` : `<button class="btn" id="extra">Learn 5 more ${I.arrow}</button><a class="btn ghost" href="#practice">Practice</a>`}
+            ${work ? `<a class="btn" href="#learn">${saved && saved.step ? `Continue · card ${saved.step + 1} of ${saved.step + saved.queue.length}` : 'Start'} ${I.arrow}</a>` : `<button class="btn" id="extra">+5 bonus words ${I.arrow}</button><a class="btn ghost" href="#practice">Practice</a>`}
             <a class="btn ghost" href="#commute">${I.listen}<span>Hands-free commute</span></a>
           </div>
         </section>
@@ -813,7 +842,7 @@
     const fx = $('#use-fix');
     if (fx) fx.addEventListener('click', () => { if (useRepair()) { sfx('ignite'); toast(`Yesterday is filled. ${streak()} days in a row.`); viewToday(); } });
     const extra = $('#extra');
-    if (extra) extra.addEventListener('click', () => { S.set.goal += 5; save(); plan(); go('learn'); });
+    if (extra) extra.addEventListener('click', () => { d.bonus = (d.bonus || 0) + 5; save(); plan(); session = null; go('learn'); });
     const sb = view.querySelector('[data-act="stub"]');
     if (sb) sb.addEventListener('click', (e) => { e.preventDefault(); startDrill(); });
   }
@@ -822,9 +851,38 @@
      PLACEMENT — 3 minutes, word → English meaning, an honest "I don't know"
      ====================================================== */
   const PLACE_MIN = 3;
+  const PLACE_KEY = 'toeic-voyage:place';
   let place = null;
+  // a check in progress survives a page reload; the clock keeps running from the original start
+  function savePlace() {
+    try {
+      if (place && place.stage === 'run') localStorage.setItem(PLACE_KEY, JSON.stringify({ items: place.items, i: place.i, t0: place.t0, res: place.res }));
+      else localStorage.removeItem(PLACE_KEY);
+    } catch (e) { /* storage unavailable */ }
+  }
+  function restorePlace() {
+    try {
+      const p = JSON.parse(localStorage.getItem(PLACE_KEY));
+      if (p && Array.isArray(p.items) && Array.isArray(p.res) && Date.now() - p.t0 < 30 * MIN) return { stage: 'run', ...p };
+    } catch (e) { /* ignore */ }
+    return null;
+  }
+  function placeClock() {
+    const P = place;
+    clearInterval(P.tick);
+    P.tick = setInterval(() => {
+      const left = PLACE_MIN * MIN - (Date.now() - P.t0);
+      if (left <= 0) { placeFinish(); return; }
+      const el = $('#pl-clock');
+      if (el) el.textContent = `${Math.floor(left / MIN)}:${pad(Math.floor((left % MIN) / 1000))}`;
+    }, 500);
+  }
   function viewPlace() {
-    if (!place || place.stage === 'done') place = { stage: 'intro' };
+    if (!place || place.stage === 'done' || place.stage === 'result') place = restorePlace() || { stage: 'intro' };
+    if (place.stage === 'run') {
+      if (Date.now() - place.t0 >= PLACE_MIN * MIN) { placeFinish(); return; }
+      placeClock();
+    }
     paintPlace();
     const onKey = (e) => {
       if (!place || place.stage !== 'run' || e.target.matches('input, textarea')) return;
@@ -842,7 +900,13 @@
       out.push(...pool.slice(0, 8).map((w) => ({ id: w.id, lv: l.lv })));
     }
     // easy first, then mixed upward
-    return [...out.filter((x) => x.lv === 400).slice(0, 4), ...shuffle(out.filter((x) => !(x.lv === 400 && out.indexOf(x) < 4)))];
+    const first = out.slice(0, 4);
+    const items = [...first, ...shuffle(out.slice(4))];
+    for (const it of items) {
+      const w = BY_ID.get(it.id);
+      it.opts = shuffle([{ t: w.d, ok: true }, ...distractors(w, 3, WORDS.filter((x) => x.lv === w.lv)).map((d) => ({ t: d.d }))]);
+    }
+    return items;
   }
   function paintPlace() {
     const P = place;
@@ -850,13 +914,14 @@
       view.innerHTML = `<div class="wrap"><div class="learn sp"><div class="sp-intro">
         <span class="eyebrow mono">LEVEL CHECK · 3 MINUTES</span>
         <h1>3-minute level check</h1>
-        <p>See a word, hear it, and choose the right English meaning. If you don’t know, press “I don’t know”. Don’t guess, so the result is true.</p>
-        <ul class="sp-stars-how"><li><b>400</b>Get 75% of the 400-level words right to start at 600</li><li><b>3:00</b>It stops when time is up. Every answer counts.</li><li><b>✓</b>Your saved progress stays</li></ul>
+        <p>See a word, hear it, and choose the right English meaning. If you don’t know, press “I don’t know”. Wrong guesses lower your result; “I don’t know” does not.</p>
+        <ul class="sp-stars-how"><li><b>400</b>Do well on the 400-level words to start at 600</li><li><b>3:00</b>It stops when time is up. Every answer counts.</li><li><b>✓</b>If you reload the page, the check goes on where you were</li></ul>
         <div class="row-btns"><button class="btn" id="pl-go">Start ${I.arrow}</button>${S.onboarded ? '' : '<button class="btn ghost" id="pl-skip">Skip, start at 400</button>'}</div>
       </div></div></div>`;
       $('#pl-go').addEventListener('click', () => {
         Object.assign(P, { stage: 'run', items: placeItems(), i: 0, t0: Date.now(), res: [] });
-        P.tick = setInterval(() => { const el = $('#pl-clock'); if (!el) return; const left = PLACE_MIN * MIN - (Date.now() - P.t0); if (left <= 0) placeFinish(); else el.textContent = `${Math.floor(left / MIN)}:${pad(Math.floor((left % MIN) / 1000))}`; }, 500);
+        savePlace();
+        placeClock();
         sfx('start');
         vt('card', paintPlace);
       });
@@ -868,13 +933,12 @@
     const it = P.items[P.i];
     if (!it) return placeFinish();
     const w = BY_ID.get(it.id);
-    if (!it.opts) it.opts = shuffle([{ t: w.d, ok: true }, ...distractors(w, 3, WORDS.filter((x) => x.lv === w.lv)).map((d) => ({ t: d.d }))]);
-    const left = PLACE_MIN * MIN - (Date.now() - P.t0);
+    const left = Math.max(0, PLACE_MIN * MIN - (Date.now() - P.t0));
     view.innerHTML = `<div class="wrap"><div class="quiz">
       <div class="learn-top">
-        <a class="icon-btn" href="#today" aria-label="Leave the check">${I.close}</a>
+        <a class="icon-btn" href="#today" aria-label="Leave the check" title="Leave (you can come back to it)">${I.close}</a>
         <div class="meter"><i style="width:${(P.i / P.items.length) * 100}%"></i></div>
-        <span class="count num">${P.i + 1} / ${P.items.length}</span>
+        <span class="count num">Question ${P.i + 1} of ${P.items.length}</span>
         <span class="sp-clock num" id="pl-clock">${Math.floor(left / MIN)}:${pad(Math.floor((left % MIN) / 1000))}</span>
       </div>
       <article class="q-card">
@@ -891,56 +955,86 @@
     if (P.stage !== 'run') return;
     const it = P.items[P.i];
     if (!it || (i >= 0 && !it.opts[i])) return;
-    P.res.push({ lv: it.lv, ok: i >= 0 && !!it.opts[i].ok });
+    P.res.push({ lv: it.lv, r: i < 0 ? 'idk' : it.opts[i].ok ? 'ok' : 'no' });
     sfx('tap');
     P.i++;
+    savePlace();
     if (P.i >= P.items.length || Date.now() - P.t0 >= PLACE_MIN * MIN) return placeFinish();
     vt('card', paintPlace);
   }
+  // score per level: right answers minus a guessing penalty (a wrong pick costs 1/3, "I don't know" costs nothing),
+  // and a harder level can never score above an easier one
+  function placeScores(res) {
+    const acc = {};
+    let cap = 1;
+    for (const l of LEVELS) {
+      const r = res.filter((x) => x.lv === l.lv);
+      if (!r.length) { acc[l.lv] = null; continue; }
+      const ok = r.filter((x) => x.r === 'ok').length;
+      const no = r.filter((x) => x.r === 'no').length;
+      const v = Math.max(0, (ok - no / 3) / r.length);
+      acc[l.lv] = Math.min(v, cap);
+      cap = acc[l.lv];
+    }
+    return acc;
+  }
   function placeFinish() {
     const P = place;
-    if (P.stage !== 'run') return;
+    if (!P || P.stage !== 'run') return;
     clearInterval(P.tick);
-    const acc = {};
-    for (const l of LEVELS) { const r = P.res.filter((x) => x.lv === l.lv); acc[l.lv] = r.length ? r.filter((x) => x.ok).length / r.length : null; }
-    const start = acc[400] != null && acc[400] >= 0.75 && P.res.filter((x) => x.lv === 400).length >= 3 ? 600 : 400;
-    S.place = { at: ymd(), acc, start, n: P.res.length };
+    const res = P.res.map((x) => (x.r ? x : { lv: x.lv, r: x.ok ? 'ok' : 'no' }));
+    const acc = placeScores(res);
+    const n400 = res.filter((x) => x.lv === 400).length;
+    const start = acc[400] != null && acc[400] >= 0.7 && n400 >= 3 ? 600 : 400;
+    const count = (k) => res.filter((x) => x.r === k).length;
+    S.place = { at: ymd(), acc, start, n: res.length, ok: count('ok'), no: count('no'), idk: count('idk') };
     S.set.start = start;
     S.onboarded = true;
     const d = today(); d.plan = (d.plan || []).filter((id) => S.cards[id]);
     save();
     P.stage = 'result';
+    savePlace();
     sfx('complete');
-    vt('card', placeResult);
+    if (route.name === 'place') vt('card', placeResult);
   }
   function placeResult() {
-    const P = place;
-    const acc = S.place.acc;
+    const pl0 = S.place;
+    const acc = pl0.acc;
+    const sc = estScore();
     view.innerHTML = `<div class="wrap"><div class="quiz"><div class="done">
       <img src="assets/brand/done.webp" alt="" width="480" height="480">
       <div class="done-body">
-        <span class="eyebrow">Done · ${P.res.length} answers</span>
-        <h2>Start at ${S.place.start}${S.place.start === 600 ? '. You already know the basics well.' : '. Build a strong base first.'}</h2>
-        <div class="lv-rows">${LEVELS.map((l) => `<div class="lv-row lv-${l.lv}"><b>${l.lv}</b><div class="meter"><i class="m-mastered" style="width:${(acc[l.lv] || 0) * 100}%"></i></div><span>${acc[l.lv] == null ? '—' : Math.round(acc[l.lv] * 100) + '%'}</span></div>`).join('')}</div>
-        <p style="color:var(--ink-2)">Estimated score from vocabulary: about <b class="num">${estScore()}</b> (words only, a rough guide). ${S.set.goal} new words a day; change it in Me → Settings.</p>
+        <span class="eyebrow">Done · ${pl(pl0.n, 'answer')}</span>
+        <h2>Start at ${pl0.start}${pl0.start === 600 ? '. You already know the basics well.' : '. Build a strong base first.'}</h2>
+        <div class="done-stats is-three">
+          <div><b class="num">${pl0.ok}</b><span>right</span></div>
+          <div><b class="num">${pl0.no}</b><span>wrong</span></div>
+          <div><b class="num">${pl0.idk}</b><span>I don’t know</span></div>
+        </div>
+        <div class="lv-rows">${LEVELS.map((l) => `<div class="lv-row lv-${l.lv}"><b>${l.lv}</b><div class="meter"><i class="m-mastered" style="width:${(acc[l.lv] || 0) * 100}%"></i></div><span>${acc[l.lv] == null ? 'not reached' : Math.round(acc[l.lv] * 100) + '%'}</span></div>`).join('')}</div>
+        <p class="done-note">Level scores take away a little for each wrong guess, and a harder level never scores higher than an easier one.</p>
+        <p style="color:var(--ink-2)">Estimated TOEIC score from vocabulary: <b class="num">${sc == null ? '—' : `${Math.max(10, sc - 50)}–${Math.min(990, sc + 50)}`}</b> (words only, a rough guide). ${S.set.goal} new words a day; change it in Me → Settings.</p>
         <div class="row-btns"><a class="btn" href="#learn">Start today’s ${S.set.goal} words ${I.arrow}</a><a class="btn ghost" href="#today">Back to Today</a></div>
       </div>
     </div></div></div>`;
   }
-  // a rough vocabulary-based estimate, shown with a ±50 range
+  // a rough vocabulary-based estimate; null until there is enough to go on
   function estScore() {
+    const placed = S.place && !S.place.skipped && S.place.acc;
+    if (!placed && Object.keys(S.cards).length < 20) return null;
     const k = {};
     for (const l of LEVELS) {
       const list = WORDS.filter((w) => w.lv === l.lv);
       let v = 0;
-      for (const w of list) { const st = status(w.id); v += st === 'mastered' ? 1 : st === 'learning' ? 0.55 : 0; }
+      for (const w of list) { const st = status(w.id); v += st === 'mastered' ? 1 : st === 'learning' ? 0.5 : 0; }
       let f = v / list.length;
-      const p = S.place && S.place.acc ? S.place.acc[l.lv] : null;
-      if (p != null) f = Math.max(f, p * 0.85);
+      const p = placed ? S.place.acc[l.lv] : null;
+      if (p != null) f = Math.max(f, p * 0.9);
       k[l.lv] = f;
     }
-    const s = 230 + 250 * k[400] + 200 * k[600] + 150 * k[800] + 120 * k[990];
-    return Math.round(Math.min(950, s) / 5) * 5;
+    // easier words weigh more: knowing every 400 word is worth more than knowing a few 990 words
+    const s = 10 + 980 * (0.35 * k[400] + 0.27 * k[600] + 0.22 * k[800] + 0.16 * k[990]);
+    return Math.round(s / 5) * 5;
   }
 
   /* ======================================================
@@ -977,7 +1071,7 @@
       <div class="learn-top">
         <a class="icon-btn" href="#today" aria-label="Leave">${I.close}</a>
         <div class="meter"><i style="width:${((C.i + 1) / C.ids.length) * 100}%"></i></div>
-        <span class="count num">${C.i + 1} / ${C.ids.length}</span>
+        <span class="count num">Word ${C.i + 1} of ${C.ids.length}</span>
       </div>
       <article class="cm-card">
         <span class="eyebrow">Hands-free · word → meaning → example · ${ACC[listenAccent(C.i)]}</span>
@@ -986,9 +1080,9 @@
         <p class="cm-line is-ex ${C.step === 'ex' ? 'is-on' : ''}">${markSentence(ex)}</p>
       </article>
       <div class="cm-ctrl">
-        <button class="icon-btn big" id="cm-prev" aria-label="Previous">${I.prev}</button>
-        <button class="cm-play" id="cm-play" aria-label="${C.on ? 'Pause' : 'Play'}">${C.on ? I.pause : I.play}</button>
-        <button class="icon-btn big" id="cm-next" aria-label="Next">${I.next}</button>
+        <button class="icon-btn big" id="cm-prev" aria-label="Previous word" title="Previous word">${I.prev}</button>
+        <button class="cm-play" id="cm-play" aria-label="${C.on ? 'Pause' : 'Play'}" title="${C.on ? 'Pause' : 'Play'}">${C.on ? I.pause : I.play}</button>
+        <button class="icon-btn big" id="cm-next" aria-label="Next word" title="Next word">${I.next}</button>
       </div>
       <div class="cm-set"><label for="cm-rate">Speed <span class="num" id="cm-rate-v">${S.set.rate.toFixed(2)}×</span></label><input id="cm-rate" type="range" min="0.6" max="1.2" step="0.05" value="${S.set.rate}"></div>
       <p class="kbd-hint">Put on headphones, press play and keep your phone in your pocket. Some phones stop the voice when the screen turns off; keep it on or make auto-lock longer.</p>
@@ -1225,12 +1319,12 @@
           ${pron(w)}
           <p class="def-line is-big"><span class="def-tag">EN</span>${esc(w.d)}</p>
           ${x[0] ? `<p class="def-simple"><span class="def-tag">simpler</span>${esc(x[0])}</p>` : ''}
-          <div class="senses is-small">${sensesByPos(w).map(([pos, zh]) => `<div class="sense"><i>${pos}</i><b>${esc(zh)}</b></div>`).join('')}</div>
+          <div class="senses is-small" lang="zh-Hant">${sensesByPos(w).map(([pos, zh]) => `<div class="sense"><i>${pos}</i><b>${esc(zh)}</b></div>`).join('')}</div>
           ${x[4] ? `<div><div class="block-label">Learn this phrase first</div><p class="col-line is-key"><b>${esc(x[4])}</b><span>= ${esc(x[5])}</span> <button class="mini-spk" data-say="${esc(x[4])}" aria-label="Read aloud">${I.speaker}</button></p></div>` : ''}
           <div class="hook-box">
             <div class="block-label">Memory hook</div>
             ${x[1] ? `<div class="roots">${rootsHtml(x[1])}</div>` : ''}
-            ${x[2] ? `<p class="hook">${esc(x[2])}</p>` : ''}
+            ${x[2] ? `<p class="hook" lang="zh-Hant">${esc(x[2])}</p>` : ''}
             <label class="mine"><span>My own hook</span><input id="e-mine" maxlength="80" placeholder="Your own way to remember it: a picture or a line" value="${esc(S.mine[id] || '')}"></label>
           </div>
           ${x[3] ? `<div><div class="block-label">Word family</div><div class="family">${familyHtml(x[3])}<span class="fam is-self"><b>${esc(w.w)}</b><i>${esc(posOf(w))}</i></span></div></div>` : ''}
@@ -1239,7 +1333,7 @@
             ${[dailyEx(w), toeicEx(w)].map((ex) => `<div class="example" data-sh-box>
               <span class="ex-tag ${ex.k === 't' ? 'is-toeic' : ''}">${ex.k === 't' ? 'TOEIC example' : 'Everyday example'}</span>
               <p class="en-line">${markSentence(ex)}</p>
-              <p class="zh-line">${esc(ex.zh)}</p>
+              <p class="zh-line" lang="zh-Hant">${esc(ex.zh)}</p>
               ${shadowBtns(ex.en)}
               <div class="sh-out"></div>
             </div>`).join('')}
@@ -1354,14 +1448,36 @@
      Reviews: a question first. Wrong = 忘了 automatically; right = choose 記得 or 很簡單.
      ====================================================== */
   let session = null;
+  // a missed word waits for at least this many other cards before it comes back
+  const REQUEUE_GAP = 4;
+  const SESSION_KEY = 'toeic-voyage:session';
+  // the session in progress survives a page reload (same day only)
+  function saveSession() {
+    try {
+      if (!session || !session.queue.length) localStorage.removeItem(SESSION_KEY);
+      else localStorage.setItem(SESSION_KEY, JSON.stringify({ ...session, day: ymd() }));
+    } catch (e) { /* storage unavailable */ }
+  }
+  function restoreSession() {
+    try {
+      const s = JSON.parse(localStorage.getItem(SESSION_KEY));
+      if (s && s.day === ymd() && Array.isArray(s.queue) && s.queue.length && s.queue.every((x) => BY_ID.has(x.id))) return s;
+    } catch (e) { /* ignore */ }
+    return null;
+  }
+  const requeue = (s, item) => s.queue.splice(Math.min(REQUEUE_GAP, s.queue.length), 0, item);
   function startSession() {
     const rv = reviewPlan();
     const fresh = plan().filter((id) => !S.cards[id]);
     preloadFull(fresh);
-    session = { queue: [...rv.list.map((id) => ({ id, k: 'q' })), ...fresh.map((id) => ({ id, k: 'intro' }))], total: rv.list.length + fresh.length, done: 0, later: rv.later, tally: { forgot: 0, ok: 0, easy: 0 }, q: null, n: 0, nNew: fresh.length, nRev: rv.list.length };
+    session = { queue: [...rv.list.map((id) => ({ id, k: 'q' })), ...fresh.map((id) => ({ id, k: 'intro' }))], step: 0, later: rv.later, tally: { forgot: 0, ok: 0, easy: 0 }, q: null, n: 0, nNew: fresh.length, nRev: rv.list.length };
+    saveSession();
   }
   function viewLearn() {
-    if (!session || !session.queue.length) { startSession(); if (session.queue.length) sfx('start'); }
+    if (!session || !session.queue.length) {
+      session = restoreSession();
+      if (!session) { startSession(); if (session.queue.length) sfx('start'); }
+    }
     paintLearn();
     const onKey = (e) => {
       if ($('.overlay') || !session || e.target.matches('input, textarea')) return;
@@ -1379,8 +1495,10 @@
   function gotIntro() {
     const s = session;
     const it = s.queue.shift();
-    // the check question comes back after one or two other cards, so it is recall, not copying
-    s.queue.splice(Math.min(2, s.queue.length), 0, { id: it.id, k: 'q', isNew: true });
+    s.step++;
+    // the check comes back after several other cards, so it is recall, not copying
+    requeue(s, { id: it.id, k: 'q', isNew: true });
+    saveSession();
     sfx('page');
     vt('card', paintLearn);
   }
@@ -1396,43 +1514,70 @@
   function rateLearn(g) {
     const s = session;
     const it = s.queue.shift();
+    s.step++;
     const c = grade(it.id, g);
     if (g === 1) s.tally.forgot++; else if (g === 4) s.tally.easy++; else s.tally.ok++;
     if (g >= 3) sfx('page');
-    if (c.due - Date.now() < 20 * MIN) s.queue.splice(Math.min(3, s.queue.length), 0, { id: it.id, k: 'q' });
-    else s.done++;
+    if (c.due - Date.now() < 20 * MIN) requeue(s, { id: it.id, k: 'q' });
     s.q = null;
+    saveSession();
     vt('card', paintLearn);
+  }
+  // what is still open on today's plan after this session
+  function openTasks() {
+    const out = [];
+    if (stubborn().length) out.push(['Hard words', '#practice', 'stub']);
+    const d = today();
+    if (!d.recap && todaysWords().length) out.push(['Bedtime recap', '#recap']);
+    return out;
   }
   function learnDone() {
     const s = session;
-    if (s.total) { sfx('complete'); setTimeout(() => burst(innerWidth / 2, innerHeight * 0.38, 70, 1.4), 120); }
+    const steps = s.step;
+    if (steps) { sfx('complete'); setTimeout(() => burst(innerWidth / 2, innerHeight * 0.38, 70, 1.4), 120); }
+    try { localStorage.removeItem(SESSION_KEY); } catch (e) { /* ignore */ }
     const d = today();
     earnRepair();
+    const rest = openTasks();
+    const reviewed = (d.rv || []).length;
     view.innerHTML = `<div class="wrap"><div class="learn">
       <div class="done">
         <img src="assets/brand/done.webp" alt="" width="480" height="480">
         <div class="done-body">
-          <span class="eyebrow">Today’s learning is done</span>
-          <h2>${s.story ? `You have studied every word in chapter ${s.story}.` : s.total ? 'Today’s words have landed safely.' : 'Nothing to learn right now.'}</h2>
-          <p style="color:var(--ink-2)">${s.total ? `Remembered ${s.tally.ok}, easy ${s.tally.easy}, forgot ${s.tally.forgot}. ` : 'New words and reviews are done. '}Today: ${d.n} new, ${d.r} reviews. ${s.later ? `${s.later} more due words are moved to the next days, so you do not have to do them all now.` : ''}</p>
+          <span class="eyebrow">${s.story ? `Chapter ${s.story}` : rest.length ? 'Review done' : 'Today’s plan is done'}</span>
+          <h2>${s.story ? `You studied every word in chapter ${s.story}.` : steps ? (rest.length ? 'Your reviews and new words are done.' : 'Today’s words have landed safely.') : 'Nothing to learn right now.'}</h2>
+          <div class="done-stats">
+            <div><b class="num">${d.n}</b><span>new words today</span></div>
+            <div><b class="num">${reviewed}</b><span>${reviewed === 1 ? 'word' : 'words'} reviewed today</span></div>
+            <div><b class="num">${s.tally.ok + s.tally.easy}</b><span>remembered this session</span></div>
+            <div><b class="num">${s.tally.forgot}</b><span>forgot (they come back)</span></div>
+          </div>
+          ${s.later ? `<p class="done-note">${s.later} more due ${s.later === 1 ? 'word waits' : 'words wait'} for the next days, so you do not have to do them all now.</p>` : ''}
+          ${rest.length ? `<p class="done-note">Still on today’s plan: ${rest.map(([t, h, act]) => `<a href="${h}" ${act ? `data-act="${act}"` : ''}>${t}</a>`).join(' · ')}</p>` : ''}
           <div class="row-btns">
             ${s.story
               ? `<button class="btn" data-cloze="${s.story}">Check with the story quiz ${I.arrow}</button><button class="btn ghost" data-story="${s.story}">Back to chapter ${s.story}</button>`
-              : `<a class="btn" href="#practice">Practice another way ${I.arrow}</a><a class="btn ghost" href="#commute">Review by listening</a><button class="btn ghost" id="more5">Learn 5 more</button>`}
+              : `<a class="btn" href="#today">Back to Today ${I.arrow}</a><a class="btn ghost" href="#practice">Practice</a><button class="btn ghost" id="more5">+5 bonus words</button>`}
           </div>
         </div>
       </div></div></div>`;
     const m5 = $('#more5');
-    if (m5) m5.addEventListener('click', () => { S.set.goal += 5; save(); plan(); session = null; viewLearn(); });
+    // bonus words are extra for today only; the daily goal in Settings stays the same
+    if (m5) m5.addEventListener('click', () => { const dd = today(); dd.bonus = (dd.bonus || 0) + 5; save(); plan(); session = null; viewLearn(); });
+    const st = view.querySelector('[data-act="stub"]');
+    if (st) st.addEventListener('click', (e) => { e.preventDefault(); startDrill(); });
     const cz = view.querySelector('[data-cloze]');
     if (cz) cz.addEventListener('click', () => { const no = +cz.dataset.cloze; session = null; storyState.cloze = { no, pending: true }; go(`story-${no}`); });
   }
-  const learnTop = (s) => `<div class="learn-top">
-      <a class="icon-btn" href="#today" aria-label="Leave">${I.close}</a>
-      <div class="meter" role="progressbar" aria-valuenow="${Math.round((s.done / Math.max(1, s.total)) * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${(s.done / Math.max(1, s.total)) * 100}%"></i></div>
-      <span class="count num">${s.done} / ${s.total}</span>
+  // one progress rule everywhere: "Card n of N" (N grows when a missed word is added back)
+  const learnTop = (s) => {
+    const total = s.step + s.queue.length;
+    return `<div class="learn-top">
+      <a class="icon-btn" href="#today" aria-label="Leave" title="Leave (your place is saved)">${I.close}</a>
+      <div class="meter" role="progressbar" aria-valuenow="${Math.round((s.step / Math.max(1, total)) * 100)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${(s.step / Math.max(1, total)) * 100}%"></i></div>
+      <span class="count num">Card ${Math.min(s.step + 1, total)} of ${total}</span>
     </div>`;
+  };
   // the card itself, English only: picture or sentence, definition, collocation, roots, family
   function cardFront(w, opt = {}) {
     const x = xw(w);
@@ -1445,16 +1590,19 @@
         ${pron(w)}
         <p class="def-line is-big"><span class="def-tag">EN</span>${esc(w.d)}</p>
         ${opt.zh ? `<p class="zh-small" lang="zh-Hant">${esc(zhMain(w))}</p>` : ''}
-        <div class="example"><p class="en-line">${markSentence(ex)} <button class="mini-spk" data-say="${esc(ex.en)}" aria-label="Read the example">${I.speaker}</button></p>${opt.zh ? `<p class="zh-line">${esc(ex.zh)}</p>` : ''}</div>
-        ${x[4] ? `<p class="col-line"><span class="def-tag">use it</span><b>${esc(x[4])}</b><span>= ${esc(x[5])}</span></p>` : ''}
+        <div class="example"><p class="en-line">${markSentence(ex)} <button class="mini-spk" data-say="${esc(ex.en)}" aria-label="Read the example">${I.speaker}</button></p>${opt.zh ? `<p class="zh-line" lang="zh-Hant">${esc(ex.zh)}</p>` : ''}</div>
+        ${x[4] && !opt.noPhrase ? `<p class="col-line"><span class="def-tag">use it</span><b>${esc(x[4])}</b><span>= ${esc(x[5])}</span></p>` : ''}
         ${x[1] || x[3] ? `<div class="word-parts">${x[1] ? `<span class="roots">${rootsHtml(x[1])}</span>` : ''}${x[3] ? `<span class="family">${familyHtml(x[3])}</span>` : ''}</div>` : ''}
-        ${opt.zh && x[2] ? `<p class="hook"><b>Memory hook</b>${esc(x[2])}</p>` : ''}
+        ${opt.zh && x[2] ? `<p class="hook" lang="zh-Hant"><b>Memory hook</b>${esc(x[2])}</p>` : ''}
         ${opt.zh && S.mine[w.id] ? `<p class="hook is-mine"><b>My hook</b>${esc(S.mine[w.id])}</p>` : ''}
       </div>
     </article>`;
   }
   const rootsHtml = (r) => r.split('+').map((p) => { const [a, b] = p.split('='); return `<span class="root"><b>${esc(a)}</b>${b ? `<i>${esc(b)}</i>` : ''}</span>`; }).join('<span class="plus">+</span>');
   const familyHtml = (f) => f.split(';').map((t) => { const m = t.trim().match(/^(.+?)\s+([a-z./]+)$/); const word = m ? m[1] : t.trim(); const hit = BY_WORD.get(fold(word)); return `<span class="fam">${hit ? `<button data-open="${hit.id}">${esc(word)}</button>` : `<b>${esc(word)}</b>`}${m ? `<i>${esc(m[2])}</i>` : ''}</span>`; }).join('');
+  // the action bar sits fixed at the bottom, so answering never scrolls the question away
+  const dock = (inner) => `<div class="dock" role="group" aria-label="Next step"><div class="dock-in">${inner}</div></div>`;
+  const verdict = (q) => (q.ok ? `<span class="verdict is-ok">${I.check}Correct${q.hinted ? ' · with a hint' : ''}</span>` : `<span class="verdict is-no">${I.cross}Not quite${q.gaveUp ? '' : q.typed ? ` · you typed “${esc(q.typed)}”` : ''}</span>`);
   function paintLearn() {
     const s = session;
     if (!s.queue.length) return learnDone();
@@ -1462,23 +1610,23 @@
     const w = BY_ID.get(it.id);
     if (it.k === 'intro') {
       hintCtx = null;
-      view.innerHTML = `<div class="wrap"><div class="learn">
+      view.innerHTML = `<div class="wrap has-dock"><div class="learn">
         ${learnTop(s)}
         ${cardFront(w, { badge: '<span class="badge plain lv-800">NEW</span>' })}
-        <div class="learn-cta"><button class="btn" id="got">I’ve got it · test me later ${I.arrow}</button></div>
-        <p class="kbd-hint">Listen, read the example aloud and think about the meaning in English.<kbd>Enter</kbd> next</p>
-      </div></div>`;
+        <p class="kbd-hint">Listen, read the example aloud and think about the meaning in English. <kbd>Enter</kbd> next</p>
+      </div></div>
+      ${dock(`<span class="dock-note">This word comes back as a question after a few cards.</span><button class="btn" id="got">I’ve got it ${I.arrow}</button>`)}`;
       loadFull(view);
       $('#got').addEventListener('click', gotIntro);
       if (!it.played) { it.played = true; if (s.interacted) setTimeout(() => playWord(w), 200); }
       s.interacted = true;
       return;
     }
-    if (!s.q || s.q.id !== it.id) s.q = learnQ(it);
+    if (!s.q || s.q.id !== it.id) { s.q = learnQ(it); saveSession(); }
     const q = s.q;
     const c = S.cards[w.id];
-    const opts = [3, 4].map((g) => ivlLabel(nextState(c, g)));
-    view.innerHTML = `<div class="wrap"><div class="learn">
+    const when = [3, 4].map((g) => ivlLong(nextState(c, g)));
+    view.innerHTML = `<div class="wrap ${q.answered ? 'has-dock' : ''}"><div class="learn">
       ${learnTop(s)}
       <article class="q-card">
         <div class="flash-head"><span class="eyebrow">${it.isNew ? 'New word check' : 'Review'} · ${QLABEL[q.type]}</span>${lvBadge(w.lv)}</div>
@@ -1486,14 +1634,14 @@
         ${qChoices(q)}
         ${hintHtml(q)}
       </article>
-      ${q.answered ? `${q.ok
-          ? `<div class="rates is-two">
-              <button class="rate r3" data-g="3">Remembered<small>${opts[0]}</small></button>
-              ${q.hinted ? `<button class="rate r4" disabled title="You used a hint, so choose Remembered">Easy<small>hint used</small></button>` : `<button class="rate r4" data-g="4">Easy<small>${opts[1]}</small></button>`}
-            </div><p class="kbd-hint"><kbd>1</kbd> Remembered　<kbd>2</kbd> Easy</p>`
-          : `<div class="forgot-row"><span class="forgot-tag">Saved as forgot · it comes back soon</span><button class="btn" data-g="1">Next ${I.arrow}</button></div>`}
-        ${cardFront(w, { zh: true, cls: 'is-back' })}` : ''}
-    </div></div>`;
+      ${q.answered ? cardFront(w, { zh: true, cls: 'is-back' }) : ''}
+    </div></div>
+    ${q.answered ? dock(q.ok
+      ? `${verdict(q)}<div class="rates is-two">
+          <button class="rate r3" data-g="3">Remembered<small>see you ${when[0]}</small></button>
+          ${q.hinted ? '<button class="rate r4" disabled title="You used a hint, so choose Remembered">Easy<small>not after a hint</small></button>' : `<button class="rate r4" data-g="4">Easy<small>see you ${when[1]}</small></button>`}
+        </div>`
+      : `${verdict(q)}<span class="dock-note">Saved as “forgot”. It comes back after ${REQUEUE_GAP} cards.</span><button class="btn" data-g="1">Next ${I.arrow}</button>`) : ''}`;
     loadFull(view);
     wireQ(q, {
       paint: paintLearn,
@@ -1501,14 +1649,15 @@
         if (!qq.ok) miss(qq.id);
         const d = today(); d.q++; if (qq.ok) d.c++;
         save();
+        saveSession();
         paintLearn();
         settle();
         if (qq.ok) burstFrom($('.opt.ok') || $('.spell'), 18, 0.6);
-        const b = view.querySelector('[data-g]');
-        if (b) { b.focus({ preventScroll: true }); (view.querySelector('.rates, .forgot-row') || b).scrollIntoView({ block: 'nearest', behavior: reducedMotion() ? 'auto' : 'smooth' }); }
+        const b = document.querySelector('.dock [data-g]');
+        if (b) b.focus({ preventScroll: true });
       },
     });
-    view.querySelectorAll('[data-g]').forEach((b) => b.addEventListener('click', () => rateLearn(+b.dataset.g)));
+    document.querySelectorAll('.dock [data-g]').forEach((b) => b.addEventListener('click', () => rateLearn(+b.dataset.g)));
   }
 
   /* ======================================================
@@ -1570,6 +1719,7 @@
   }
   const posTag = (w) => POS_EN[posOf(w)] || posOf(w);
   const underscores = (f) => f.replace(/[A-Za-zÀ-ÿ]/g, '_');
+  const BLANK = '________';
   // where the word (or an inflected form of it) sits inside a phrase
   function findForm(text, w) {
     const base = w.w.toLowerCase();
@@ -1662,17 +1812,22 @@
   }
   const blankSpan = (q, f) => `<span class="blank">${q.answered ? esc(f) : '&nbsp;'}</span>`;
   const QLABEL = { cloze: 'Part 5 · sentence', def: 'Meaning → word', spell: 'Spelling', type: 'Recall · type the word', word2def: 'Word → meaning',
-    hear: 'Listening · word', dict: 'Listening · dictation', p2: 'Listening · Part 2', col: 'Phrases', pair: 'Confusable words' };
+    hear: 'Listening · word', dict: 'Listening · gap', p2: 'Listening · Part 2', col: 'Phrases', pair: 'Confusable words' };
   function qPrompt(q) {
     const w = qWord(q);
     const t = q.type;
     if (t === 'cloze') return `<p class="q-sent">${esc(q.ex.en.slice(0, q.ex.a))}${blankSpan(q, q.ex.f)}${esc(q.ex.en.slice(q.ex.a + q.ex.f.length))}</p>${q.answered && q.ex.zh ? `<p class="q-zh">${esc(q.ex.zh)}</p>` : ''}`;
     if (t === 'def') return `<div class="q-def"><span class="def-tag">${posTag(w)}</span><p>${esc(w.d)}</p></div>`;
-    if (t === 'spell') return `<div class="q-def is-small"><span class="def-tag">${posTag(w)}</span><p>${esc(w.d)}</p></div><p class="q-sent is-mid">${esc(q.ex.en.slice(0, q.ex.a))}<span class="blank">${q.answered ? esc(q.ex.f) : esc(underscores(q.ex.f))}</span>${esc(q.ex.en.slice(q.ex.a + q.ex.f.length))}</p>`;
+    if (t === 'spell') return `<div class="q-def is-small"><span class="def-tag">${posTag(w)}</span><p>${esc(w.d)}</p></div><p class="q-sent is-mid">${esc(q.ex.en.slice(0, q.ex.a))}<span class="blank">${q.answered ? esc(q.ex.f) : BLANK}</span>${esc(q.ex.en.slice(q.ex.a + q.ex.f.length))}</p>`;
     if (t === 'type') return `<div class="q-def"><span class="def-tag">${posTag(w)}</span><p>${esc(w.d)}</p></div>`;
     if (t === 'word2def') return `<div class="q-word"><span class="q-big">${esc(w.w)}</span><button class="pron is-mini" data-word="${w.id}" aria-label="Listen"><span class="spk">${I.speaker}</span><b>${kkHtml(w)}</b></button><span class="def-tag">${posTag(w)}</span></div><p class="q-ask">Which meaning is right?</p>`;
     if (t === 'hear') return `<div class="listen-stage is-compact"><button class="big-listen" data-sayq aria-label="Play again">${I.listen}</button><span class="acc-tag">${ACC[q.accent]}</span><p class="q-ask">${q.answered ? `<b class="q-reveal">${esc(w.w)}</b>` : 'Listen. What does this word mean?'} <button class="btn ghost small" data-sayq="slow">Slower</button></p></div>`;
-    if (t === 'dict') return `<div class="listen-stage is-compact"><button class="big-listen" data-sayq aria-label="Play again">${I.listen}</button><span class="acc-tag">${ACC[q.accent]}</span></div><p class="q-sent is-mid">${esc(q.ex.en.slice(0, q.ex.a))}<span class="blank">${q.answered ? esc(q.ex.f) : esc(underscores(q.ex.f))}</span>${esc(q.ex.en.slice(q.ex.a + q.ex.f.length))}</p><p class="q-ask">Listen and type the missing word. <button class="btn ghost small" data-sayq="slow">Slower</button></p>`;
+    if (t === 'dict') {
+      const shown = q.answered || q.showText;
+      return `<div class="listen-stage is-compact"><button class="big-listen" data-sayq aria-label="Play again">${I.listen}</button><span class="acc-tag">${ACC[q.accent]}</span></div>
+        <p class="q-sent is-mid ${shown ? '' : 'is-hidden'}" ${shown ? '' : 'aria-hidden="true"'}>${esc(q.ex.en.slice(0, q.ex.a))}<span class="blank">${q.answered ? esc(q.ex.f) : BLANK}</span>${esc(q.ex.en.slice(q.ex.a + q.ex.f.length))}</p>
+        <p class="q-ask">Listen and type the missing word. <button class="btn ghost small" data-sayq="slow">Slower</button>${shown ? '' : ' <button class="btn ghost small" data-showtext>Show the sentence (counts as a hint)</button>'}</p>`;
+    }
     if (t === 'p2') return `<div class="listen-stage is-compact"><button class="big-listen" data-sayq aria-label="Play again">${I.listen}</button><span class="acc-tag">${ACC[q.accent]}</span><p class="q-ask">${q.answered ? `<b class="q-reveal">“${esc(q.say)}”</b>` : 'Listen to the question. Choose the best response.'} <button class="btn ghost small" data-sayq="slow">Slower</button></p></div>`;
     if (t === 'col') return `<p class="q-sent">${esc(q.phrase.slice(0, q.a))}${blankSpan(q, q.f)}${esc(q.phrase.slice(q.a + q.f.length))}</p><p class="q-gloss"><span class="def-tag">means</span>${esc(q.gloss)}</p>`;
     if (t === 'pair') { const k = q.sent.indexOf('___'); return `<p class="q-sent">${esc(q.sent.slice(0, k))}${blankSpan(q, q.f)}${esc(q.sent.slice(k + 3))}</p>`; }
@@ -1681,7 +1836,8 @@
   function qChoices(q) {
     if (q.input) {
       const ph = q.type === 'dict' ? 'Type what you hear' : 'Type the word';
-      return `<form class="spell" id="q-form" autocomplete="off"><label class="sr-only" for="q-in">Type the word</label><input id="q-in" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${ph}" ${q.answered ? `disabled value="${esc(q.typed || '')}"` : ''}><button class="btn" type="submit" ${q.answered ? 'disabled' : ''}>Check</button></form>`;
+      return `<form class="spell" id="q-form" autocomplete="off"><label class="sr-only" for="q-in">Type the word</label><input id="q-in" type="text" maxlength="30" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${ph}" ${q.answered ? `disabled value="${esc(q.typed || '')}"` : ''}><button class="btn" type="submit" disabled>Check</button></form>
+        ${q.synMsg && !q.answered ? `<p class="syn-msg" role="status">${q.synMsg}</p>` : ''}`;
     }
     return `<div class="opts ${q.long ? 'is-long' : ''} ${q.opts.length === 3 ? 'is-three' : ''} ${q.opts.length === 2 ? 'is-two' : ''}">${q.opts.map((o, i) => {
       let cls = '';
@@ -1704,32 +1860,41 @@
     v = fold(v.trim());
     return v === fold(q.f) || (w && v === fold(w.w));
   }
+  // a near-synonym that fits is not wrong: the learner gets another try
+  function typedSyn(q, v) {
+    const w = qWord(q);
+    if (!w || !EX.syn || !EX.syn[w.id]) return null;
+    v = fold(v.trim());
+    const hit = EX.syn[w.id].find((x) => x[1] !== 'N' && fold(x[0]) === v);
+    return hit ? hit[0] : null;
+  }
   function fbHtml(q) {
     const w = qWord(q);
     if (q.type === 'p2') {
       const right = q.opts.find((o) => o.ok).t;
       return `<div class="feedback is-plain"><div class="fb-main">
-        <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? 'Correct' : `Best response: ${esc(right)}`}</span>
+        <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? `${I.check}Correct` : `${I.cross}Not quite · best response: ${esc(right)}`}</span>
         <span class="fb-q">“${esc(q.say)}” <button class="mini-spk" data-sayq aria-label="Play again">${I.speaker}</button></span>
         ${w ? `<span class="fb-def"><button data-open="${w.id}" class="fb-word is-sm">${esc(w.w)}</button> ${esc(w.d)}<small lang="zh-Hant">${esc(zhMain(w))}</small></span>` : ''}
       </div></div>`;
     }
     if (q.type === 'pair') {
       return `<div class="feedback is-plain"><div class="fb-main">
-        <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? 'Correct' : `Answer: ${esc(q.f)}`}</span>
+        <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? `${I.check}Correct` : `${I.cross}Not quite · answer: ${esc(q.f)}`}</span>
         ${q.pair.w.map((t) => { const pw = BY_WORD.get(fold(t)); return `<span class="fb-def"><b class="fb-pw">${pw ? `<button data-open="${pw.id}" class="fb-word is-sm">${esc(t)}</button>` : esc(t)}</b>${esc(q.pair.n[t])}${pw ? `<small lang="zh-Hant">${esc(zhMain(pw))}</small>` : ''}</span>`; }).join('')}
       </div></div>`;
     }
     const x = xw(w);
     const shown = q.f || w.w;
-    return `<div class="feedback">
-        <button data-open="${w.id}" aria-label="Open ${esc(w.w)}">${art(w)}</button>
+    const wrongLine = q.typed ? `You typed “${esc(q.typed)}” · answer: ${esc(shown)}` : `${q.gaveUp ? 'No problem. ' : ''}Answer: ${esc(shown)}`;
+    return `<div class="feedback ${hasArt(w) ? '' : 'no-art'}">
+        ${hasArt(w) ? `<button data-open="${w.id}" aria-label="Open ${esc(w.w)}">${art(w)}</button>` : ''}
         <div class="fb-main">
-          <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? (q.hinted ? 'Correct (with a hint)' : 'Correct') : `${q.gaveUp ? 'No problem. ' : ''}Answer: ${esc(shown)}`}</span>
+          <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? `${I.check}${q.hinted ? 'Correct (with a hint)' : 'Correct'}` : `${I.cross}Not quite · ${wrongLine}`}</span>
           <span><button data-open="${w.id}" class="fb-word">${esc(w.w)}</button> ${kkHtml(w)} <button class="mini-spk" data-word="${w.id}" aria-label="Listen">${I.speaker}</button></span>
           <span class="fb-def">${esc(w.d)}<small lang="zh-Hant">${esc(zhMain(w))}</small></span>
           ${q.type === 'col' ? `<span class="fb-col"><b>${esc(q.phrase)}</b> = ${esc(q.gloss)}</span>` : ''}
-          ${!q.ok && x[2] ? `<span class="fb-hook"><b>Memory hook</b>${x[1] ? `<i>${esc(x[1].replace(/\+/g, ' + '))}</i>` : ''}${esc(x[2])}</span>` : ''}
+          ${!q.ok && x[2] ? `<span class="fb-hook" lang="zh-Hant"><b>Memory hook</b>${x[1] ? `<i>${esc(x[1].replace(/\+/g, ' + '))}</i>` : ''}${esc(x[2])}</span>` : ''}
         </div>
       </div>`;
   }
@@ -1762,11 +1927,24 @@
     const form = $('#q-form');
     if (form) {
       const input = $('#q-in');
-      form.addEventListener('submit', (e) => { e.preventDefault(); const v = input.value; if (!v.trim()) return; done(typedOk(q, v), { typed: v.trim() }); });
+      const btn = form.querySelector('button[type="submit"]');
+      const sync = () => { btn.disabled = q.answered || !input.value.trim(); };
+      sync();
+      input.addEventListener('input', sync);
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const v = input.value.trim();
+        if (!v || q.answered) return;
+        const syn = !typedOk(q, v) && typedSyn(q, v);
+        if (syn) { q.synMsg = `“${esc(syn)}” is another word that fits. Type the word we are learning.`; sfx('tap'); host.paint(); settle(); return; }
+        done(typedOk(q, v), { typed: v });
+      });
       input.addEventListener('keydown', (e) => { if (e.key.length === 1 || e.key === 'Backspace') sfx('key'); });
       if (!q.answered) input.focus({ preventScroll: true });
     }
     view.querySelectorAll('[data-sayq]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); sayQ(q, b.dataset.sayq === 'slow'); }));
+    const st = view.querySelector('[data-showtext]');
+    if (st) st.addEventListener('click', () => { q.showText = true; q.hinted = true; host.paint(); settle(); });
     if (['hear', 'dict', 'p2'].includes(q.type) && !q.played && !q.answered) { q.played = true; setTimeout(() => { if (hintCtx && hintCtx.q === q) sayQ(q); }, 300); }
     return done;
   }
@@ -1804,7 +1982,9 @@
     { k: 'col', part: 'Collocations', zh: 'Phrases', desc: 'Learn words in groups, like submit a report.', img: 'topic-education' },
     { k: 'pair', part: 'Confusables', zh: 'Confusables', desc: 'affect / effect, principal / principle: choose the right one.', img: 'topic-thinking' },
   ];
-  const pracState = { scope: 'all', mode: null, qs: [], i: 0, results: [] };
+  // scope: null until the learner picks one; then learned words are the default once there are enough
+  const pracState = { scope: null, mode: null, qs: [], i: 0, results: [] };
+  const learnedCount = () => Object.keys(S.cards).length;
   function scopePool(scope) {
     if (scope === 'star') return WORDS.filter((w) => S.stars.includes(w.id));
     if (scope === 'learning') return WORDS.filter((w) => status(w.id) !== 'new');
@@ -1812,10 +1992,14 @@
     if (/^\d+$/.test(scope)) return WORDS.filter((w) => w.lv === +scope);
     return WORDS;
   }
+  // the Practice tab always opens the hub; a session in progress is offered as "Resume"
   function viewPractice() {
-    if (pracState.mode && pracState.qs.length && pracState.i < pracState.qs.length) { paintQuiz(); return; }
-    if (pracState.mode) { pracState.mode = null; pracState.qs = []; if (pracState.scope === 'stub') pracState.scope = 'all'; }
-    const pool = scopePool(pracState.scope);
+    const P = pracState;
+    const open = P.mode && P.qs.length && P.i < P.qs.length;
+    if (P.mode && !open) { P.mode = null; P.qs = []; }
+    if (P.scope === 'stub' && !open) P.scope = null;
+    if (!P.scope) P.scope = learnedCount() >= 10 ? 'learning' : 'all';
+    const pool = scopePool(P.scope);
     const stub = stubborn();
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
@@ -1823,11 +2007,12 @@
         <h1>Think of the meaning in English first.</h1>
         <p class="sub">Every question needs the meaning. If you are stuck, open the English hints one by one. Chinese appears only after you answer.</p>
       </header>
+      ${open ? `<div class="notice is-resume"><b>Resume session?</b><span>${P.mode === 'mix' ? 'Hard words' : (MODES.find((m) => m.k === P.mode) || {}).zh} · question ${P.i + 1} of ${P.qs.length}</span><span class="row-btns"><button class="btn small" id="resume">Resume ${I.arrow}</button><button class="btn ghost small" id="discard">Start over</button></span></div>` : ''}
       <div class="drill-row">
         <button class="drill-card ${stub.length ? '' : 'is-empty'}" id="go-stub" ${stub.length ? '' : 'disabled'}>
           <span class="eyebrow">Hard words</span>
           <b class="num">${stub.length}</b>
-          <span>${stub.length ? 'Words you missed 3+ times. Get one right 3 times in a row to finish it.' : `No hard words now. ${S.tamed ? `You have finished ${S.tamed}.` : 'Words you miss 3 times come here.'}`}</span>
+          <span>${stub.length ? 'Words you missed on 3 different days. Get one right 3 times in a row to finish it.' : `No hard words now. ${S.tamed ? `You have finished ${S.tamed}.` : 'Words you miss on 3 different days come here.'}`}</span>
         </button>
         <button class="drill-card" id="go-pair">
           <span class="eyebrow">Confusable pairs</span>
@@ -1863,6 +2048,8 @@
     view.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => startQuiz(b.dataset.mode)));
     view.querySelectorAll('[data-passn]').forEach((b) => b.addEventListener('click', () => { S.set.passN = +b.dataset.passn; save(); viewPractice(); }));
     $('#go-stub').addEventListener('click', startDrill);
+    const rs = $('#resume');
+    if (rs) { rs.addEventListener('click', () => { paintQuiz(); window.scrollTo(0, 0); }); $('#discard').addEventListener('click', () => { P.mode = null; P.qs = []; viewPractice(); }); }
     $('#go-pair').addEventListener('click', () => startQuiz('pair'));
   }
   function startDrill() {
@@ -1899,12 +2086,12 @@
     if (P.i >= P.qs.length) return paintResult();
     const q = P.qs[P.i];
     const w = qWord(q);
-    const pct = (P.i / P.qs.length) * 100;
-    view.innerHTML = `<div class="wrap"><div class="quiz">
+    const pct = ((P.i + (q.answered ? 1 : 0)) / P.qs.length) * 100;
+    view.innerHTML = `<div class="wrap ${q.answered ? 'has-dock' : ''}"><div class="quiz">
       <div class="learn-top">
-        <button class="icon-btn" id="q-exit" aria-label="End practice">${I.close}</button>
+        <button class="icon-btn" id="q-exit" aria-label="End practice" title="End practice">${I.close}</button>
         <div class="meter"><i style="width:${pct}%"></i></div>
-        <span class="count num">${P.i + 1} / ${P.qs.length}</span>
+        <span class="count num">Question ${P.i + 1} of ${P.qs.length}</span>
       </div>
       <article class="q-card">
         <div class="flash-head"><span class="eyebrow">${P.mode === 'mix' ? 'Hard words · ' : ''}${QLABEL[q.type]}</span>${w ? lvBadge(w.lv) : ''}</div>
@@ -1912,11 +2099,12 @@
         ${qChoices(q)}
         ${hintHtml(q)}
       </article>
-      ${q.answered ? `${fbHtml(q)}${q.tamed ? `<p class="tamed">${esc(w.w)}: right 3 times in a row. It is no longer a hard word!</p>` : ''}<button class="btn" id="q-next" style="justify-self:end">${P.i === P.qs.length - 1 ? 'See results' : 'Next'} ${I.arrow}</button>` : ''}
+      ${q.answered ? `${fbHtml(q)}${q.tamed ? `<p class="tamed">${esc(w.w)}: right 3 times in a row. It is no longer a hard word!</p>` : ''}` : ''}
       ${!q.answered && q.opts && !q.input ? `<p class="kbd-hint">Keys <kbd>1</kbd>–<kbd>${q.opts.length}</kbd> to answer</p>` : ''}
-    </div></div>`;
+    </div></div>
+    ${q.answered ? dock(`${verdict(q)}<button class="btn" id="q-next">${P.i === P.qs.length - 1 ? 'See results' : 'Next'} ${I.arrow}</button>`) : ''}`;
     loadFull(view);
-    $('#q-exit').addEventListener('click', () => { P.mode = null; P.qs = []; if (P.scope === 'stub') P.scope = 'all'; viewPractice(); });
+    $('#q-exit').addEventListener('click', () => { P.mode = null; P.qs = []; if (P.scope === 'stub') P.scope = null; viewPractice(); });
     wireQ(q, {
       paint: paintQuiz,
       after: (qq) => {
@@ -1939,6 +2127,15 @@
     const right = P.results.filter((r) => r.ok).length;
     const wrongIds = [...new Set(P.results.filter((r) => !r.ok && r.id).map((r) => r.id))];
     const wrong = wrongIds.map((id) => BY_ID.get(id)).filter(Boolean);
+    const chose = (id) => {
+      const r = P.results.find((x) => x.id === id && !x.ok);
+      if (!r || !r.q) return '';
+      const q = r.q;
+      if (q.gaveUp) return 'You chose: show the answer';
+      if (q.typed) return `You typed: “${esc(q.typed)}”`;
+      if (q.opts && q.picked >= 0) return `You chose: “${esc(q.opts[q.picked].t.length > 60 ? q.opts[q.picked].t.slice(0, 58) + '…' : q.opts[q.picked].t)}”`;
+      return '';
+    };
     sfx('complete');
     if (right / P.results.length >= 0.8) setTimeout(() => burst(innerWidth / 2, innerHeight * 0.35, 70, 1.4), 120);
     const score = Math.round((right / P.results.length) * 100);
@@ -1959,13 +2156,13 @@
       </div>
       ${wrong.length ? `<div class="result-list" data-list>
         <span class="eyebrow">Missed words</span>
-        ${wrong.map((w) => `<button class="result-row" data-open="${w.id}">${art(w)}<b>${esc(w.w)}</b><span>${esc(shortDef(w, 70))}</span></button>`).join('')}
+        ${wrong.map((w) => `<button class="result-row ${hasArt(w) ? '' : 'no-art'}" data-open="${w.id}">${hasArt(w) ? art(w) : ''}<b>${esc(w.w)}</b><span>${esc(shortDef(w, 70))}<small class="you-chose">${chose(w.id)}</small></span></button>`).join('')}
         <button class="btn ghost small" id="star-wrong" style="justify-self:start">${I.star}Save the missed words</button>
       </div>` : ''}
     </div></div>`;
     listContext = wrong.map((w) => w.id);
     $('#again').addEventListener('click', () => { if (P.mode === 'mix') startDrill(); else startQuiz(P.mode); });
-    $('#other').addEventListener('click', () => { P.mode = null; P.qs = []; if (P.scope === 'stub') P.scope = 'all'; viewPractice(); });
+    $('#other').addEventListener('click', () => { P.mode = null; P.qs = []; if (P.scope === 'stub') P.scope = null; viewPractice(); });
     const sw = $('#star-wrong');
     if (sw) sw.addEventListener('click', () => { wrong.forEach((w) => { if (!S.stars.includes(w.id)) S.stars.push(w.id); }); save(); toast(`Saved ${wrong.length} words`); sw.disabled = true; });
   }
@@ -2102,7 +2299,7 @@
     }
     return `<div class="st-block st-${b.k}" data-i="${i}">
       ${en}
-      <p class="st-zh">${zh}</p>
+      <p class="st-zh" lang="zh-Hant">${zh}</p>
       <div class="st-tools"><button class="mini-spk" data-say="${say}" aria-label="Read this part">${I.speaker}</button><button class="st-tr" aria-label="Show Chinese for this part">中</button></div>
     </div>`;
   }
@@ -2192,7 +2389,8 @@
   }
   function learnChapter(ch) {
     const ids = ch.words.filter((id) => status(id) !== 'mastered');
-    session = { queue: ids.map((id) => (S.cards[id] ? { id, k: 'q' } : { id, k: 'intro' })), total: ids.length, done: 0, later: 0, tally: { forgot: 0, ok: 0, easy: 0 }, q: null, n: 0, story: ch.no };
+    session = { queue: ids.map((id) => (S.cards[id] ? { id, k: 'q' } : { id, k: 'intro' })), step: 0, later: 0, tally: { forgot: 0, ok: 0, easy: 0 }, q: null, n: 0, story: ch.no };
+    saveSession();
     sfx('start');
     go('learn');
   }
@@ -2206,6 +2404,23 @@
     if (a.endsWith('d') && !base.endsWith('d')) return 'ed';
     return '';
   }
+  // plain (unmarked) uses of any answer word in the passage
+  function clozeFormsRe(blanks) {
+    const forms = blanks.flatMap((b) => b.forms || []).sort((a, b) => b.length - a.length).map((f) => f.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&'));
+    return forms.length ? new RegExp(`\\b(?:${forms.join('|')})\\b`, 'gi') : /$^/;
+  }
+  // the sentence that holds a gap, with its markup kept so it can be drawn the same way
+  function clozeSentence(ch, id) {
+    for (const b of ch.blocks) {
+      for (const line of blockLinesRaw(b)) {
+        if (!line.includes(`[[${id}:`)) continue;
+        const parts = line.replace(/([.!?]["”]?)\s+(?=["“]?[A-Z])/g, '$1\u0001').split('\u0001');
+        return parts.find((x) => x.includes(`[[${id}:`)) || line;
+      }
+    }
+    return '';
+  }
+  const blockLinesRaw = (b) => (b.k === 'sms' ? b.en.split('\n').map((l) => l.split('|')[1]) : b.k === 'doc' ? b.en.split('\n') : [b.en]);
   function startCloze(ch) {
     const seen = new Set();
     const blanks = [];
@@ -2214,20 +2429,20 @@
     for (const q of blanks) {
       const w = BY_ID.get(q.id);
       const kind = blankKind(q.f, w.w.toLowerCase());
-      const cap = /^[A-Z]/.test(q.f) && !/^[A-Z]/.test(w.w);
-      const mates = shuffle(ch.words.filter((id) => id !== q.id).map((id) => BY_ID.get(id)).filter((x) => posOf(x) === posOf(w) && !confusable(w, x)));
-      const more = distractors(w, 6, WORDS.filter((x) => x.lv === lv));
+      const mates = shuffle(ch.words.filter((id) => id !== q.id).map((id) => BY_ID.get(id)).filter((x) => posOf(x) === posOf(w) && !confusable(w, x))).slice(0, 1);
+      const more = distractors(w, 8, WORDS.filter((x) => x.lv === lv && !ch.words.includes(x.id)));
       const used = new Set([fold(q.f)]);
-      const opts = [{ id: w.id, t: q.f }];
+      const opts = [{ id: w.id, t: q.f.toLowerCase() }];
       for (const d of [...mates, ...more]) {
         if (opts.length === 4) break;
-        const t = applyForm(d.w, kind, cap);
+        const t = applyForm(d.w, kind, false).toLowerCase();
         if (used.has(fold(t))) continue;
         used.add(fold(t));
         opts.push({ id: d.id, t });
       }
       q.opts = shuffle(opts);
     }
+    for (const q of blanks) { const b = BY_ID.get(q.id).w.toLowerCase(); q.forms = [...new Set([b, inflS(b), inflEd(b), inflIng(b), q.f.toLowerCase()])]; }
     storyState.cloze = { no: ch.no, blanks, i: 0, answered: false, right: 0 };
     paintCloze(ch);
   }
@@ -2237,41 +2452,55 @@
     const q = C.blanks[C.i];
     const order = new Map(C.blanks.map((b, k) => [b.id, k]));
     const done = new Set();
-    const inline = (t) => esc(t).replace(MARK_RE, (m, id, f) => {
-      id = +id;
-      const k = order.get(id);
-      if (k == null || done.has(id)) return f;
-      done.add(id);
+    const gap = (k, f, first) => {
       const b = C.blanks[k];
-      if (k < C.i || (k === C.i && C.answered)) return `<span class="cz-blank is-filled ${b.ok ? 'ok' : 'no'}">${f}</span>`;
-      return `<span class="cz-blank ${k === C.i ? 'is-cur' : ''}" ${k === C.i ? 'id="cz-cur"' : ''}>(${k + 1})</span>`;
+      if (k < C.i || (k === C.i && C.answered)) return `<span class="cz-blank is-filled ${b.ok ? 'ok' : 'no'}">${esc(f)}</span>`;
+      const cur = k === C.i;
+      return `<span class="cz-blank ${cur ? 'is-cur' : ''}" ${cur && first ? 'id="cz-cur"' : ''}>(${k + 1})</span>`;
+    };
+    const plainRe = clozeFormsRe(C.blanks);
+    const plain = (t) => esc(t).replace(plainRe, (m) => {
+      const k = C.blanks.findIndex((b) => b.forms.includes(m.toLowerCase()));
+      return k < 0 ? m : gap(k, m, false);
     });
+    const inline = (t) => t.split(/(\[\[\d+:[^\]]+\]\])/).map((part) => {
+      const mm = /^\[\[(\d+):([^\]]+)\]\]$/.exec(part);
+      if (!mm) return plain(part);
+      const id = +mm[1];
+      const k = order.get(id);
+      if (k == null) return esc(mm[2]);
+      const first = !done.has(id);
+      done.add(id);
+      return gap(k, mm[2], first);
+    }).join('');
     const passage = ch.blocks.map((b) => {
       if (b.k === 'sms') return `<div class="st-sms">${b.en.split('\n').map((l) => { const [who, txt] = l.split('|'); return `<div class="bubble ${who === 'Jun' ? 'is-me' : ''}"><small>${esc(who)}</small><span>${inline(txt)}</span></div>`; }).join('')}</div>`;
       if (b.k === 'doc') return `<div class="st-paper">${b.en.split('\n').map((l, j) => (l ? `<div class="${j === 0 ? 'st-paper-head' : ''}">${inline(l)}</div>` : '<div class="gap"></div>')).join('')}</div>`;
       return `<p class="st-en">${inline(b.en)}</p>`;
     }).join('');
     const w = BY_ID.get(q.id);
+    const line = clozeSentence(ch, q.id);
     view.innerHTML = `<div class="wrap tale cz">
       <div class="learn-top">
         <button class="icon-btn" id="cz-exit" aria-label="End quiz">${I.close}</button>
-        <div class="meter"><i style="width:${(C.i / C.blanks.length) * 100}%"></i></div>
-        <span class="count num">${C.i + 1} / ${C.blanks.length}</span>
+        <div class="meter"><i style="width:${((C.i + (C.answered ? 1 : 0)) / C.blanks.length) * 100}%"></i></div>
+        <span class="count num">Gap ${C.i + 1} of ${C.blanks.length}</span>
       </div>
       <article class="tale-body cz-passage">
-        <span class="eyebrow mono">PART 6 · CHAPTER ${pad(ch.no)} · ${esc(ch.title)}</span>
+        <span class="eyebrow mono">PART 6 · CHAPTER ${pad(ch.no)}</span>
         ${passage}
       </article>
       <div class="cz-panel q-card">
         <div class="flash-head"><span class="eyebrow">Which word goes in gap (${C.i + 1})?</span>${lvBadge(w.lv)}</div>
+        ${line ? `<p class="cz-sent">${inline(line)}</p>` : ''}
         <div class="opts">${q.opts.map((o, k) => {
           let cls = '';
           if (C.answered) { if (o.id === q.id) cls = 'ok'; else if (o.id === q.picked) cls = 'no'; }
           return `<button class="opt ${cls}" data-o="${k}" ${C.answered ? 'disabled' : ''}><span class="k">${'ABCD'[k]}</span><span class="t en">${esc(o.t)}</span></button>`;
         }).join('')}</div>
         ${C.answered ? `<div class="cz-fb">
-          <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? 'Correct' : `Answer: ${esc(q.f)}`}</span>
-          <span><button data-open="${w.id}" class="cz-word">${esc(w.w)}</button> ${kkHtml(w)} · ${esc(zhMain(w))}</span>
+          <span class="fb-title ${q.ok ? 'ok' : 'no'}">${q.ok ? `${I.check}Correct` : `${I.cross}Not quite · answer: ${esc(q.f.toLowerCase())}`}</span>
+          <span><button data-open="${w.id}" class="cz-word">${esc(w.w)}</button> ${kkHtml(w)} · ${esc(w.d)} <small lang="zh-Hant">${esc(zhMain(w))}</small></span>
           <button class="btn" id="cz-next">${C.i === C.blanks.length - 1 ? 'See results' : 'Next gap'} ${I.arrow}</button>
         </div>` : '<p class="kbd-hint">Keys <kbd>1</kbd>–<kbd>4</kbd> or <kbd>A</kbd>–<kbd>D</kbd> to answer</p>'}
       </div>
@@ -2332,9 +2561,9 @@
           <span class="score num">${C.right}<small style="font-size:28px;color:var(--ink-3)"> / ${n}</small></span>
           <h2>${msg}</h2>
           <div class="row-btns">
-            ${next ? `<a class="btn" href="#story-${next.no}">Read chapter ${next.no} ${I.arrow}</a>` : `<a class="btn" href="#story">All chapters ${I.arrow}</a>`}
-            <button class="btn ghost" id="cz-again">Try again</button>
-            <button class="btn ghost" data-story="${ch.no}">Read again</button>
+            ${C.right / n < 0.6
+              ? `<button class="btn" data-story="${ch.no}">Read the chapter again ${I.arrow}</button><button class="btn ghost" id="cz-again">Try again</button>${next ? `<a class="btn ghost" href="#story-${next.no}">Chapter ${next.no}</a>` : ''}`
+              : `${next ? `<a class="btn" href="#story-${next.no}">Read chapter ${next.no} ${I.arrow}</a>` : `<a class="btn" href="#story">All chapters ${I.arrow}</a>`}<button class="btn ghost" id="cz-again">Try again</button><button class="btn ghost" data-story="${ch.no}">Read again</button>`}
           </div>
         </div>
       </div>
@@ -2482,7 +2711,7 @@
     view.innerHTML = `<div class="wrap"><div class="learn sp">
       <div class="sp-intro">
         <span class="eyebrow mono">LEVEL ${pad(P.no)} · ${P.lv} ${LV[P.lv].name}</span>
-        <h1>Level ${P.no}</h1>
+        <h1>Level ${pad(P.no)}</h1>
         <p>${words.length} words · ${SPRINT_MIN} minutes · English clues only · ${S.set.passN} in a row each${best ? ` · best ${starStr(best.stars)}` : ''}</p>
         <div class="sp-faces">${words.map((w) => art(w)).join('')}</div>
         <ul class="sp-stars-how">
@@ -2509,7 +2738,7 @@
     const w = BY_ID.get(P.ids[P.i]);
     const ex = dailyEx(w);
     view.innerHTML = `<div class="wrap"><div class="learn sp">
-      ${spTop(`${P.i + 1} / ${P.ids.length}`, P.i, P.ids.length)}
+      ${spTop(`Word ${P.i + 1} of ${P.ids.length}`, P.i, P.ids.length)}
       <article class="flash sp-see ${hasArt(w) ? '' : 'no-art'}">
         ${hasArt(w) ? art(w, { full: true }) : ''}
         <div class="flash-body">
@@ -2518,7 +2747,6 @@
           ${pron(w)}
           <p class="def-line"><span class="def-tag">EN</span>${esc(w.d)}</p>
           <div class="example"><p class="en-line">${markSentence(ex)} <button class="mini-spk" data-say="${esc(ex.en)}" aria-label="Read the example">${I.speaker}</button></p></div>
-          ${xw(w)[4] ? `<p class="col-line"><span class="def-tag">use it</span><b>${esc(xw(w)[4])}</b><span>= ${esc(xw(w)[5])}</span></p>` : ''}
           ${xw(w)[1] ? `<div class="word-parts"><span class="roots">${rootsHtml(xw(w)[1])}</span></div>` : ''}
         </div>
       </article>
@@ -2574,7 +2802,8 @@
   /* step 2: recall with English cues until each word is right N times in a row */
   function spMakeQ(card) {
     const w = BY_ID.get(card.id);
-    const types = ['cloze', 'def', 'hear', 'col', 'word2def'];
+    // the first question for a word never repeats what the see-card just showed (its meaning line)
+    const types = card.seen ? ['cloze', 'def', 'hear', 'col', 'word2def'] : ['cloze', 'hear', 'col'];
     const type = types[(card.seen + hash(w.w)) % types.length];
     const group = sprint.ids.map((id) => BY_ID.get(id));
     return makeQ(type, w, group, sprint.qn = (sprint.qn || 0) + 1);
@@ -2588,17 +2817,18 @@
     const need = S.set.passN;
     const prog = P.cleared * need + P.queue.reduce((a, c) => a + Math.min(c.streak, need), 0);
     view.innerHTML = `<div class="wrap"><div class="quiz sp">
-      ${spTop(`${P.queue.length} left`, prog, P.ids.length * need)}
+      ${spTop(`${prog} / ${P.ids.length * need} correct`, prog, P.ids.length * need)}
       <article class="q-card">
         <div class="flash-head"><span class="eyebrow">${QLABEL[q.type]}</span><span class="sp-dots" aria-label="${card.streak} in a row for this word">${Array.from({ length: need }, (_, k) => `<i class="${k < card.streak ? 'on' : ''}"></i>`).join('')}</span></div>
         ${qPrompt(q)}
         ${qChoices(q)}
         ${hintHtml(q)}
       </article>
-      ${q.answered && !q.ok ? `${fbHtml(q)}<p class="sp-again">This word comes back soon</p>
-      <button class="btn" id="sp-next" style="justify-self:end">Got it ${I.arrow}</button>` : ''}
+      <p class="sp-count">${P.queue.length} ${P.queue.length === 1 ? 'word' : 'words'} still in the pile · each word needs ${need} right in a row</p>
+      ${q.answered && !q.ok ? fbHtml(q) : ''}
       ${P.combo >= 3 ? `<div class="sp-combo" aria-live="polite">Combo ×${P.combo}</div>` : ''}
-    </div></div>`;
+    </div></div>
+    ${q.answered && !q.ok ? dock(`${verdict(q)}<span class="dock-note">This word comes back a few questions later.</span><button class="btn" id="sp-next">Got it ${I.arrow}</button>`) : ''}`;
     loadFull(view); // before focus(), which forces a style pass and would make the plate fade in again
     wireQ(q, { paint: spRecall, after: () => spAnswer() });
     const nx = $('#sp-next');
@@ -2625,7 +2855,7 @@
       card.streak = 0;
       P.combo = 0;
       P.wrong[q.id] = (P.wrong[q.id] || 0) + 1;
-      P.queue.splice(Math.min(P.queue.length, 2), 0, card); // straight back into the deck
+      P.queue.splice(Math.min(P.queue.length, REQUEUE_GAP), 0, card); // back into the deck, a few questions later
     }
     spRecall();
     settle();
@@ -2646,10 +2876,10 @@
     const w = BY_ID.get(P.makeIds[P.mi]);
     const shown = P.shown;
     view.innerHTML = `<div class="wrap"><div class="learn sp">
-      ${spTop(`${P.mi + 1} / 3`, P.mi, 3)}
+      ${spTop(`Sentence ${P.mi + 1} of 3`, P.mi, 3)}
       <article class="q-card sp-make">
         <div class="sp-make-head">${hasArt(w) ? art(w) : ''}<div><div class="flash-word">${esc(w.w)}</div><p class="def-line"><span class="def-tag">${POS_EN[posOf(w)] || posOf(w)}</span>${esc(w.d)}</p></div></div>
-        <p class="sp-make-hint">Write a sentence with <b>${esc(w.w)}</b> about your life: your job, school or yesterday. At least 5 words; you can change the form (like ${esc(applyForm(w.w, posOf(w) === 'v.' ? 'ed' : posOf(w) === 'n.' ? 's' : '', false))}）。</p>
+        <p class="sp-make-hint">Write a sentence with <b>${esc(w.w)}</b> about your life: your job, school or yesterday. At least 5 words; you can change the form (like ${esc(applyForm(w.w, posOf(w) === 'v.' ? 'ed' : posOf(w) === 'n.' ? 's' : '', false))}).</p>
         <form id="sp-form" class="sp-form" autocomplete="off">
           <label class="sr-only" for="sp-in">Your sentence</label>
           <textarea id="sp-in" rows="3" spellcheck="true" placeholder="I ..." ${shown ? 'disabled' : ''}>${shown ? esc(shown) : ''}</textarea>
@@ -2710,7 +2940,7 @@
       <div class="done sp-done">
         <div class="sp-stamp lv-${P.lv}"><span class="eyebrow mono">LEVEL ${pad(P.no)}</span><b>${starStr(P.stars)}</b><span>${P.stars === 3 ? 'Perfect' : P.stars === 2 ? 'Great' : 'Passed'}</span></div>
         <div class="done-body">
-          <span class="eyebrow">Level ${P.no} done${P.isBest ? ' · new best' : ''}</span>
+          <span class="eyebrow">Level ${pad(P.no)} done${P.isBest ? ' · new best' : ''}</span>
           <div class="sp-stats">
             <div><b class="num">${Math.floor(P.ms / MIN)}:${pad(Math.floor((P.ms % MIN) / 1000))}</b><span>time / ${SPRINT_MIN}:00</span></div>
             <div><b class="num">${Math.round(P.acc * 100)}%</b><span>first-try accuracy</span></div>
@@ -2807,7 +3037,7 @@
         <div class="done-body">
           <span class="eyebrow">Recap done</span>
           <h2>Good night. Let sleep do the rest.</h2>
-          <p style="color:var(--ink-2)">${R.ids.length} words${R.unsure.length ? `. ${R.unsure.length} unsure ones are saved, so you can practice just those tomorrow` : ', and you remembered every one'}。</p>
+          <p style="color:var(--ink-2)">${R.ids.length} words${R.unsure.length ? `. ${R.unsure.length} unsure ones are saved, so you can practice just those tomorrow` : ', and you remembered every one'}.</p>
           ${rewardLine()}
           <div class="row-btns"><a class="btn" href="#today">Back to Today ${I.arrow}</a></div>
         </div></div></div></div>`;
@@ -2818,7 +3048,7 @@
       <div class="learn-top">
         <a class="icon-btn" href="#today" aria-label="Leave">${I.close}</a>
         <div class="meter"><i style="width:${(R.i / R.ids.length) * 100}%"></i></div>
-        <span class="count num">${R.i + 1} / ${R.ids.length}</span>
+        <span class="count num">Word ${R.i + 1} of ${R.ids.length}</span>
       </div>
       <article class="flash rc-card ${hasArt(w) ? '' : 'no-art'}">
         ${hasArt(w) ? art(w, { full: true }) : ''}
@@ -2829,7 +3059,7 @@
         </div>
       </article>
       ${R.shown
-        ? `<div class="rates rc-rates"><button class="rate r1" id="rc-no">Not sure<small>save it</small></button><button class="rate r4" id="rc-yes">Remembered<small>Next</small></button></div><p class="kbd-hint"><kbd>1</kbd> 不太確定　<kbd>2</kbd> Remembered</p>`
+        ? `<div class="rates rc-rates"><button class="rate r1" id="rc-no">Not sure<small>save it</small></button><button class="rate r4" id="rc-yes">Remembered<small>Next</small></button></div><p class="kbd-hint"><kbd>1</kbd> Not sure　<kbd>2</kbd> Remembered</p>`
         : `<button class="btn reveal-btn" id="rc-show">Show answer</button><p class="kbd-hint"><kbd>Space</kbd> Show answer</p>`}
     </div></div>`;
     loadFull(view);
@@ -3131,9 +3361,9 @@
     const all = counts();
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
-        <span class="eyebrow">Star map · 4 levels · 14 work topics</span>
+        <span class="eyebrow">Star map · 4 levels · 15 topics</span>
         <h1>Every word you learn lights a star.</h1>
-        <p class="sub">The four rings from the center out are the 400, 600, 800 and 990 levels. Each arm is a work topic. Learning words light up; mastered words shine gold.</p>
+        <p class="sub">The four rings from the center out are the 400, 600, 800 and 990 levels. Each of the 14 arms is a work topic; Core words, the 15th topic, are spread across the whole map. Learning words light up; mastered words shine gold.</p>
       </header>
       <div class="chips" style="margin-bottom:16px" role="group" aria-label="Level">
         <button class="chip" data-mlv="0" aria-pressed="${mapState.lv === 0}">All levels</button>
@@ -3389,7 +3619,7 @@
     const all = D.blanks.every((x) => x.picked != null);
     const right = D.blanks.filter((x) => x.ok).length;
     view.innerHTML = `<div class="wrap"><div class="quiz doc-wrap">
-      <div class="learn-top"><a class="icon-btn" href="#work" aria-label="Back to Work">${I.left}</a><div class="meter"><i style="width:${(D.blanks.filter((x) => x.picked != null).length / D.blanks.length) * 100}%"></i></div><span class="count num">${D.blanks.filter((x) => x.picked != null).length} / ${D.blanks.length}</span></div>
+      <div class="learn-top"><a class="icon-btn" href="#work" aria-label="Back to Work">${I.left}</a><div class="meter"><i style="width:${(D.blanks.filter((x) => x.picked != null).length / D.blanks.length) * 100}%"></i></div><span class="count num">${D.blanks.filter((x) => x.picked != null).length} of ${D.blanks.length} filled</span></div>
       <article class="doc is-${doc.k}">
         <div class="doc-top"><span class="doc-kind">${DOC_KIND[doc.k]}</span><b>${esc(doc.t)}</b></div>
         ${head}
@@ -3480,7 +3710,7 @@
         <div class="chips">${EX.iv.intro.map((x) => `<button class="chip" data-tpl="${x.k}" aria-pressed="${x.k === T.k}">${esc(x.t)}</button>`).join('')}</div>
         <form class="iv-fields" autocomplete="off">${fields.map((f) => `<label><span>${esc(IV_FIELDS[f] || f)}</span><input data-ivf="${esc(f)}" value="${esc(S.ivf[f] || '')}" placeholder="${esc(IV_FIELDS[f] || f)}"></label>`).join('')}</form>
         <article class="card panel iv-card" data-list>
-          ${T.p.map(([en, zh]) => `<div class="iv-p" data-sh-box><p class="iv-en">${ivHtml(en)}</p>${shadowBtns(ivPlain(en))}<div class="sh-out"></div><details class="iv-zh"><summary>中文</summary><p>${esc(ivFill(zh))}</p></details></div>`).join('')}
+          ${T.p.map(([en, zh]) => `<div class="iv-p" data-sh-box><p class="iv-en">${ivHtml(en)}</p>${shadowBtns(ivPlain(en))}<div class="sh-out"></div><details class="iv-zh" lang="zh-Hant"><summary>中文</summary><p>${esc(ivFill(zh))}</p></details></div>`).join('')}
         </article>`
       : `<div class="iv-qa" data-list>${EX.iv.qa.map((x, i) => `<article class="card panel iv-q" data-sh-box>
           <span class="eyebrow">Q${i + 1}</span>
@@ -3488,7 +3718,7 @@
           <p class="iv-en">${ivHtml(x.a)}</p>
           ${shadowBtns(ivPlain(x.a))}
           <div class="sh-out"></div>
-          <details class="iv-zh"><summary>中文 · tip</summary><p>${esc(ivFill(x.zh))}</p><p class="iv-tip">${esc(x.tip || '')}</p></details>
+          <details class="iv-zh" lang="zh-Hant"><summary>中文 · tip</summary><p>${esc(ivFill(x.zh))}</p><p class="iv-tip">${esc(x.tip || '')}</p></details>
         </article>`).join('')}</div>`}
     </div>`;
     listContext = [...view.querySelectorAll('[data-open]')].map((b) => +b.dataset.open);
@@ -3522,7 +3752,7 @@ Requirements:
 - Strong communication skills in English and Mandarin
 - Able to prioritize tasks and meet tight deadlines in a flexible, fast-paced environment
 We offer competitive compensation, annual leave, health insurance and a clear career path.`;
-  const jdState = { text: '' };
+  const jdState = { text: '', msg: '', full: false };
   function analyzeJD(text) {
     const F = formMap();
     const found = new Map();
@@ -3554,6 +3784,7 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
       <div class="card panel jd-input">
         <label class="sr-only" for="jd-text">Job description</label>
         <textarea id="jd-text" rows="9" placeholder="Paste a job description here…">${esc(t)}</textarea>
+        ${jdState.msg ? `<p class="jd-msg" role="alert">${esc(jdState.msg)}</p>` : ''}
         <div class="row-btns"><button class="btn" id="jd-go">Check ${I.arrow}</button><button class="btn ghost" id="jd-sample">Use an example</button>${t ? '<button class="btn ghost" id="jd-clear">Clear</button>' : ''}</div>
       </div>
       ${R ? `<section class="section jd-out">
@@ -3563,16 +3794,24 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
           <div class="is-new"><b class="num">${R.unknown.length + R.queued.length}</b><span>still new</span></div>
         </div>
         ${R.unknown.length ? `<div class="jd-add"><div class="chips" data-list>${R.unknown.map((id) => `<button class="chip" data-open="${id}">${esc(BY_ID.get(id).w)}</button>`).join('')}</div><button class="btn" id="jd-add">Learn these ${R.unknown.length} words ${I.arrow}</button></div>`
-          : R.queued.length ? `<p class="jd-note">The ${R.queued.length} new words from this ad are first in your new words.</p>` : R.ids.length ? '<p class="jd-note">You have learned every TOEIC word in this ad. Great!</p>' : ''}
-        <article class="card panel jd-text" data-list>${R.html.replace(/\n/g, '<br>')}</article>
+          : R.queued.length ? `<p class="jd-note">The ${R.queued.length} new words from this ad are first in your new words.</p>` : R.ids.length ? '<p class="jd-note">You have learned every TOEIC word in this ad. Great!</p>' : '<p class="jd-note is-empty">No TOEIC words found in this text. Try a longer English job description.</p>'}
+        ${R.ids.length ? `<article class="card panel jd-text ${jdState.full || t.length < 700 ? '' : 'is-short'}" data-list><span class="eyebrow">Your text with the words marked</span><div class="jd-body">${R.html.replace(/\n/g, '<br>')}</div></article>
+        ${t.length >= 700 ? `<button class="btn ghost small" id="jd-more">${jdState.full ? 'Show less' : 'Show the whole text'}</button>` : ''}` : ''}
       </section>` : ''}
     </div>`;
     listContext = R ? R.ids : [];
     const ta = $('#jd-text');
-    $('#jd-go').addEventListener('click', () => { jdState.text = ta.value.slice(0, 20000); viewJD(); });
-    $('#jd-sample').addEventListener('click', () => { jdState.text = JD_SAMPLE; viewJD(); });
+    $('#jd-go').addEventListener('click', () => {
+      const v = ta.value.slice(0, 20000);
+      if (!v.trim()) { jdState.msg = 'Paste some text first.'; jdState.text = ''; viewJD(); $('#jd-text').focus(); return; }
+      Object.assign(jdState, { text: v, msg: '', full: false });
+      viewJD();
+    });
+    const more = $('#jd-more');
+    if (more) more.addEventListener('click', () => { jdState.full = !jdState.full; viewJD(); });
+    $('#jd-sample').addEventListener('click', () => { Object.assign(jdState, { text: JD_SAMPLE, msg: '', full: false }); viewJD(); });
     const cl = $('#jd-clear');
-    if (cl) cl.addEventListener('click', () => { jdState.text = ''; viewJD(); });
+    if (cl) cl.addEventListener('click', () => { Object.assign(jdState, { text: '', msg: '', full: false }); viewJD(); });
     const add = $('#jd-add');
     if (add) add.addEventListener('click', () => {
       const ids = R.unknown;
@@ -3604,8 +3843,8 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
     }
     const lvl = (v) => (v === 0 ? '' : v < 10 ? 'h1' : v < 30 ? 'h2' : 'h3');
     const ret = (b) => (S.ret[b][1] ? `${Math.round((S.ret[b][0] / S.ret[b][1]) * 100)}%` : '—');
-    const showScore = all.learning + all.mastered >= 20 || S.place;
     const sc = estScore();
+    const showScore = sc != null;
     view.innerHTML = `<div class="wrap">
       <header class="page-head">
         <span class="eyebrow">Me · progress and settings</span>
@@ -3616,8 +3855,8 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
         <div style="display:grid;gap:20px">
           <section class="card panel">
             <div class="score-est">
-              <div><span class="eyebrow">Estimated TOEIC score (vocabulary)</span><b class="num">${showScore ? `${Math.max(10, sc - 50)}–${Math.min(990, sc + 50)}` : '—'}</b><span class="hint">${showScore ? 'Based on your words and the level check. Words only, a rough guide.' : 'Shows after 20 words or the level check.'}</span></div>
-              <a class="btn ghost small" href="#place">${S.place && !S.place.skipped ? 'Retake the level check' : 'Take the 3-minute level check'}</a>
+              <div><span class="eyebrow">Estimated TOEIC score (vocabulary)</span><b class="num ${showScore ? '' : 'is-empty'}">${showScore ? `${Math.max(10, sc - 50)}–${Math.min(990, sc + 50)}` : 'Take the level check first'}</b><span class="hint">${showScore ? 'Based on your words and the level check. Words only, a rough guide.' : 'We need the 3-minute level check, or at least 20 learned words, to estimate a score.'}</span></div>
+              <a class="btn ${S.place && !S.place.skipped ? 'ghost' : ''} small" href="#place">${S.place && !S.place.skipped ? 'Retake the level check' : 'Take the 3-minute level check'} ${I.arrow}</a>
             </div>
             <div class="kpis">
               <div class="kpi"><b class="num">${all.learning + all.mastered}</b><span>Words learned</span></div>
@@ -3632,6 +3871,7 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
               <div class="kpi"><b class="num">${totalQ ? Math.round((totalC / totalQ) * 100) + '%' : '—'}</b><span>Accuracy</span></div>
             </div>
             <div>
+              <div class="heat-months" aria-hidden="true">${cells.filter((c, i) => i % 7 === 0).map((c, i, arr) => { const m = +c.k.slice(5, 7); const prev = i ? +arr[i - 1].k.slice(5, 7) : 0; return `<span>${m !== prev ? MON[m - 1] : ''}</span>`; }).join('')}</div>
               <div class="heat" aria-label="Last 18 weeks">${cells.map((c) => `<i class="${c.fix ? 'is-fix' : lvl(c.v)}" title="${c.k}：${c.fix ? 'Streak savers' : c.v}"></i>`).join('')}</div>
               <div class="heat-foot"><span>18 weeks ago</span><span>less <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--paper-2)"></i> <i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--ochre)"></i> more</span><span>Today</span></div>
             </div>
@@ -3673,7 +3913,7 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
             <textarea class="data-box" id="data-box" hidden aria-label="Progress data"></textarea>
             <div class="row-btns" id="data-actions" hidden></div>
           </div>
-          <div class="setting"><span class="lab">Reset</span><button class="btn ghost small" id="reset" style="color:var(--bad);justify-self:start">Delete all progress</button></div>
+          <div class="setting"><span class="lab">Reset</span><button class="btn small is-danger" id="reset" style="justify-self:start">${I.cross}Delete all progress</button><span class="hint">This cannot be undone. You will be asked to confirm.</span></div>
         </section>
       </div>
 
@@ -3698,10 +3938,10 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
             <li>The 5,000 quiz sentences, ${EX.part2.length} Part 2 questions, ${EX.pairs.length} confusable pairs, ${EX.docs.length} work documents and the interview answers are all original.</li>
             <li>The story "Flight NS-014" and its translation are original.</li>
             <li>KK phonetics come from the CMU Pronouncing Dictionary, checked by hand; ${WORDS.filter((w) => w.tip).length} TOEIC tips are written by this site.</li>
-            <li>Pictures and US/UK recordings come from Word Atlas (Word Atlas contributors,<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>), resized and combined. After checking each one, ${fmt(WORDS.filter(hasArt).length)} pictures that fit their word are kept; the other cards show an example. Real recordings: ${fmt(WORDS.filter((w) => w.u).length)} words; the rest use your device voice.</li>
+            <li>Pictures and US/UK recordings come from Word Atlas (Word Atlas contributors, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>), resized and combined. After checking each one, ${fmt(WORDS.filter(hasArt).length)} pictures that fit their word are kept; the other cards show an example. Real recordings: ${fmt(WORDS.filter((w) => w.u).length)} words; the rest use your device voice.</li>
             <li>Reviews use SM-2 spaced repetition: each time you remember a word, the gap grows. A word is mastered after 21 days.</li>
             <li>Music, background sounds and sound effects are made by this site; change them in the top menu.</li>
-            <li>Design inspired by the open-source IELTS project <a href="https://github.com/designfuchen/word-atlas" target="_blank" rel="noopener">Word Atlas</a>(MIT license). This is an independent TOEIC version.</li>
+            <li>Design inspired by the open-source IELTS project <a href="https://github.com/designfuchen/word-atlas" target="_blank" rel="noopener">Word Atlas</a> (MIT license). This is an independent TOEIC version.</li>
           </ul>
         </article>
       </section>
@@ -3725,19 +3965,28 @@ We offer competitive compensation, annual leave, health insurance and a clear ca
       const json = JSON.stringify(S);
       box.hidden = false; acts.hidden = false;
       box.value = json;
-      acts.innerHTML = '<button class="btn small" id="copy-data">Copy</button><button class="btn ghost small" id="dl-data">Download JSON</button>';
+      acts.innerHTML = '<button class="btn small" id="copy-data">Copy</button><button class="btn ghost small" id="dl-data">Download JSON</button><span class="data-msg" id="data-msg" role="status"></span>';
+      // every result is shown on the page as well as in a toast, so nothing fails silently
+      const say = (msg, bad) => { const m = $('#data-msg'); if (m) { m.textContent = msg; m.classList.toggle('is-bad', !!bad); } toast(msg); };
+      const legacyCopy = () => { box.hidden = false; box.focus(); box.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; } return ok; };
       $('#copy-data').addEventListener('click', () => {
-        const done = () => toast('Copied. Keep it in notes or cloud storage.');
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(json).then(done, () => { box.select(); toast('Press Ctrl/⌘ + C to copy'); });
-        else { box.select(); toast('Press Ctrl/⌘ + C to copy'); }
+        const fallback = () => (legacyCopy() ? say('Copied. Keep it in notes or cloud storage.') : say('Copy blocked here. The text is selected: press Ctrl/⌘ + C.', true));
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          let settled = false;
+          const t = setTimeout(() => { if (!settled) { settled = true; fallback(); } }, 1200);
+          navigator.clipboard.writeText(json).then(() => { if (!settled) { settled = true; clearTimeout(t); say('Copied. Keep it in notes or cloud storage.'); } }, () => { if (!settled) { settled = true; clearTimeout(t); fallback(); } });
+        } else fallback();
       });
       $('#dl-data').addEventListener('click', () => {
+        // a page inside a frame (like the Claude preview) is not allowed to start downloads
+        if (window.self !== window.top) { say('Download blocked — use Copy', true); return; }
         try {
           const a = document.createElement('a');
           a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
           a.download = `toeic-voyage-${ymd()}.json`;
           document.body.appendChild(a); a.click(); a.remove();
-        } catch (e) { toast('Downloads do not work here. Please use Copy.'); }
+          say(`Download started: toeic-voyage-${ymd()}.json`);
+        } catch (e) { say('Download blocked — use Copy', true); }
       });
     });
     const restore = (text) => {
