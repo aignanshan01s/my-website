@@ -669,6 +669,16 @@
   /* ---------- router ---------- */
   const route = { name: 'today', sub: 0, hash: 'today' };
   let cleanup = null;
+  // entrance animations play when a page is opened, not each time it repaints
+  let enterT = 0;
+  function enterView() {
+    view.classList.add('is-enter');
+    clearTimeout(enterT);
+    enterT = setTimeout(() => view.classList.remove('is-enter'), 1200);
+  }
+  const topBar = $('.top');
+  const onScrollTop = () => topBar.classList.toggle('is-scrolled', window.scrollY > 6);
+  window.addEventListener('scroll', onScrollTop, { passive: true });
   function go(name) { if (location.hash !== `#${name}`) location.hash = name; else render(); }
   function render() {
     const raw = (location.hash || '#today').slice(1);
@@ -691,7 +701,7 @@
     $$('[data-nav]').forEach((a) => a.setAttribute('aria-current', a.dataset.nav === name || NAV_PARENT[name] === a.dataset.nav ? 'page' : 'false'));
     if (changed || !wordId) {
       const from = NAV_ORDER.indexOf(prevRoute) * 100 + (prevRoute === name ? prevSub : 0); const to = NAV_ORDER.indexOf(name) * 100 + sub;
-      const doIt = () => { VIEWS[name](); if (!wordId) window.scrollTo(0, 0); };
+      const doIt = () => { VIEWS[name](); if (!wordId) window.scrollTo(0, 0); if (changed) enterView(); };
       if (changed && view.dataset.ready) vt(to >= from ? 'page-fwd' : 'page-back', doIt); else doIt();
       view.dataset.ready = '1';
     }
@@ -2034,10 +2044,10 @@
         </div>
       </section>
       ${sprintMap()}
-      <section class="section">
+      ${storyFeature() || `<section class="section">
         <div class="section-head"><h2>Story</h2><a class="more" href="#story">All chapters →</a></div>
-        ${storyFeature() || `<a class="card panel story-link" href="#story"><b>${esc(STORY.series.title)}</b><span>Read the story, then check with a Part 6 quiz.</span></a>`}
-      </section>
+        <a class="card panel story-link" href="#story"><b>${esc(STORY.series.title)}</b><span>Read the story, then check with a Part 6 quiz.</span></a>
+      </section>`}
       ${S.notes.length ? `<section class="section">
         <div class="section-head"><h2>My sentences</h2><span class="more">${S.notes.length} sentences</span></div>
         <div class="notes" data-list>${S.notes.slice(-12).reverse().map((n) => { const w = BY_ID.get(n.id); return `<div class="note"><button class="note-w" data-open="${w.id}">${esc(w.w)}</button><p>${esc(n.t)}</p><span>${esc(n.at)}</span></div>`; }).join('')}</div>
