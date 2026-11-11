@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="毛孩相機">
+<title>毛孩相機</title>
+<style>
+:root{
+  /* 設計：畫面只屬於牠。純黑底、白字、一個暖色只在「現在可以拍」時出現；快門自己會告訴你時機。 */
+  --bg:#000; --ink:#fff; --ink2:rgba(255,255,255,.62); --ink3:rgba(255,255,255,.34);
+  --hair:rgba(255,255,255,.1); --fill:rgba(255,255,255,.1); --mat:rgba(28,28,30,.74);
+  --accent:#ffc978; --bad:#ff8a7a;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  --ease:cubic-bezier(.2,.8,.2,1);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);overscroll-behavior:none}
+body{font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select{font:inherit;color:var(--ink);background:var(--fill);border:0;border-radius:12px;padding:12px 14px;width:100%}
+svg{display:block}
+[hidden]{display:none!important}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;background:var(--bg);
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.screen.on{display:flex;animation:in .32s var(--ease)}
+@keyframes in{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
+.bar{display:flex;align-items:center;gap:6px;padding:8px 12px;min-height:56px;flex:none}
+.bar h1{font-size:17px;margin:0 0 0 6px;font-weight:600;flex:1;letter-spacing:.01em}
+.sp{flex:1}
+.ib{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--fill);transition:transform .2s var(--ease),background .2s}
+.ib:active{transform:scale(.9)}
+.ib svg{width:20px;height:20px}
+.ib.act{background:var(--ink);color:#000}
+.tx{height:40px;padding:0 12px;font-size:15px;color:var(--ink2);font-weight:500}
+.tx.act{color:var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:17px;white-space:nowrap;font-size:14px;color:var(--ink2);transition:background .2s,color .2s}
+.chip.act{background:var(--fill);color:var(--ink);font-weight:600}
+.chip svg{width:14px;height:14px}
+.btn{height:52px;padding:0 24px;border-radius:26px;background:var(--fill);font-weight:600;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .2s var(--ease),opacity .2s}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--ink);color:#000}
+.btn.wide{flex:1}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:10px;align-items:center}
+.scrollx{display:flex;gap:2px;overflow-x:auto;padding:0 10px;scrollbar-width:none;flex:none}
+.scrollx::-webkit-scrollbar{display:none}
+.muted{color:var(--ink2)} .small{font-size:13px}
+
+/* ---------- 相機 ---------- */
+.top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:6px 12px;min-height:52px;flex:none}
+.top .tbtn{display:inline-flex;align-items:center;gap:4px;height:40px;padding:0 6px;font-size:15px;font-weight:500;color:var(--ink2);justify-self:start;max-width:36vw}
+.top .tbtn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top .tbtn svg{width:12px;height:12px;opacity:.6;flex:none}
+.top #sceneBtn{justify-self:center;color:var(--ink);font-weight:600;font-size:16px}
+.top .tr{justify-self:end;display:flex;gap:8px}
+#stageWrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;container-type:size}
+#stage{position:relative;width:100%;height:100%;border-radius:28px;overflow:hidden;background:#0b0b0c;transition:transform .12s ease-out,opacity .12s}
+@supports (width:1cqw){#stage{width:min(100cqw,75cqh);height:min(100cqh,133.34cqw)}}
+#stage.blink{transform:scale(.985);opacity:.25}
+#stage::before{content:"";position:absolute;inset:0 0 auto 0;height:90px;background:linear-gradient(rgba(0,0,0,.38),transparent);z-index:1;pointer-events:none}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center}
+#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#msg{position:absolute;z-index:2;top:16px;left:20px;right:20px;text-align:center;font-size:16px;font-weight:600;letter-spacing:.02em;
+  text-shadow:0 1px 10px rgba(0,0,0,.55);pointer-events:none;transition:opacity .14s,color .3s;text-wrap:balance}
+#msg.sw{opacity:0}
+#msg.ok{color:var(--accent)}
+#zooms{position:absolute;z-index:2;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:2px;padding:3px;border-radius:22px;
+  background:rgba(0,0,0,.32);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4)}
+#zooms button{width:36px;height:36px;border-radius:50%;font-size:12px;font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums;transition:all .25s var(--ease)}
+#zooms button.act{background:rgba(255,255,255,.16);color:var(--accent);font-size:13px}
+#burstCount{position:absolute;z-index:2;top:50%;left:50%;transform:translate(-50%,-50%);font-size:96px;font-weight:200;opacity:0;text-shadow:0 2px 24px rgba(0,0,0,.5);font-variant-numeric:tabular-nums;transition:opacity .2s}
+#work{position:absolute;inset:0;z-index:3;display:none;flex-direction:column;gap:16px;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.4);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);font-weight:500;color:var(--ink2)}
+#work.on{display:flex}
+#work::before{content:"";width:26px;height:26px;border-radius:50%;border:2px solid var(--hair);border-top-color:var(--ink);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#modes{display:flex;justify-content:center;gap:34px;padding:16px 0 4px;flex:none}
+#modes button{position:relative;height:36px;font-size:15px;letter-spacing:.12em;color:var(--ink3);font-weight:500;transition:color .25s}
+#modes button.act{color:var(--ink);font-weight:600}
+#modes button::after{content:"";position:absolute;left:50%;bottom:0;width:4px;height:4px;margin-left:-3px;border-radius:50%;background:var(--accent);opacity:0;transform:scale(0);transition:all .3s var(--ease)}
+#modes button.act::after{opacity:1;transform:none}
+#shootRow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 30px 18px;flex:none}
+.sideBtn{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:var(--ink3);letter-spacing:.06em;width:56px}
+.sideBtn .th{width:48px;height:48px;border-radius:50%;overflow:hidden;background:var(--fill);display:grid;place-items:center;color:var(--ink);transition:transform .2s var(--ease)}
+.sideBtn:active .th{transform:scale(.9)}
+.sideBtn .th img{width:100%;height:100%;object-fit:cover}
+.sideBtn .th svg{width:22px;height:22px}
+.sideBtn .th.pop{animation:pop .45s var(--ease)}
+@keyframes pop{0%{transform:scale(.5);opacity:.4}100%{transform:none;opacity:1}}
+#albumBtn{justify-self:start} #callBtn{justify-self:end}
+#callBtn.ring .th{animation:ring .5s var(--ease)}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(255,201,120,.5)}100%{box-shadow:0 0 0 18px rgba(255,201,120,0)}}
+#shutter{width:78px;height:78px;border-radius:50%;border:3px solid var(--ink);display:grid;place-items:center;transition:border-color .35s,box-shadow .35s}
+#shutter b{width:64px;height:64px;border-radius:50%;background:var(--ink);display:block;transition:transform .18s var(--ease)}
+#shutter:active b{transform:scale(.86)}
+#shutter.ready{border-color:var(--accent);animation:breathe 1.8s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 0 rgba(255,201,120,0)}50%{box-shadow:0 0 0 7px rgba(255,201,120,.22)}}
+
+/* 開場 */
+#startCard{position:absolute;inset:0;z-index:5;background:#000;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 24px) 32px calc(env(safe-area-inset-bottom) + 28px)}
+#startCard .hero{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px}
+#startCard .mark{width:54px;height:54px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;margin-bottom:18px}
+#startCard .mark::after{content:"";width:40px;height:40px;border-radius:50%;background:var(--accent)}
+#startCard h2{margin:0;font-size:40px;font-weight:700;letter-spacing:.02em;line-height:1.15}
+#startCard .hero p{margin:0;font-size:19px;color:var(--ink2);line-height:1.6;font-weight:400}
+#startCard .cta{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+#startCard .link{height:48px;color:var(--ink2);font-size:15px}
+#startCard .fine{margin:6px 0 0;text-align:center;font-size:12px;color:var(--ink3);letter-spacing:.04em}
+#startCard .err{margin:0 0 10px;color:var(--bad);font-size:14px}
+
+/* ---------- 面板 ---------- */
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;z-index:20;transition:opacity .3s}
+#scrim.on{opacity:1;pointer-events:auto}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--mat);backdrop-filter:blur(36px) saturate(1.6);-webkit-backdrop-filter:blur(36px) saturate(1.6);
+  border-radius:28px 28px 0 0;max-height:88%;overflow-y:auto;transform:translateY(105%);transition:transform .42s var(--ease);
+  padding:8px 20px calc(22px + env(safe-area-inset-bottom))}
+#sheet.on{transform:none}
+#sheet .grab{width:36px;height:5px;border-radius:3px;background:rgba(255,255,255,.22);margin:0 auto 10px}
+#sheet h2{font-size:22px;font-weight:700;margin:10px 0 2px;letter-spacing:.01em}
+#sheet h3{font-size:12px;font-weight:500;color:var(--ink3);letter-spacing:.1em;margin:22px 0 0}
+.tpl{display:flex;gap:16px;align-items:center;width:100%;text-align:left;padding:14px 0;border-bottom:.5px solid var(--hair)}
+.tpl:last-of-type{border-bottom:0}
+.tpl svg.il{width:46px;height:60px;flex:none;border-radius:10px;background:rgba(255,255,255,.06)}
+.tpl .t{flex:1;min-width:0}
+.tpl b{font-size:17px;font-weight:600;display:block}
+.tpl i{font-style:normal;color:var(--ink2);font-size:13.5px;display:block;line-height:1.55}
+.tpl .ck{width:20px;height:20px;color:var(--accent);opacity:0;flex:none}
+.tpl.act .ck{opacity:1}
+.tog{display:flex;align-items:center;gap:12px;padding:14px 0;width:100%;text-align:left;border-bottom:.5px solid var(--hair)}
+.tog:last-child{border-bottom:0}
+.tog>span:first-child{flex:1}
+.tog b{font-weight:500;font-size:16px}
+.tog .sw{width:50px;height:30px;border-radius:15px;background:rgba(255,255,255,.16);position:relative;flex:none;transition:background .25s}
+.tog .sw::after{content:"";position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .3s var(--ease)}
+.tog.on .sw{background:var(--accent)} .tog.on .sw::after{transform:translateX(20px)}
+.field{display:block;margin-top:14px;font-size:12px;color:var(--ink3);letter-spacing:.06em}
+.field input,.field select{margin-top:6px;font-size:16px}
+.petRow{display:flex;align-items:center;gap:14px;padding:12px 0;width:100%;text-align:left;border-bottom:.5px solid var(--hair)}
+.petRow .av{width:42px;height:42px;border-radius:50%;background:var(--fill);display:grid;place-items:center;font-weight:600;font-size:17px}
+.petRow.act .av{background:var(--accent);color:#000}
+.petRow b{font-weight:600;font-size:16px}
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 70px);transform:translateX(-50%) translateY(-8px) scale(.96);z-index:30;
+  background:var(--mat);backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);
+  padding:11px 18px;border-radius:22px;font-weight:500;font-size:14px;opacity:0;pointer-events:none;transition:all .35s var(--ease);max-width:84%;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%)}
+
+/* ---------- 選片 ---------- */
+#rvMain{flex:1;min-height:0;position:relative;border-radius:24px;overflow:hidden;background:#0b0b0c}
+#rvMain img{width:100%;height:100%;object-fit:contain}
+#rvBadge{position:absolute;top:14px;left:14px;padding:6px 12px;border-radius:15px;background:rgba(0,0,0,.4);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:var(--accent);font-weight:600;font-size:13px;letter-spacing:.08em;display:none}
+#rvWhy{margin:14px 24px 2px;font-size:15px;min-height:44px;text-align:center;text-wrap:balance}
+#rvWhy b{font-weight:600}
+#rvStrip{padding:10px 16px 2px;gap:6px}
+#rvStrip button{position:relative;flex:none;width:50px;height:66px;border-radius:9px;overflow:hidden;background:#111;opacity:.4;transition:all .25s var(--ease)}
+#rvStrip button.keep{opacity:1}
+#rvStrip button.view{opacity:1;box-shadow:0 0 0 2px #000,0 0 0 4px var(--ink);transform:scale(.94)}
+#rvStrip img{width:100%;height:100%;object-fit:cover}
+#rvStrip .ck{display:none}
+#rvStrip .keep::after{content:"";position:absolute;left:50%;bottom:5px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--accent)}
+#rvStrip .star{display:none}
+.foot{display:flex;gap:10px;padding:14px 20px 16px;flex:none}
+
+/* ---------- 修圖 ---------- */
+#edWrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative}
+#edCanvas{max-width:100%;max-height:100%;border-radius:22px;background:#0b0b0c}
+#edHold{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;height:34px;padding:0 14px;border-radius:17px;background:rgba(0,0,0,.4);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);font-size:12.5px;font-weight:500;color:var(--ink2)}
+#edNote{margin:10px 24px 0;font-size:12.5px;color:var(--ink3);min-height:19px;flex:none;text-align:center}
+#edStyles{justify-content:center;padding-top:10px}
+.sl{display:flex;align-items:center;gap:14px;padding:10px 24px 0;flex:none}
+.sl label{width:60px;font-size:13px;color:var(--ink2);flex:none}
+.sl output{width:28px;text-align:right;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;height:30px;padding:0;border:0;background:transparent;flex:1;border-radius:0}
+input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:rgba(255,255,255,.2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;margin-top:-10.5px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:rgba(255,255,255,.2)}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;background:#fff}
+input[type=range]:disabled{opacity:.35}
+#edSave{color:var(--accent);font-weight:600;font-size:16px}
+
+/* ---------- 相簿 ---------- */
+.big{font-size:34px;font-weight:700;margin:0 20px 10px;letter-spacing:.01em;flex:none}
+#alBody{flex:1;overflow-y:auto;padding:0 0 16px}
+#alBody h3{font-size:13px;color:var(--ink2);margin:22px 20px 10px;font-weight:500;letter-spacing:.04em}
+#alBody>p{margin:14px 20px 0}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.grid button{position:relative;aspect-ratio:1;overflow:hidden;background:#0b0b0c}
+.grid img{width:100%;height:100%;object-fit:cover}
+.grid .fv{position:absolute;right:7px;bottom:7px;color:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,.6))}
+.grid .fv svg{width:14px;height:14px}
+.grid .pick{position:absolute;inset:0;box-shadow:inset 0 0 0 3px var(--accent);display:none}
+.grid .sel .pick{display:block}
+.grid .tag{display:none}
+.empty{text-align:center;color:var(--ink2);padding:22vh 40px 0;font-size:15px}
+.empty b{display:block;color:var(--ink);font-size:22px;font-weight:600;margin-bottom:8px}
+#alFoot .btn{background:none;color:var(--ink2);height:44px;font-weight:500;font-size:15px}
+#dtWrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+#dtImg{max-width:100%;max-height:100%;border-radius:22px}
+#dtMeta{padding:14px 20px 0;font-size:12.5px;color:var(--ink3);flex:none;text-align:center;letter-spacing:.04em}
+.acts{display:flex;justify-content:space-around;padding:14px 10px 16px;flex:none}
+.acts button{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;min-width:56px;color:var(--ink2);letter-spacing:.06em;transition:transform .2s var(--ease)}
+.acts button:active{transform:scale(.9)}
+.acts svg{width:24px;height:24px;color:var(--ink)}
+.acts .on svg{color:var(--accent)}
+#cpWrap{flex:1;min-height:0;display:flex;gap:6px;padding:0 6px}
+#cpWrap figure{flex:1;margin:0;display:flex;flex-direction:column;gap:12px;min-width:0}
+#cpWrap .im{flex:1;min-height:0;border-radius:18px;overflow:hidden;background:#0b0b0c}
+#cpWrap img{width:100%;height:100%;object-fit:contain}
+#cpWrap .row{padding:0 6px}
+#grBody{flex:1;overflow-y:auto;padding:0 24px 16px}
+.gr{display:flex;gap:18px;align-items:center;padding:12px 0}
+.gr img{width:108px;height:144px;object-fit:cover;border-radius:16px}
+.gr b{font-size:22px;font-weight:300;display:block;letter-spacing:.02em}
+.gr .muted{font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<section id="cam" class="screen on">
+  <div class="top">
+    <button class="tbtn" id="petBtn" aria-label="切換寵物"></button>
+    <button class="tbtn" id="sceneBtn" aria-label="選擇拍攝情境"></button>
+    <div class="tr"><button class="ib" id="torchBtn" aria-label="補光燈" hidden></button><button class="ib" id="flipBtn" aria-label="切換前後鏡頭"></button></div>
+  </div>
+  <div id="stageWrap"><div id="stage">
+    <video id="video" playsinline muted autoplay></video>
+    <canvas id="ov"></canvas>
+    <div id="msg" role="status"></div>
+    <div id="zooms"></div>
+    <div id="burstCount"></div>
+    <div id="work"><div id="workMsg"></div></div>
+  </div></div>
+  <div id="modes" role="tablist">
+    <button role="tab" data-m="daily">日常</button>
+    <button role="tab" data-m="action">動態</button>
+    <button role="tab" data-m="portrait">肖像</button>
+  </div>
+  <div id="shootRow">
+    <button class="sideBtn" id="albumBtn" aria-label="打開相簿"><span class="th"></span>相簿</button>
+    <button id="shutter" aria-label="拍照"><b></b></button>
+    <button class="sideBtn" id="callBtn" aria-label="發出聲音叫牠看鏡頭，長按可換聲音"><span class="th"></span>叫牠</button>
+  </div>
+  <div id="startCard">
+    <div class="hero">
+      <div class="mark"></div>
+      <h2>毛孩相機</h2>
+      <p>對準牠。<br>快門亮起來的時候，按下去。</p>
+    </div>
+    <div class="cta">
+      <p class="err" id="startErr" hidden></p>
+      <button class="btn pri" id="startBtn">開始拍照</button>
+      <button class="link" id="importBtn0">從相簿選照片</button>
+      <p class="fine">照片只留在這支手機裡</p>
+    </div>
+  </div>
+</section>
+
+<section id="review" class="screen">
+  <div class="bar"><button class="ib" id="rvBack" aria-label="全部不要"></button><h1 id="rvTitle"></h1></div>
+  <div id="rvMain"><img id="rvImg" alt="目前檢視的照片"><div id="rvBadge">最佳</div></div>
+  <p id="rvWhy"></p>
+  <div class="scrollx" id="rvStrip"></div>
+  <div class="foot"><button class="btn wide" id="rvToggle"></button><button class="btn pri wide" id="rvSave"></button></div>
+</section>
+
+<section id="editor" class="screen">
+  <div class="bar"><button class="ib" id="edBack" aria-label="返回"></button><h1>修圖</h1><button class="tx" id="edSave">完成</button></div>
+  <div id="edWrap"><canvas id="edCanvas"></canvas><button id="edHold">按住看原圖</button></div>
+  <p id="edNote"></p>
+  <div class="scrollx" id="edStyles"></div>
+  <div class="sl"><label for="edStr">強度</label><input type="range" id="edStr" min="0" max="100" value="70"><output id="edStrO">70</output></div>
+  <div class="sl"><label for="edBlur">背景柔化</label><input type="range" id="edBlur" min="0" max="100" value="0"><output id="edBlurO">0</output></div>
+  <div class="foot"><button class="btn wide" id="edOne">一鍵修好</button></div>
+</section>
+
+<section id="album" class="screen">
+  <div class="bar"><button class="ib" id="alBack" aria-label="回到相機"></button><div class="sp"></div>
+    <button class="tx" id="alCompare">比較</button><button class="tx" id="alGrowth">成長紀錄</button></div>
+  <h1 class="big">相簿</h1>
+  <div class="scrollx" id="alPets"></div>
+  <div class="scrollx" id="alScenes"></div>
+  <div id="alBody"></div>
+  <div class="foot" id="alFoot"><button class="btn wide" id="importBtn">匯入照片</button></div>
+</section>
+
+<section id="detail" class="screen">
+  <div class="bar"><button class="ib" id="dtBack" aria-label="返回"></button><h1 id="dtTitle"></h1></div>
+  <div id="dtWrap"><img id="dtImg" alt="照片"></div>
+  <div id="dtMeta"></div>
+  <div class="acts">
+    <button id="dtFav"></button><button id="dtEdit"></button><button id="dtShare"></button><button id="dtTag"></button><button id="dtDel"></button>
+  </div>
+</section>
+
+<section id="compare" class="screen">
+  <div class="bar"><button class="ib" id="cpBack" aria-label="返回"></button><h1>哪一張比較好？</h1></div>
+  <div id="cpWrap"></div>
+  <p class="muted small" style="margin:14px 20px 18px;text-align:center">收藏喜歡的，另一張可以放手</p>
+</section>
+
+<section id="growth" class="screen">
+  <div class="bar"><button class="ib" id="grBack" aria-label="返回"></button><h1 id="grTitle"></h1></div>
+  <div id="grBody"></div>
+  <div class="foot"><button class="btn pri wide" id="grExport">存成一張長圖</button></div>
+</section>
+
+<div id="scrim"></div><div id="sheet"></div><div id="toast" role="status"></div>
+<input type="file" id="fileIn" accept="image/*" multiple hidden>
+
+<script>
+'use strict';
+/* =====================================================================
+   毛孩相機 — 單檔 PWA
+   辨識：MediaPipe Tasks Vision（ObjectDetector 找貓狗、ImageSegmenter 取輪廓），全部在手機上運算
+   ===================================================================== */
+const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+const DET_MODEL = 'https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite';
+const SEG_MODEL = 'https://storage.googleapis.com/mediapipe-models/image_segmenter/deeplab_v3/float32/1/deeplab_v3.tflite';
+const ANIMALS = {cat:'貓',dog:'狗',bird:'鳥',horse:'馬',sheep:'羊',cow:'牛',bear:'毛孩'};
+const SEG_ANIMAL_IDX = [3,8,10,12,13,17]; // Pascal VOC：bird, cat, cow, dog, horse, sheep
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const ic = (d, fill) => `<svg viewBox="0 0 24 24" fill="${fill?'currentColor':'none'}" stroke="${fill?'none':'currentColor'}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const I = {
+  back: ic('<path d="M15 5l-7 7 7 7"/>'), x: ic('<path d="M6 6l12 12M18 6L6 18"/>'),
+  flip: ic('<path d="M4 9a8 8 0 0114-3l2 2M20 15a8 8 0 01-14 3l-2-2"/><path d="M20 4v4h-4M4 20v-4h4"/>'),
+  torch: ic('<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>'),
+  bell: ic('<path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 21h4"/>'),
+  auto: ic('<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>'),
+  grid: ic('<path d="M9 4v16M15 4v16M4 9h16M4 15h16"/>'),
+  album: ic('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 16l4-4 4 4 3-3 5 5"/>'),
+  guide: ic('<path d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3"/><circle cx="12" cy="12" r="3"/>'),
+  chev: ic('<path d="M6 9l6 6 6-6"/>'), wave: ic('<path d="M4 10v4M8 7v10M12 4v16M16 7v10M20 10v4"/>'),
+  check: ic('<path d="M5 12l5 5 9-10"/>'), paw: ic('<circle cx="7" cy="9" r="2"/><circle cx="12" cy="6.5" r="2"/><circle cx="17" cy="9" r="2"/><path d="M12 12c-3 0-5.5 2.5-5.5 5 0 1.6 1.4 2.5 3 2.2 1.700-.3 3.3-.3 5 0 1.600.3 3-.6 3-2.200 0-2.500-2.500-5-5.500-5z"/>', true),
+  heart: ic('<path d="M12 20s-7-4.500-7-10a4 4 0 017-2.500A4 4 0 0119 10c0 5.500-7 10-7 10z"/>'),
+  heartF: ic('<path d="M12 20s-7-4.500-7-10a4 4 0 017-2.500A4 4 0 0119 10c0 5.500-7 10-7 10z"/>', true),
+  wand: ic('<path d="M5 19L16 8M14 6l4 4M18 3v3M16.500 4.500h3M6 5v2M5 6h2"/>'),
+  share: ic('<path d="M12 15V4M8 8l4-4 4 4M5 13v6h14v-6"/>'),
+  tag: ic('<path d="M4 4h7l9 9-7 7-9-9z"/><circle cx="8.500" cy="8.500" r="1.500"/>'),
+  trash: ic('<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"/>'),
+};
+
+/* ---------------- 情境模板 ---------------- */
+const TPL = {
+  head:  {name:'大頭照', mode:'portrait', steps:['蹲到跟牠眼睛一樣高','把眼睛放在畫面上方那條線','按「叫牠」，牠看過來就拍'], goal:'靠近到臉佔畫面一半'},
+  body:  {name:'全身照', mode:'daily',    steps:['退後到整隻都進框','四周留一點空間，別切到尾巴和腳','背景找乾淨的牆或地板'], goal:'整隻放進虛線框'},
+  sleep: {name:'睡覺照', mode:'daily',    steps:['不要出聲、不要開補光燈','從正上方或側面慢慢靠近','身體沿著斜線擺，畫面比較好看'], goal:'安靜靠近，沿斜線構圖'},
+  play:  {name:'玩耍照', mode:'action',   steps:['到光線亮的地方，動作才拍得清楚','手機放低，鏡頭跟牠一樣高','牠衝過來時按一下，相機會連拍再幫你挑'], goal:'放低手機，按一下連拍'},
+  bday:  {name:'生日照', mode:'portrait', steps:['蛋糕或禮物放在牠前面下方','讓牠坐好，帽子戴上後馬上拍','蠟燭點著時不要開補光燈'], goal:'上面放臉，下面留給蛋糕'},
+};
+const SCENE_NAME = id => id==='daily' ? '日常' : (TPL[id] ? TPL[id].name : '日常');
+const MODE = {
+  daily:    {desc:'自動調整，適合日常隨手拍'},
+  action:   {desc:'按一下連拍 10 張，自動挑出最清楚的'},
+  portrait: {desc:'辨識寵物輪廓，把背景變柔和'},
+};
+function tplSvg(id){
+  const s = 'stroke="#ffc978" stroke-width="1.6" fill="none" stroke-dasharray="4 3"';
+  const g = {
+    head:`<path d="M8 30h48" ${s}/><circle cx="24" cy="30" r="3" fill="#ffc978"/><circle cx="40" cy="30" r="3" fill="#ffc978"/><path d="M14 22c0 26 36 26 36 0" stroke="#8e8e93" stroke-width="1.6" fill="none"/>`,
+    body:`<rect x="10" y="16" width="44" height="52" rx="6" ${s}/><ellipse cx="32" cy="46" rx="14" ry="10" fill="#8e8e93"/><circle cx="44" cy="34" r="6" fill="#8e8e93"/>`,
+    sleep:`<path d="M8 66L56 18" ${s}/><ellipse cx="32" cy="42" rx="18" ry="9" transform="rotate(-45 32 42)" fill="#8e8e93"/>`,
+    play:`<path d="M8 56h48" ${s}/><circle cx="26" cy="46" r="8" fill="#8e8e93"/><path d="M42 30l8-6M44 38l10-2" stroke="#ffc978" stroke-width="1.6"/>`,
+    bday:`<path d="M8 50h48" ${s}/><circle cx="32" cy="30" r="10" fill="#8e8e93"/><path d="M32 14l-5 8h10z" fill="#ffc978"/><rect x="22" y="58" width="20" height="10" rx="2" fill="#ffc978"/>`,
+  }[id];
+  return `<svg class="il" viewBox="0 0 64 84">${g||'<circle cx="32" cy="42" r="13" stroke="#8e8e93" stroke-width="1.6" fill="none"/><circle cx="32" cy="42" r="8" fill="#ffc978"/>'}</svg>`;
+}
+function drawGuide(ctx, id, W, H){
+  ctx.save(); ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.fillStyle='rgba(255,255,255,.9)'; ctx.lineWidth=1; ctx.setLineDash([3,7]);
+  ctx.font='500 12px '+getComputedStyle(document.body).fontFamily; ctx.shadowColor='rgba(0,0,0,.7)'; ctx.shadowBlur=4;
+  const line=(x1,y1,x2,y2)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
+  if(id==='head'){ line(W*.1,H*.38,W*.9,H*.38); ctx.fillText('眼睛放這條線',W*.1,H*.38-8); }
+  if(id==='body'){ ctx.beginPath(); roundRect(ctx,W*.1,H*.14,W*.8,H*.66,18); ctx.stroke(); ctx.fillText('整隻放進框裡',W*.1+10,H*.14+22); }
+  if(id==='sleep'){ line(W*.1,H*.78,W*.9,H*.22); ctx.fillText('身體沿著這條斜線',W*.1,H*.78+20); }
+  if(id==='play'){ line(W*.06,H*.67,W*.94,H*.67); ctx.fillText('腳踩在這條線附近',W*.06,H*.67+20); }
+  if(id==='bday'){ line(W*.06,H*.62,W*.94,H*.62); ctx.fillText('上面：牠的臉',W*.06,H*.62-8); ctx.fillText('下面：蛋糕、禮物',W*.06,H*.62+20); }
+  ctx.restore();
+}
+function roundRect(ctx,x,y,w,h,r){ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+/* ---------------- 資料庫（IndexedDB） ---------------- */
+let db=null; const mem={pets:new Map(),photos:new Map(),blobs:new Map()};
+function openDB(){return new Promise(res=>{try{
+  const q=indexedDB.open('maohai-cam',1);
+  q.onupgradeneeded=()=>{const d=q.result;['pets','photos','blobs'].forEach(n=>d.createObjectStore(n,{keyPath:'id'}));};
+  q.onsuccess=()=>{db=q.result;res();}; q.onerror=()=>res();
+}catch(e){res();}});}
+function tx(store,mode,fn){
+  if(!db) return Promise.resolve(fn(null));
+  return new Promise((res,rej)=>{const t=db.transaction(store,mode);const r=fn(t.objectStore(store));
+    t.oncomplete=()=>res(r&&'result' in r?r.result:undefined); t.onerror=()=>rej(t.error); t.onabort=()=>rej(t.error);});
+}
+const dbPut=(s,v)=>db?tx(s,'readwrite',o=>o.put(v)):(mem[s].set(v.id,v),Promise.resolve());
+const dbGet=(s,id)=>db?tx(s,'readonly',o=>o.get(id)):Promise.resolve(mem[s].get(id));
+const dbAll=s=>db?tx(s,'readonly',o=>o.getAll()):Promise.resolve([...mem[s].values()]);
+const dbDel=(s,id)=>db?tx(s,'readwrite',o=>o.delete(id)):(mem[s].delete(id),Promise.resolve());
+const LS={get(k,d){try{const v=localStorage.getItem('mh.'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem('mh.'+k,JSON.stringify(v));}catch(e){}}};
+
+/* ---------------- 狀態 ---------------- */
+const S={snd:LS.get('snd','squeak'), note:null, mode:LS.get('mode','daily'), tpl:null, grid:LS.get('grid',false), auto:false, sndShoot:LS.get('sndShoot',true),
+  facing:'environment', zoom:1, dz:1, pets:[], petId:LS.get('pet',null), photos:[], busy:false,
+  ai:'loading', det:null, bright:128, moving:0, okSince:0, lastAuto:0, focusPt:null};
+let stream=null, track=null, caps={}, detector=null, segmenter=null, vision=null, fileset=null;
+const video=$('#video'), stage=$('#stage'), ov=$('#ov');
+
+/* ---------------- 提示 ---------------- */
+let toastT; function toast(m,ms=2200){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms);}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));}
+function openSheet(html){$('#sheet').innerHTML='<div class="grab"></div>'+html;$('#sheet').classList.add('on');$('#scrim').classList.add('on');}
+function closeSheet(){$('#sheet').classList.remove('on');$('#scrim').classList.remove('on');}
+$('#scrim').onclick=closeSheet;
+function work(msg){$('#workMsg').textContent=msg||'';$('#work').classList.toggle('on',!!msg);}
+
+/* ---------------- 相機 ---------------- */
+async function startCamera(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) throw new Error('nocam');
+  stopCamera();
+  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:S.facing},width:{ideal:1920},height:{ideal:1440}}});
+  track=stream.getVideoTracks()[0]; caps=(track.getCapabilities&&track.getCapabilities())||{};
+  video.srcObject=stream; await video.play().catch(()=>{});
+  $('#torchBtn').hidden=!caps.torch; $('#torchBtn').classList.remove('act');
+  try{ if(caps.focusMode&&caps.focusMode.includes('continuous')) await track.applyConstraints({advanced:[{focusMode:'continuous'}]}); }catch(e){}
+  setZoom(1); applyVideoTransform();
+  try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').catch(()=>{}); }catch(e){}
+}
+function stopCamera(){ if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;track=null;} }
+function applyVideoTransform(){ video.style.transform=`scale(${S.facing==='user'?-S.dz:S.dz},${S.dz})`; }
+function setZoom(z){
+  S.zoom=z; let native=1;
+  if(caps.zoom&&track){ const base=Math.max(caps.zoom.min||1,1); native=clamp(z*base,caps.zoom.min,caps.zoom.max);
+    track.applyConstraints({advanced:[{zoom:native}]}).catch(()=>{}); S.dz=z/(native/base); }
+  else S.dz=z;
+  if(S.dz<1.01) S.dz=1;
+  applyVideoTransform();
+  $('#zooms').innerHTML=[1,2,3].map(v=>`<button class="${v===z?'act':''}" data-z="${v}">${v}×</button>`).join('');
+}
+$('#zooms').onclick=e=>{const b=e.target.closest('button');if(b)setZoom(+b.dataset.z);};
+// 取景框實際看到的範圍，換算回影像像素
+function cropRect(){
+  const vw=video.videoWidth,vh=video.videoHeight,R=stage.clientWidth/stage.clientHeight;
+  let cw=vw,ch=vw/R; if(ch>vh){ch=vh;cw=vh*R;} cw/=S.dz; ch/=S.dz;
+  return {sx:(vw-cw)/2,sy:(vh-ch)/2,cw,ch};
+}
+function grabFrame(maxLong){
+  const {sx,sy,cw,ch}=cropRect(); let k=1; if(maxLong) k=Math.min(1,maxLong/Math.max(cw,ch));
+  const c=document.createElement('canvas'); c.width=Math.round(cw*k); c.height=Math.round(ch*k);
+  c.getContext('2d').drawImage(video,sx,sy,cw,ch,0,0,c.width,c.height); return c;
+}
+function detBoxNorm(){ // 目前偵測框，換成取景框內 0~1 座標
+  if(!S.det) return null; const {sx,sy,cw,ch}=cropRect(), d=S.det;
+  const x0=clamp((d.x-sx)/cw,0,1),y0=clamp((d.y-sy)/ch,0,1),x1=clamp((d.x+d.w-sx)/cw,0,1),y1=clamp((d.y+d.h-sy)/ch,0,1);
+  if(x1-x0<.03||y1-y0<.03) return null;
+  return {x:x0,y:y0,w:x1-x0,h:y1-y0,score:d.score,kind:d.kind,cut:(d.x-sx)/cw<.01||(d.y-sy)/ch<.01||(d.x+d.w-sx)/cw>.99||(d.y+d.h-sy)/ch>.99};
+}
+$('#flipBtn').onclick=async()=>{S.facing=S.facing==='user'?'environment':'user';S.det=null;try{await startCamera();}catch(e){toast('切換鏡頭失敗');}};
+$('#torchBtn').onclick=async()=>{const on=!$('#torchBtn').classList.contains('act');try{await track.applyConstraints({advanced:[{torch:on}]});$('#torchBtn').classList.toggle('act',on);}catch(e){toast('這顆鏡頭沒有補光燈');}};
+stage.addEventListener('pointerdown',e=>{ // 點一下對焦（支援的手機才有效，其餘維持自動對焦）
+  if(e.target.closest('button')||!track) return;
+  const r=stage.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+  S.focusPt={x,y,t:performance.now()};
+  if(caps.focusMode){ const adv={pointsOfInterest:[{x,y}]}; if(caps.focusMode.includes('single-shot')) adv.focusMode='single-shot';
+    track.applyConstraints({advanced:[adv]}).then(()=>{ if(caps.focusMode.includes('continuous')) setTimeout(()=>track&&track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(()=>{}),2500); }).catch(()=>{}); }
+});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden) return;
+  if($('#startCard').hidden&&(!track||track.readyState!=='live')) startCamera().catch(()=>{});
+});
+
+/* ---------------- AI 載入 ---------------- */
+async function loadAI(){
+  try{
+    vision=await import(MP_BASE+'/vision_bundle.mjs');
+    fileset=await vision.FilesetResolver.forVisionTasks(MP_BASE+'/wasm');
+    const opt=d=>({baseOptions:{modelAssetPath:DET_MODEL,delegate:d},runningMode:'VIDEO',scoreThreshold:.3,maxResults:4,categoryAllowlist:Object.keys(ANIMALS)});
+    try{detector=await vision.ObjectDetector.createFromOptions(fileset,opt('GPU'));}
+    catch(e){detector=await vision.ObjectDetector.createFromOptions(fileset,opt('CPU'));}
+    S.ai='ready';
+  }catch(e){ console.warn('AI 載入失敗',e); S.ai='off'; }
+}
+let segLoading=null;
+function loadSeg(){
+  if(segmenter) return Promise.resolve(segmenter);
+  if(!vision) return Promise.resolve(null);
+  if(!segLoading) segLoading=(async()=>{
+    const opt=d=>({baseOptions:{modelAssetPath:SEG_MODEL,delegate:d},runningMode:'IMAGE',outputConfidenceMasks:true,outputCategoryMask:false});
+    try{segmenter=await vision.ImageSegmenter.createFromOptions(fileset,opt('GPU'));}
+    catch(e){ try{segmenter=await vision.ImageSegmenter.createFromOptions(fileset,opt('CPU'));}catch(e2){console.warn(e2);segmenter=null;} }
+    return segmenter;
+  })();
+  return segLoading;
+}
+function detectOn(src){ // 回傳影像像素座標的最佳寵物框
+  if(!detector) return null;
+  let r; try{ r=detector.detectForVideo(src,performance.now()); }catch(e){ return null; }
+  let best=null,bs=0; const W=src.videoWidth||src.width,H=src.videoHeight||src.height;
+  for(const d of (r.detections||[])){ const c=d.categories&&d.categories[0], b=d.boundingBox; if(!c||!b) continue;
+    const s=c.score*Math.sqrt((b.width*b.height)/(W*H)); if(s>bs){bs=s;best={x:b.originX,y:b.originY,w:b.width,h:b.height,score:c.score,kind:c.categoryName};} }
+  return best;
+}
+
+/* ---------------- 即時分析迴圈 ---------------- */
+const probe=document.createElement('canvas'); probe.width=32; probe.height=24; const pctx=probe.getContext('2d',{willReadFrequently:true});
+let lastDet=0,lastBright=0,miss=0;
+function tick(now){
+  requestAnimationFrame(tick);
+  if(!$('#cam').classList.contains('on')||video.readyState<2||!video.videoWidth) return;
+  if(detector&&now-lastDet>90&&!S.busy){ lastDet=now;
+    const d=detectOn(video);
+    if(d){ miss=0; const p=S.det;
+      if(p){ const a=.55; const mv=Math.hypot((d.x+d.w/2)-(p.x+p.w/2),(d.y+d.h/2)-(p.y+p.h/2))/Math.max(p.w,p.h,1);
+        S.moving=S.moving*.6+mv*.4; S.det={x:p.x+(d.x-p.x)*a,y:p.y+(d.y-p.y)*a,w:p.w+(d.w-p.w)*a,h:p.h+(d.h-p.h)*a,score:d.score,kind:d.kind}; }
+      else {S.det=d;S.moving=0;} }
+    else if(++miss>5){ S.det=null; S.moving=0; }
+  }
+  if(now-lastBright>500){ lastBright=now; try{ pctx.drawImage(video,0,0,32,24); const d=pctx.getImageData(0,0,32,24).data; let s=0;
+    for(let i=0;i<d.length;i+=4) s+=.299*d[i]+.587*d[i+1]+.114*d[i+2]; S.bright=s/(d.length/4); }catch(e){} }
+  const g=guide(); renderStatus(g); drawOverlay(now);
+  if(S.auto&&!S.busy&&g.level==='ok'&&S.det){ if(!S.okSince) S.okSince=now;
+    if(now-S.okSince>650&&now-S.lastAuto>3000&&S.moving<.06){ S.lastAuto=now; S.okSince=0; shoot(); } } else S.okSince=0;
+}
+function note(text,ms){ S.note={text,until:performance.now()+(ms||2600)}; }
+function guide(){
+  if(S.note){ if(performance.now()<S.note.until) return {level:'idle',msg:S.note.text}; S.note=null; }
+  const b=detBoxNorm(), dark=S.bright<55, dim=S.bright<85, t=S.tpl;
+  if(S.ai==='loading') return {level:'idle',msg:''};
+  if(S.ai==='off') return {level:'idle',msg:dark?'太暗了，靠近窗邊或開燈':''};
+  if(!b) return {level:'idle',msg:'把鏡頭對準牠'};
+  const area=b.w*b.h;
+  if(dark) return {level:'warn',msg:'太暗了，靠近窗邊或開燈'};
+  if(t==='head'&&area<.28) return {level:'warn',msg:'再靠近一點，讓臉佔滿半個畫面'};
+  if(area<.07) return {level:'warn',msg:'再靠近一點'};
+  if(t!=='head'&&b.cut&&area>.5) return {level:'warn',msg:'退後一點，耳朵被切到了'};
+  if(t==='body'&&b.cut) return {level:'warn',msg:'退後一點，讓牠整隻入鏡'};
+  if(S.moving>.12&&S.mode!=='action') return {level:'warn',msg:'牠在動，換成「動態」試試'};
+  if(S.mode==='action'&&dim) return {level:'warn',msg:'這裡偏暗，動作容易糊'};
+  return {level:'ok',msg:t?TPL[t].goal:'就是現在'};
+}
+let lastStatus='',msgT=0;
+function renderStatus(g){ const k=g.level+g.msg; if(k===lastStatus) return; lastStatus=k;
+  const m=$('#msg'); m.classList.add('sw'); clearTimeout(msgT); msgT=setTimeout(()=>{m.textContent=g.msg;m.className=g.level;},140);
+  $('#shutter').classList.toggle('ready',g.level==='ok'); }
+function drawOverlay(now){
+  const W=stage.clientWidth,H=stage.clientHeight,dpr=Math.min(devicePixelRatio||1,2);
+  if(ov.width!==Math.round(W*dpr)||ov.height!==Math.round(H*dpr)){ov.width=Math.round(W*dpr);ov.height=Math.round(H*dpr);}
+  const c=ov.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H);
+  if(S.grid){ c.strokeStyle='rgba(255,255,255,.18)'; c.lineWidth=.5; c.beginPath();
+    for(const f of [1/3,2/3]){c.moveTo(W*f,0);c.lineTo(W*f,H);c.moveTo(0,H*f);c.lineTo(W,H*f);} c.stroke(); }
+  if(S.tpl) drawGuide(c,S.tpl,W,H);
+  const b=detBoxNorm();
+  if(b){ let x=b.x*W,y=b.y*H,w=b.w*W,h=b.h*H; if(S.facing==='user') x=W-x-w;
+    const ok=lastStatus.startsWith('ok'),r=Math.min(26,Math.min(w,h)*.18); c.strokeStyle=ok?'rgba(255,201,120,.95)':'rgba(255,255,255,.55)'; c.lineWidth=ok?2:1.25;
+    c.shadowColor='rgba(0,0,0,.25)'; c.shadowBlur=6; c.beginPath(); roundRect(c,x,y,w,h,r); c.stroke(); c.shadowBlur=0; }
+  if(S.focusPt){ const a=1-(now-S.focusPt.t)/900; if(a<=0) S.focusPt=null; else { c.strokeStyle=`rgba(255,201,120,${a})`; c.lineWidth=1.25;
+    c.beginPath(); c.arc(S.focusPt.x*W,S.focusPt.y*H,24+10*a,0,7); c.stroke(); } }
+}
+
+/* ---------------- 注意力音效 ---------------- */
+let ac=null; function audio(){ if(!ac){const A=window.AudioContext||window.webkitAudioContext; if(A) ac=new A();} if(ac&&ac.state==='suspended') ac.resume(); return ac; }
+function noiseBuf(a,sec){const b=a.createBuffer(1,a.sampleRate*sec,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;return b;}
+function playSound(type){
+  const a=audio(); if(!a) return 0; const t=a.currentTime+.02;
+  const tone=(wave,f0,f1,f2,st,dur,vol)=>{const o=a.createOscillator(),g=a.createGain();o.type=wave;o.frequency.setValueAtTime(f0,st);
+    o.frequency.exponentialRampToValueAtTime(f1,st+dur*.45);o.frequency.exponentialRampToValueAtTime(f2,st+dur);
+    g.gain.setValueAtTime(.0001,st);g.gain.exponentialRampToValueAtTime(vol,st+.02);g.gain.exponentialRampToValueAtTime(.0001,st+dur);o.connect(g).connect(a.destination);o.start(st);o.stop(st+dur+.02);};
+  const burst=(st,dur,freq,type,vol)=>{const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=noiseBuf(a,dur);f.type=type;f.frequency.value=freq;f.Q.value=1.2;
+    g.gain.setValueAtTime(vol,st);g.gain.exponentialRampToValueAtTime(.0001,st+dur);s.connect(f).connect(g).connect(a.destination);s.start(st);};
+  if(type==='squeak'){ tone('triangle',900,2100,1200,t,.16,.5); tone('triangle',1000,2400,1300,t+.22,.18,.5); return 450; }
+  if(type==='kiss'){ for(let i=0;i<3;i++) burst(t+i*.13,.06,3800,'bandpass',.9); return 420; }
+  if(type==='whistle'){ tone('sine',1300,2400,1900,t,.4,.4); return 450; }
+  if(type==='crinkle'){ for(let i=0;i<14;i++) burst(t+Math.random()*.6,.03+Math.random()*.04,4500+Math.random()*2500,'highpass',.5); return 700; }
+  if(type==='meow'){ tone('sawtooth',520,880,430,t,.5,.18); return 550; }
+  return 0;
+}
+const SOUNDS=[['squeak','啾啾玩具','狗狗最愛'],['kiss','親親聲','貓狗都會回頭'],['whistle','口哨','遠一點也聽得到'],['crinkle','零食袋','貪吃鬼專用'],['meow','喵一聲','讓貓好奇']];
+function callPet(){
+  const b=$('#callBtn'); b.classList.remove('ring'); void b.offsetWidth; b.classList.add('ring');
+  const ms=playSound(S.snd); if(navigator.vibrate) navigator.vibrate(8);
+  if(S.sndShoot&&stream) setTimeout(shoot,Math.max(250,ms-120));
+  if(!LS.get('callHint',false)){ LS.set('callHint',true); setTimeout(()=>toast('長按「叫牠」可以換聲音',3200),900); }
+}
+function soundSheet(){
+  const draw=()=>openSheet(`<h2>用什麼聲音叫牠？</h2><p class="muted small" style="margin:0 0 6px">牠通常只會看過來一兩秒。先對好，再按。</p>
+  ${SOUNDS.map(([k,n,d])=>`<button class="tpl ${S.snd===k?'act':''}" data-s="${k}"><span class="t"><b>${n}</b><i>${d}</i></span><span class="ck">${I.check}</span></button>`).join('')}
+  <h3>拍攝</h3><button class="tog ${S.sndShoot?'on':''}" id="sndTog"><span><b>聲音結束時自動拍</b></span><span class="sw"></span></button>`);
+  draw();
+  $('#sheet').onclick=e=>{ const b=e.target.closest('[data-s]');
+    if(b){ S.snd=b.dataset.s; LS.set('snd',S.snd); playSound(S.snd); document.querySelectorAll('#sheet [data-s]').forEach(x=>x.classList.toggle('act',x===b)); }
+    if(e.target.closest('#sndTog')){ S.sndShoot=!S.sndShoot; LS.set('sndShoot',S.sndShoot); $('#sndTog').classList.toggle('on',S.sndShoot); } };
+}
+(function(){ const b=$('#callBtn'); let t=0,long=false;
+  b.addEventListener('pointerdown',()=>{ audio(); long=false; t=setTimeout(()=>{long=true; if(navigator.vibrate)navigator.vibrate(10); soundSheet();},480); });
+  b.addEventListener('pointerup',()=>{ clearTimeout(t); if(!long) callPet(); });
+  ['pointerleave','pointercancel'].forEach(n=>b.addEventListener(n,()=>clearTimeout(t)));
+  b.addEventListener('contextmenu',e=>e.preventDefault());
+})();
+
+/* ---------------- 影像工具 ---------------- */
+const toBlob=(c,q=.92)=>new Promise(r=>c.toBlob(r,'image/jpeg',q));
+function scaled(src,maxLong){ const w=src.width,h=src.height,k=Math.min(1,maxLong/Math.max(w,h)); const c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(w*k)); c.height=Math.max(1,Math.round(h*k)); const x=c.getContext('2d'); x.imageSmoothingQuality='high'; x.drawImage(src,0,0,c.width,c.height); return c; }
+async function blobToCanvas(blob,maxLong){
+  let bmp; try{ bmp=await createImageBitmap(blob,{imageOrientation:'from-image'}); }catch(e){
+    bmp=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=URL.createObjectURL(blob);}); }
+  const w=bmp.width,h=bmp.height,k=maxLong?Math.min(1,maxLong/Math.max(w,h)):1; const c=document.createElement('canvas');
+  c.width=Math.round(w*k); c.height=Math.round(h*k); c.getContext('2d').drawImage(bmp,0,0,c.width,c.height); if(bmp.close) bmp.close(); else URL.revokeObjectURL(bmp.src); return c;
+}
+// 清晰度（Laplacian 變異數）與亮度：只看寵物框內
+function analyze(src,box){
+  const c=scaled(src,220),w=c.width,h=c.height,d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data;
+  const g=new Float32Array(w*h); for(let i=0,j=0;i<d.length;i+=4,j++) g[j]=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+  const bx=box||{x:.2,y:.2,w:.6,h:.6}; const x0=Math.max(1,Math.floor(bx.x*w)),x1=Math.min(w-1,Math.ceil((bx.x+bx.w)*w)),y0=Math.max(1,Math.floor(bx.y*h)),y1=Math.min(h-1,Math.ceil((bx.y+bx.h)*h));
+  let s=0,s2=0,n=0,lum=0; for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++){ const i=y*w+x,l=4*g[i]-g[i-1]-g[i+1]-g[i-w]-g[i+w]; s+=l;s2+=l*l;lum+=g[i];n++; }
+  n=Math.max(n,1); return {sharp:s2/n-(s/n)*(s/n),bright:lum/n};
+}
+// 導向濾波（guided filter）：讓遮罩邊緣貼合毛髮
+function boxMean(src,w,h,r){
+  const W=w+1,S_=new Float64Array(W*(h+1)); for(let y=0;y<h;y++){let row=0;for(let x=0;x<w;x++){row+=src[y*w+x];S_[(y+1)*W+x+1]=S_[y*W+x+1]+row;}}
+  const out=new Float32Array(w*h); for(let y=0;y<h;y++){const y0=Math.max(0,y-r),y1=Math.min(h,y+r+1);for(let x=0;x<w;x++){const x0=Math.max(0,x-r),x1=Math.min(w,x+r+1);
+    out[y*w+x]=(S_[y1*W+x1]-S_[y0*W+x1]-S_[y1*W+x0]+S_[y0*W+x0])/((y1-y0)*(x1-x0));}} return out;
+}
+function guidedFilter(Ig,p,w,h,r,eps){
+  const n=w*h,II=new Float32Array(n),Ip=new Float32Array(n); for(let i=0;i<n;i++){II[i]=Ig[i]*Ig[i];Ip[i]=Ig[i]*p[i];}
+  const mI=boxMean(Ig,w,h,r),mp=boxMean(p,w,h,r),mII=boxMean(II,w,h,r),mIp=boxMean(Ip,w,h,r),a=new Float32Array(n),b=new Float32Array(n);
+  for(let i=0;i<n;i++){a[i]=(mIp[i]-mI[i]*mp[i])/(mII[i]-mI[i]*mI[i]+eps);b[i]=mp[i]-a[i]*mI[i];}
+  const ma=boxMean(a,w,h,r),mb=boxMean(b,w,h,r),q=new Float32Array(n); for(let i=0;i<n;i++) q[i]=ma[i]*Ig[i]+mb[i]; return q;
+}
+function resizeF32(src,sw,sh,w,h){ if(sw===w&&sh===h) return src; const o=new Float32Array(w*h);
+  for(let y=0;y<h;y++){const fy=(y+.5)*sh/h-.5,y0=clamp(Math.floor(fy),0,sh-1),y1=Math.min(sh-1,y0+1),ty=clamp(fy-y0,0,1);
+    for(let x=0;x<w;x++){const fx=(x+.5)*sw/w-.5,x0=clamp(Math.floor(fx),0,sw-1),x1=Math.min(sw-1,x0+1),tx=clamp(fx-x0,0,1);
+      o[y*w+x]=(src[y0*sw+x0]*(1-tx)+src[y0*sw+x1]*tx)*(1-ty)+(src[y1*sw+x0]*(1-tx)+src[y1*sw+x1]*tx)*ty;}} return o; }
+async function computeMask(src,box){
+  const c=scaled(src,384),w=c.width,h=c.height,n=w*h; let p=null,kind='ai';
+  const seg=await loadSeg();
+  if(seg){ try{ const res=seg.segment(c),ms=res.confidenceMasks;
+      if(ms&&ms.length>17){ const mw=ms[0].width,mh=ms[0].height,acc=new Float32Array(mw*mh);
+        for(const k of SEG_ANIMAL_IDX){const f=ms[k].getAsFloat32Array();for(let i=0;i<acc.length;i++)acc[i]+=f[i];}
+        let cov=0; for(let i=0;i<acc.length;i++){ if(acc[i]>1)acc[i]=1; cov+=acc[i]; }
+        if(cov/acc.length>.015) p=resizeF32(acc,mw,mh,w,h); }
+      if(ms) ms.forEach(m=>m.close&&m.close()); if(res.close) res.close();
+    }catch(e){console.warn('seg',e);} }
+  if(!p){ kind='simple'; p=new Float32Array(n); const b=box||{x:.2,y:.15,w:.6,h:.65},cx=(b.x+b.w/2)*w,cy=(b.y+b.h/2)*h,rx=b.w*w*.52,ry=b.h*h*.52;
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){const d=Math.hypot((x-cx)/rx,(y-cy)/ry);p[y*w+x]=clamp((1.12-d)/.3,0,1);} }
+  const d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data,Ig=new Float32Array(n);
+  for(let i=0,j=0;j<n;i+=4,j++) Ig[j]=(.299*d[i]+.587*d[i+1]+.114*d[i+2])/255;
+  const q=kind==='ai'?guidedFilter(Ig,p,w,h,Math.max(4,Math.round(w/48)),8e-4):p, out=new Uint8Array(n);
+  for(let i=0;i<n;i++){ let v=clamp((q[i]-.12)/.76,0,1); v=v*v*(3-2*v); out[i]=Math.round(v*255); }
+  return {w,h,data:out,kind};
+}
+function maskCanvas(m){ const c=document.createElement('canvas'); c.width=m.w; c.height=m.h; const x=c.getContext('2d'),id=x.createImageData(m.w,m.h);
+  for(let i=0,j=0;j<m.data.length;i+=4,j++){id.data[i]=id.data[i+1]=id.data[i+2]=255;id.data[i+3]=m.data[j];} x.putImageData(id,0,0); return c; }
+function boxBlurRGBA(d,w,h,r){ const t=new Uint8ClampedArray(d.length);
+  for(let pass=0;pass<2;pass++){ const a=pass?t:d,b=pass?d:t, hz=!pass;
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){let R=0,G=0,B=0,c=0;for(let k=-r;k<=r;k++){const xx=hz?clamp(x+k,0,w-1):x,yy=hz?y:clamp(y+k,0,h-1),i=(yy*w+xx)*4;R+=a[i];G+=a[i+1];B+=a[i+2];c++;}
+      const o=(y*w+x)*4;b[o]=R/c;b[o+1]=G/c;b[o+2]=B/c;b[o+3]=255;} } }
+function blurred(src,s){ // 縮小→方框模糊→放大：所有瀏覽器都能用的大光圈模糊
+  const long=Math.max(src.width,src.height), small=scaled(scaled(src,Math.max(64,long/2)),Math.max(40,Math.round(long/(5+s*20))));
+  const x=small.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,small.width,small.height);
+  for(let i=0;i<2;i++) boxBlurRGBA(id.data,small.width,small.height,2); x.putImageData(id,0,0);
+  const c=document.createElement('canvas'); c.width=src.width; c.height=src.height; const cx=c.getContext('2d'); cx.imageSmoothingQuality='high'; cx.drawImage(small,0,0,c.width,c.height);
+  cx.fillStyle='rgba(0,0,0,.05)'; cx.fillRect(0,0,c.width,c.height); return c;
+}
+
+/* ---------------- 修圖 ---------------- */
+const STYLES={none:{name:'原圖'},natural:{name:'自然'},warm:{name:'溫暖'},japan:{name:'日系'},vivid:{name:'鮮明'}};
+// edit = {style, strength 0-100, blur 0-100}
+function renderEdit(src,edit,mask){
+  const w=src.width,h=src.height,out=document.createElement('canvas'); out.width=w; out.height=h; const ctx=out.getContext('2d',{willReadFrequently:true});
+  ctx.drawImage(src,0,0);
+  const t=edit.style==='none'?0:edit.strength/100;
+  if(t>0){
+    const id=ctx.getImageData(0,0,w,h),d=id.data,n=w*h,step=Math.max(1,Math.floor(n/60000));
+    const hist=new Uint32Array(256); let sr=0,sg=0,sb=0,cnt=0;
+    for(let p=0;p<n;p+=step){const i=p*4;hist[(.299*d[i]+.587*d[i+1]+.114*d[i+2])|0]++;sr+=d[i];sg+=d[i+1];sb+=d[i+2];cnt++;}
+    const pct=q=>{let a=0;const tg=cnt*q;for(let i=0;i<256;i++){a+=hist[i];if(a>=tg)return i;}return 255;};
+    const lo=Math.min(pct(.005),38),hi=Math.max(pct(.995),205),med=clamp((pct(.5)-lo)/(hi-lo),.05,.95);
+    const gamma=clamp(Math.log(.47)/Math.log(med),.72,1.3);
+    // 白平衡只修一點點，避免改變毛色
+    const avg=(sr+sg+sb)/3||1,gr=clamp(1+(avg/(sr||1)-1)*.3,.94,1.06),gb=clamp(1+(avg/(sb||1)-1)*.3,.94,1.06);
+    const P={natural:{sat:1.06,con:.10,lift:0,r:1,b:1,exp:0},warm:{sat:1.08,con:.06,lift:4,r:1.05,b:.93,exp:.02},
+             japan:{sat:.88,con:-.14,lift:16,r:.99,b:1.03,exp:.09},vivid:{sat:1.2,con:.2,lift:0,r:1,b:1,exp:0}}[edit.style];
+    const tone=v=>{ let x=clamp((v-lo)/(hi-lo),0,1); x=Math.pow(x,gamma); x=clamp(x+P.exp,0,1);
+      const s=x*x*(3-2*x); x=x+(s-x)*P.con*2; x=P.lift/255+x*(1-P.lift/255); return x*255; };
+    const LR=new Float32Array(256),LG=new Float32Array(256),LB=new Float32Array(256);
+    for(let i=0;i<256;i++){ LR[i]=i+(tone(clamp(i*gr*P.r,0,255))-i)*t; LG[i]=i+(tone(i)-i)*t; LB[i]=i+(tone(clamp(i*gb*P.b,0,255))-i)*t; }
+    const sat=1+(P.sat-1)*t;
+    for(let i=0;i<d.length;i+=4){ const r=LR[d[i]],g=LG[d[i+1]],b=LB[d[i+2]],l=.299*r+.587*g+.114*b; d[i]=l+(r-l)*sat; d[i+1]=l+(g-l)*sat; d[i+2]=l+(b-l)*sat; }
+    // 銳利化（unsharp mask）
+    const amt=.32*t; if(amt>.01){ const s=new Uint8ClampedArray(d), W4=w*4;
+      for(let y=1;y<h-1;y++){ let i=(y*w+1)*4; for(let x=1;x<w-1;x++,i+=4){ for(let k=0;k<3;k++){ const j=i+k; d[j]=s[j]+amt*(4*s[j]-s[j-4]-s[j+4]-s[j-W4]-s[j+W4]); } } } }
+    ctx.putImageData(id,0,0);
+  }
+  if(edit.blur>0&&mask){
+    const bg=blurred(out,edit.blur/100),tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tx_=tmp.getContext('2d');
+    tx_.imageSmoothingQuality='high'; tx_.drawImage(maskCanvas(mask),0,0,w,h); tx_.globalCompositeOperation='source-in'; tx_.drawImage(out,0,0);
+    const bx=bg.getContext('2d'); bx.drawImage(tmp,0,0); return bg;
+  }
+  return out;
+}
+
+/* ---------------- 存檔 ---------------- */
+const thumbUrl=new Map();
+function urlOf(p){ if(!thumbUrl.has(p.id)) thumbUrl.set(p.id,URL.createObjectURL(p.thumb)); return thumbUrl.get(p.id); }
+async function savePhoto({canvas,mode,scene,edit,mask,edited,ts}){
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const meta={id,petId:S.petId,scene:scene||'daily',mode,ts:ts||Date.now(),fav:false,w:canvas.width,h:canvas.height,
+    edit:edit||{style:'none',strength:70,blur:0},thumb:await toBlob(scaled(edited||canvas,420),.82)};
+  await dbPut('blobs',{id,orig:await toBlob(canvas),edited:edited?await toBlob(edited):null,mask:mask||null});
+  await dbPut('photos',meta); S.photos.push(meta); renderAlbumBtn(); return meta;
+}
+let lastThumb=null;
+function renderAlbumBtn(){ const last=[...S.photos].sort((a,b)=>b.ts-a.ts)[0],t=$('#albumBtn .th'); t.innerHTML=last?`<img src="${urlOf(last)}" alt="">`:'';
+  if(last&&lastThumb&&last.id!==lastThumb){t.classList.remove('pop');void t.offsetWidth;t.classList.add('pop');} lastThumb=last?last.id:'-'; }
+
+/* ---------------- 拍攝 ---------------- */
+function flash(){stage.classList.add('blink');setTimeout(()=>stage.classList.remove('blink'),110);}
+async function shoot(){
+  if(S.busy||!stream||video.readyState<2) return; S.busy=true;
+  try{
+    const scene=S.tpl||'daily';
+    if(S.mode==='action'){ await burst(scene); return; }
+    const box=detBoxNorm(), c=grabFrame(); flash(); if(navigator.vibrate) navigator.vibrate(12);
+    if(S.mode==='portrait'){
+      work('讓背景安靜下來…'); await sleep(30);
+      const mask=await computeMask(c,box), edit={style:'natural',strength:50,blur:60}, edited=renderEdit(c,edit,mask);
+      await savePhoto({canvas:c,mode:'portrait',scene,edit,mask,edited}); work('');
+      if(mask.kind!=='ai') toast('沒認出牠的輪廓，先柔化了四周');
+    } else { await savePhoto({canvas:c,mode:'daily',scene}); }
+  }catch(e){ console.error(e); work(''); toast('這張沒存成功，再拍一次'); }
+  finally{ S.busy=false; }
+}
+async function burst(scene){
+  const N=10,frames=[],bc=$('#burstCount'); bc.style.opacity=1;
+  for(let i=0;i<N;i++){ const t0=performance.now(); const d=detectOn(video); if(d) S.det=d;
+    frames.push({canvas:grabFrame(1600),box:detBoxNorm()}); bc.textContent=i+1; if(i%3===0) flash();
+    await sleep(Math.max(0,110-(performance.now()-t0))); }
+  bc.style.opacity=0; work('正在挑最好的一張'); await sleep(30);
+  await openReview(frames,scene,'action'); work('');
+}
+$('#shutter').onclick=shoot;
+
+/* ---------------- 選片 ---------------- */
+let RV=null;
+function scoreFrames(frames){
+  for(const f of frames){ const a=analyze(f.canvas,f.box); f.sharp=a.sharp; f.bright=a.bright; }
+  const mx=Math.max(...frames.map(f=>f.sharp),1e-6);
+  for(const f of frames){ const b=f.box, sh=f.sharp/mx, ex=1-clamp(Math.abs(f.bright-125)/110,0,1);
+    const fr=b?((b.cut?0:1)*.6+clamp(b.w*b.h/.25,0,1)*.4):.3, cf=b?b.score:.3;
+    f.parts={sh,ex,fr,cf}; f.score=sh*.58+fr*.2+cf*.12+ex*.1; }
+  const order=[...frames].sort((a,b)=>b.score-a.score); order.forEach((f,i)=>f.rank=i); return order[0];
+}
+function whyText(f,frames){ const r=[]; const p=f.parts;
+  if(p.sh>=.97&&frames.length>1) r.push('這組裡最清楚'); else if(p.sh>.8) r.push('夠清楚');
+  if(f.box&&!f.box.cut) r.push('寵物完整在畫面裡'); if(!f.box) r.push('沒辨識到寵物，只比了清晰度');
+  if(p.ex>.7) r.push('亮度剛好'); else if(f.bright<70) r.push('偏暗'); else if(f.bright>190) r.push('偏亮');
+  return r.join('、'); }
+async function openReview(frames,scene,mode){
+  const best=scoreFrames(frames);
+  for(const f of frames){ f.url=scaled(f.canvas,720).toDataURL('image/jpeg',.8); f.keep=f===best; }
+  RV={frames,scene,mode,view:frames.indexOf(best),best}; show('review'); renderReview();
+}
+function renderReview(){
+  const {frames,view,best}=RV,f=frames[view],n=frames.filter(x=>x.keep).length;
+  $('#rvImg').src=f.url; $('#rvBadge').style.display=f===best?'block':'none';
+  $('#rvTitle').textContent=`${frames.length} 張裡，這張最好`;
+  $('#rvWhy').innerHTML=`<b>${esc(whyText(f,frames))}</b><br><span class="muted small">眼神和表情，交給你決定。</span>`;
+  $('#rvStrip').innerHTML=frames.map((x,i)=>`<button data-i="${i}" class="${i===view?'view ':''}${x.keep?'keep':''}"><img src="${x.url}" alt="第 ${i+1} 張"><span class="ck">${I.check}</span>${x===best?'<span class="star">推薦</span>':''}</button>`).join('');
+  $('#rvToggle').textContent=f.keep?'不要這張':'留下這張'; $('#rvSave').textContent=n?`保留 ${n} 張`:'全部不要';
+}
+$('#rvStrip').onclick=e=>{const b=e.target.closest('button');if(b){RV.view=+b.dataset.i;renderReview();}};
+$('#rvToggle').onclick=()=>{const f=RV.frames[RV.view];f.keep=!f.keep;renderReview();};
+function endReview(){ RV.frames.forEach(f=>{f.canvas.width=0;}); const back=RV.from||'cam'; RV=null; show(back); if(back==='album') renderAlbum(); }
+$('#rvBack').innerHTML=I.x; $('#rvBack').onclick=endReview;
+$('#rvSave').onclick=async()=>{ const keep=RV.frames.filter(f=>f.keep); $('#rvSave').disabled=true;
+  for(const f of keep){ const m=await savePhoto({canvas:f.canvas,mode:RV.mode,scene:RV.scene}); if(f===RV.best&&keep.length>1){m.fav=true;await dbPut('photos',m);} }
+  $('#rvSave').disabled=false; endReview(); };
+
+/* ---------------- 修圖畫面 ---------------- */
+let ED=null;
+async function openEditor(meta){
+  show('editor'); $('#edNote').textContent='載入中…';
+  const bl=await dbGet('blobs',meta.id), full=await blobToCanvas(bl.orig), prev=scaled(full,900);
+  ED={meta,bl,full,prev,edit:{...meta.edit},mask:bl.mask||null,hold:false,from:ED&&ED.from};
+  $('#edStyles').innerHTML=Object.entries(STYLES).map(([k,v])=>`<button class="chip" data-s="${k}">${v.name}</button>`).join('');
+  syncEditor(); drawEditor();
+}
+function syncEditor(){ const e=ED.edit; $('#edStr').value=e.strength; $('#edStrO').textContent=e.strength; $('#edBlur').value=e.blur; $('#edBlurO').textContent=e.blur;
+  document.querySelectorAll('#edStyles .chip').forEach(b=>b.classList.toggle('act',b.dataset.s===e.style)); $('#edStr').disabled=e.style==='none'; }
+let edRaf=0;
+function drawEditor(){ cancelAnimationFrame(edRaf); edRaf=requestAnimationFrame(()=>{ if(!ED) return;
+  const c=$('#edCanvas'),r=ED.hold?ED.prev:renderEdit(ED.prev,ED.edit,ED.mask); c.width=r.width; c.height=r.height; c.getContext('2d').drawImage(r,0,0);
+  $('#edNote').textContent=ED.hold?'原圖':(ED.edit.blur>0&&ED.mask&&ED.mask.kind==='simple'?'沒認出牠的輪廓，改成只留中間清楚':'只調光線和顏色，牠還是牠'); }); }
+async function needMask(){ if(ED.mask) return; $('#edNote').textContent='正在辨識寵物輪廓…'; await sleep(20);
+  let box=null; const d=detectOn(ED.prev); if(d) box={x:d.x/ED.prev.width,y:d.y/ED.prev.height,w:d.w/ED.prev.width,h:d.h/ED.prev.height};
+  ED.mask=await computeMask(ED.full,box); }
+$('#edStyles').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;ED.edit.style=b.dataset.s;syncEditor();drawEditor();};
+$('#edStr').oninput=e=>{ED.edit.strength=+e.target.value;$('#edStrO').textContent=e.target.value;drawEditor();};
+$('#edBlur').oninput=async e=>{ED.edit.blur=+e.target.value;$('#edBlurO').textContent=e.target.value;if(ED.edit.blur>0)await needMask();drawEditor();};
+$('#edOne').onclick=()=>{ED.edit.style='natural';ED.edit.strength=70;syncEditor();drawEditor();};
+const hold=v=>{if(ED){ED.hold=v;drawEditor();}};
+$('#edHold').addEventListener('pointerdown',()=>hold(true)); ['pointerup','pointerleave','pointercancel'].forEach(n=>$('#edHold').addEventListener(n,()=>hold(false)));
+$('#edBack').innerHTML=I.back; $('#edBack').onclick=()=>{const m=ED.meta;ED=null;openDetail(m);};
+$('#edSave').onclick=async()=>{ $('#edNote').textContent='儲存中…'; await sleep(20);
+  const e=ED.edit,m=ED.meta,changed=e.style!=='none'||e.blur>0, out=changed?renderEdit(ED.full,e,ED.mask):null;
+  ED.bl.edited=out?await toBlob(out):null; ED.bl.mask=ED.mask; await dbPut('blobs',ED.bl);
+  m.edit={...e}; m.thumb=await toBlob(scaled(out||ED.full,420),.82); if(thumbUrl.has(m.id)){URL.revokeObjectURL(thumbUrl.get(m.id));thumbUrl.delete(m.id);}
+  await dbPut('photos',m); renderAlbumBtn(); ED=null; openDetail(m); };
+
+/* ---------------- 相簿 ---------------- */
+const AL={pet:'all',scene:'all',fav:false,pick:null};
+const petName=id=>{const p=S.pets.find(p=>p.id===id);return p?p.name:'未分類';};
+function renderAlbum(){
+  $('#alPets').innerHTML=[['all','全部'],...S.pets.map(p=>[p.id,p.name])].map(([k,n])=>`<button class="chip ${AL.pet===k?'act':''}" data-p="${esc(k)}">${esc(n)}</button>`).join('')+`<button class="chip ${AL.fav?'act':''}" data-fav="1">${I.heart}收藏</button>`;
+  const scenes=['all','daily',...Object.keys(TPL)];
+  $('#alScenes').innerHTML=scenes.map(k=>`<button class="chip ${AL.scene===k?'act':''}" data-s="${k}">${k==='all'?'所有情境':SCENE_NAME(k)}</button>`).join('');
+  $('#alCompare').classList.toggle('act',!!AL.pick); $('#alCompare').textContent=AL.pick?'取消比較':'比較';
+  const list=S.photos.filter(p=>(AL.pet==='all'||p.petId===AL.pet)&&(AL.scene==='all'||p.scene===AL.scene)&&(!AL.fav||p.fav)).sort((a,b)=>b.ts-a.ts);
+  if(!list.length){ $('#alBody').innerHTML=`<div class="empty"><b>${S.photos.length?'這個分類還沒有照片':'還沒有照片'}</b>${S.photos.length?'換一個分類看看。':'回到相機拍第一張，或從手機相簿匯入。'}</div>`; return; }
+  const groups=new Map(); for(const p of list){const d=new Date(p.ts),k=`${d.getFullYear()} 年 ${d.getMonth()+1} 月`;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(p);}
+  $('#alBody').innerHTML=(AL.pick?`<p class="muted small" style="margin:8px 0 0">選兩張照片來比較（已選 ${AL.pick.length} 張）</p>`:'')+[...groups].map(([k,ps])=>`<h3>${k}</h3><div class="grid">${ps.map(p=>
+    `<button data-id="${p.id}" class="${AL.pick&&AL.pick.includes(p.id)?'sel':''}"><img loading="lazy" src="${urlOf(p)}" alt="${esc(petName(p.petId))}的${SCENE_NAME(p.scene)}照">${p.fav?`<span class="fv">${I.heartF}</span>`:''}${p.scene!=='daily'?`<span class="tag">${SCENE_NAME(p.scene)}</span>`:''}<span class="pick"></span></button>`).join('')}</div>`).join('');
+}
+$('#alPets').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;if(b.dataset.fav)AL.fav=!AL.fav;else AL.pet=b.dataset.p;renderAlbum();};
+$('#alScenes').onclick=e=>{const b=e.target.closest('.chip');if(b){AL.scene=b.dataset.s;renderAlbum();}};
+$('#alCompare').onclick=()=>{AL.pick=AL.pick?null:[];renderAlbum();};
+$('#alBody').onclick=e=>{const b=e.target.closest('[data-id]');if(!b)return;const p=S.photos.find(x=>x.id===b.dataset.id);
+  if(AL.pick){ const i=AL.pick.indexOf(p.id); if(i>=0)AL.pick.splice(i,1); else AL.pick.push(p.id);
+    if(AL.pick.length===2){const ids=AL.pick;AL.pick=null;openCompare(ids);} else renderAlbum(); }
+  else openDetail(p); };
+$('#alBack').innerHTML=I.back; $('#alBack').onclick=()=>show('cam');
+$('#albumBtn').onclick=()=>{AL.pick=null;show('album');renderAlbum();};
+
+let DT=null,dtUrl=null;
+async function fullBlob(p){const b=await dbGet('blobs',p.id);return b.edited||b.orig;}
+async function openDetail(p){
+  DT=p; show('detail'); if(dtUrl)URL.revokeObjectURL(dtUrl); dtUrl=URL.createObjectURL(await fullBlob(p)); $('#dtImg').src=dtUrl; renderDetail(); }
+function renderDetail(){ const p=DT,d=new Date(p.ts);
+  $('#dtTitle').textContent=petName(p.petId);
+  $('#dtMeta').textContent=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} · ${SCENE_NAME(p.scene)} · ${p.edit.style!=='none'||p.edit.blur>0?'已修圖':'原圖'}`;
+  $('#dtFav').innerHTML=(p.fav?I.heartF:I.heart)+(p.fav?'已收藏':'收藏'); $('#dtFav').className=p.fav?'on':'';
+  $('#dtEdit').innerHTML=I.wand+'修圖'; $('#dtShare').innerHTML=I.share+'分享'; $('#dtTag').innerHTML=I.tag+'分類'; $('#dtDel').innerHTML=I.trash+'刪除'; }
+$('#dtBack').innerHTML=I.back; $('#dtBack').onclick=()=>{show('album');renderAlbum();};
+$('#dtFav').onclick=async()=>{DT.fav=!DT.fav;await dbPut('photos',DT);renderDetail();};
+$('#dtEdit').onclick=()=>openEditor(DT);
+async function shareBlob(blob,name){
+  const file=new File([blob],name,{type:blob.type||'image/jpeg'});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){ try{await navigator.share({files:[file]});return;}catch(e){ if(e.name==='AbortError')return; } }
+  const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('已下載到手機');
+}
+$('#dtShare').onclick=async()=>shareBlob(await fullBlob(DT),`${petName(DT.petId)}-${new Date(DT.ts).toISOString().slice(0,10)}.jpg`);
+async function deletePhoto(p){ await dbDel('photos',p.id);await dbDel('blobs',p.id);S.photos=S.photos.filter(x=>x.id!==p.id);renderAlbumBtn(); }
+$('#dtDel').onclick=()=>{ openSheet(`<h2>刪除這張照片？</h2><p class="muted small">原圖和修過的版本都會刪掉，無法復原。</p><div class="row" style="margin-top:14px"><button class="btn wide" id="no">保留</button><button class="btn pri wide" id="yes">刪除</button></div>`);
+  $('#sheet').onclick=async e=>{ if(e.target.closest('#no'))closeSheet(); if(e.target.closest('#yes')){closeSheet();await deletePhoto(DT);show('album');renderAlbum();toast('已刪除');} }; };
+$('#dtTag').onclick=()=>{ openSheet(`<h2>這張照片是誰、什麼情境？</h2>
+  <label class="field">寵物<select id="tgPet">${S.pets.map(p=>`<option value="${esc(p.id)}" ${p.id===DT.petId?'selected':''}>${esc(p.name)}</option>`).join('')}</select></label>
+  <label class="field">情境<select id="tgScene">${['daily',...Object.keys(TPL)].map(k=>`<option value="${k}" ${k===DT.scene?'selected':''}>${SCENE_NAME(k)}</option>`).join('')}</select></label>
+  <button class="btn pri" id="tgOk" style="width:100%;margin-top:16px">完成</button>`);
+  $('#sheet').onclick=async e=>{ if(e.target.closest('#tgOk')){DT.petId=$('#tgPet').value;DT.scene=$('#tgScene').value;await dbPut('photos',DT);closeSheet();renderDetail();} }; };
+
+async function openCompare(ids){ show('compare'); const ps=ids.map(id=>S.photos.find(p=>p.id===id)); const urls=[];
+  for(const p of ps) urls.push(URL.createObjectURL(await fullBlob(p)));
+  const draw=()=>{ $('#cpWrap').innerHTML=ps.map((p,i)=>`<figure><div class="im"><img src="${urls[i]}" alt="比較照片 ${i+1}"></div><div class="row"><button class="btn wide ${p.fav?'pri':''}" data-f="${i}" style="height:44px;padding:0 8px">${p.fav?'已收藏':'收藏'}</button><button class="ib" data-d="${i}" aria-label="刪除這張">${I.trash}</button></div></figure>`).join(''); };
+  draw();
+  $('#cpWrap').onclick=async e=>{ const f=e.target.closest('[data-f]'),d=e.target.closest('[data-d]');
+    if(f){const p=ps[+f.dataset.f];p.fav=!p.fav;await dbPut('photos',p);draw();}
+    if(d){await deletePhoto(ps[+d.dataset.d]);urls.forEach(u=>URL.revokeObjectURL(u));show('album');renderAlbum();toast('已刪除一張');} };
+  $('#cpBack').onclick=()=>{urls.forEach(u=>URL.revokeObjectURL(u));show('album');renderAlbum();};
+}
+$('#cpBack').innerHTML=I.back;
+
+/* ---------------- 成長紀錄 ---------------- */
+function ageText(pet,ts){ if(!pet||!pet.birthday) return ''; const b=new Date(pet.birthday),d=new Date(ts); let m=(d.getFullYear()-b.getFullYear())*12+d.getMonth()-b.getMonth(); if(d.getDate()<b.getDate())m--;
+  if(m<0) return ''; return m<12?`${m} 個月大`:`${Math.floor(m/12)} 歲${m%12?` ${m%12} 個月`:''}`; }
+function growthRows(){ const pet=S.pets.find(p=>p.id===(AL.pet==='all'?S.petId:AL.pet))||S.pets[0]; const by=new Map();
+  for(const p of S.photos.filter(p=>p.petId===pet.id).sort((a,b)=>a.ts-b.ts)){ const d=new Date(p.ts),k=d.getFullYear()*100+d.getMonth(); const cur=by.get(k); if(!cur||(p.fav&&!cur.fav)||(p.fav===cur.fav&&p.ts>cur.ts)) by.set(k,p); }
+  return {pet,rows:[...by.values()]}; }
+$('#alGrowth').onclick=()=>{ const {pet,rows}=growthRows(); show('growth'); $('#grTitle').textContent=`${pet.name}的成長紀錄`;
+  $('#grBody').innerHTML=rows.length?`<p class="muted small">每個月挑一張（優先用你收藏的）。${pet.birthday?'':'在相機左上角的寵物設定填生日，就會顯示當時幾個月大。'}</p>`+rows.map(p=>{const d=new Date(p.ts);
+    return `<div class="gr"><img src="${urlOf(p)}" alt=""><div><b>${d.getFullYear()} 年 ${d.getMonth()+1} 月</b><span class="muted">${esc(ageText(pet,p.ts)||SCENE_NAME(p.scene))}</span></div></div>`;}).join('')
+    :`<div class="empty"><b>${esc(pet.name)}還沒有照片</b>每個月拍一張，這裡會自動排成時間軸。</div>`;
+  $('#grExport').hidden=!rows.length; };
+$('#grBack').innerHTML=I.back; $('#grBack').onclick=()=>{show('album');renderAlbum();};
+$('#grExport').onclick=async()=>{ const {pet,rows}=growthRows(),cols=Math.min(3,rows.length),cw=360,chh=480,lab=64,pad=24,head=96,rc=Math.ceil(rows.length/cols);
+  const c=document.createElement('canvas'); c.width=pad+cols*(cw+pad); c.height=head+rc*(chh+lab+pad)+pad; const x=c.getContext('2d'); const ff=getComputedStyle(document.body).fontFamily;
+  x.fillStyle='#000'; x.fillRect(0,0,c.width,c.height); x.fillStyle='#fff'; x.font='800 40px '+ff; x.fillText(`${pet.name}的成長紀錄`,pad,64);
+  for(let i=0;i<rows.length;i++){ const p=rows[i],im=await blobToCanvas(p.thumb),px=pad+(i%cols)*(cw+pad),py=head+Math.floor(i/cols)*(chh+lab+pad);
+    const k=Math.max(cw/im.width,chh/im.height),sw=cw/k,sh=chh/k; x.drawImage(im,(im.width-sw)/2,(im.height-sh)/2,sw,sh,px,py,cw,chh);
+    const d=new Date(p.ts); x.fillStyle='#fff'; x.font='700 24px '+ff; x.fillText(`${d.getFullYear()}.${d.getMonth()+1}`,px,py+chh+30); x.fillStyle='#ffc978'; x.font='400 20px '+ff; x.fillText(ageText(pet,p.ts),px,py+chh+56); }
+  shareBlob(await toBlob(c),`${pet.name}-成長紀錄.jpg`); };
+
+/* ---------------- 匯入 ---------------- */
+let importFrom='album';
+$('#importBtn').onclick=()=>{importFrom='album';$('#fileIn').click();}; $('#importBtn0').onclick=()=>{importFrom='cam';$('#fileIn').click();};
+$('#fileIn').onchange=async e=>{ const files=[...e.target.files].slice(0,24); e.target.value=''; if(!files.length) return;
+  toast('讀取照片中…',6000); const frames=[];
+  for(const f of files){ try{ const c=await blobToCanvas(f,2400); const d=detectOn(c); let box=null;
+    if(d){ box={x:d.x/c.width,y:d.y/c.height,w:d.w/c.width,h:d.h/c.height,score:d.score,kind:d.kind}; box.cut=box.x<.01||box.y<.01||box.x+box.w>.99||box.y+box.h>.99; }
+    frames.push({canvas:c,box}); }catch(err){} }
+  if(!frames.length){toast('讀不到這些照片');return;}
+  if(frames.length===1){ const m=await savePhoto({canvas:frames[0].canvas,mode:'daily',scene:'daily'}); toast('已匯入'); openDetail(m); }
+  else { await openReview(frames,'daily','daily'); RV.from='album'; } };
+
+/* ---------------- 寵物、模板、模式 ---------------- */
+function renderPetBtn(){ $('#petBtn').innerHTML=`<span>${esc(petName(S.petId))}</span>`+I.chev; }
+function petSheet(){
+  openSheet(`<h2>現在拍的是誰？</h2><p class="muted small">照片會自動歸到這隻寵物的相簿。</p>
+   ${S.pets.map(p=>`<button class="petRow ${p.id===S.petId?'act':''}" data-id="${esc(p.id)}"><span class="av">${esc(p.name.slice(0,1))}</span><span><b>${esc(p.name)}</b><br><span class="muted small">${esc(p.kind)}${p.birthday?' · 生日 '+esc(p.birthday):''}</span></span></button>`).join('')}
+   <h2 style="margin-top:20px">新增或修改</h2>
+   <label class="field">名字<input id="pfName" maxlength="12" placeholder="例如：麻糬" value=""></label>
+   <label class="field">種類<select id="pfKind"><option>貓</option><option>狗</option><option>兔子</option><option>鳥</option><option>其他</option></select></label>
+   <label class="field">生日（選填，用來算成長紀錄的月齡）<input id="pfBirth" type="date"></label>
+   <div class="row" style="margin-top:16px"><button class="btn wide" id="pfEdit">改目前這隻</button><button class="btn pri wide" id="pfAdd">新增一隻</button></div>`);
+  const cur=S.pets.find(p=>p.id===S.petId); if(cur){$('#pfName').value=cur.name;$('#pfKind').value=cur.kind;$('#pfBirth').value=cur.birthday||'';}
+  $('#sheet').onclick=async e=>{ const r=e.target.closest('.petRow');
+    if(r){S.petId=r.dataset.id;LS.set('pet',S.petId);renderPetBtn();closeSheet();return;}
+    const add=e.target.closest('#pfAdd'),ed=e.target.closest('#pfEdit'); if(!add&&!ed) return;
+    const name=$('#pfName').value.trim(); if(!name){toast('先填名字');return;}
+    const p=add?{id:'p'+Date.now().toString(36)}:cur; p.name=name;p.kind=$('#pfKind').value;p.birthday=$('#pfBirth').value||'';
+    await dbPut('pets',p); if(add)S.pets.push(p); S.petId=p.id; LS.set('pet',p.id); renderPetBtn(); closeSheet(); toast(add?`已新增${name}`:'已更新'); };
+}
+$('#petBtn').onclick=petSheet;
+function setMode(m,quiet){ S.mode=m; LS.set('mode',m); document.querySelectorAll('#modes button').forEach(b=>{b.classList.toggle('act',b.dataset.m===m);b.setAttribute('aria-selected',b.dataset.m===m);});
+  if(m==='portrait') loadSeg(); if(!quiet){ note(MODE[m].desc); if(navigator.vibrate) navigator.vibrate(8); } }
+$('#modes').onclick=e=>{const b=e.target.closest('button');if(b)setMode(b.dataset.m);};
+function renderSceneBtn(){ $('#sceneBtn').innerHTML=`<span>${S.tpl?TPL[S.tpl].name:'隨手拍'}</span>`+I.chev; }
+function setTpl(id){ S.tpl=id||null; renderSceneBtn(); if(S.tpl){ setMode(TPL[S.tpl].mode,true); note(TPL[S.tpl].steps[0],3600); } }
+function sceneSheet(){
+  const row=(k,name,lines)=>`<button class="tpl ${(S.tpl||'')===k?'act':''}" data-t="${k}">${tplSvg(k)}<span class="t"><b>${name}</b>${lines.map(s=>`<i>${s}</i>`).join('')}</span><span class="ck">${I.check}</span></button>`;
+  openSheet(`<h2>今天想拍什麼？</h2>`+row('','隨手拍',['看到就拍，不用對位'])+Object.entries(TPL).map(([k,t])=>row(k,t.name,t.steps)).join('')+
+    `<h3>輔助</h3><button class="tog ${S.auto?'on':''}" id="tgAuto"><span><b>牠停下來時自動拍</b></span><span class="sw"></span></button>
+     <button class="tog ${S.grid?'on':''}" id="tgGrid"><span><b>顯示構圖格線</b></span><span class="sw"></span></button>`);
+  $('#sheet').onclick=e=>{ const b=e.target.closest('.tpl'); if(b){ setTpl(b.dataset.t); closeSheet(); return; }
+    if(e.target.closest('#tgAuto')){ S.auto=!S.auto; $('#tgAuto').classList.toggle('on',S.auto); }
+    if(e.target.closest('#tgGrid')){ S.grid=!S.grid; LS.set('grid',S.grid); $('#tgGrid').classList.toggle('on',S.grid); } };
+}
+$('#sceneBtn').onclick=sceneSheet;
+$('#flipBtn').innerHTML=I.flip; $('#torchBtn').innerHTML=I.torch; $('#callBtn .th').innerHTML=I.wave;
+
+/* ---------------- 啟動 ---------------- */
+$('#startBtn').onclick=async()=>{
+  audio(); $('#startErr').hidden=true;
+  try{ await startCamera(); $('#startCard').hidden=true; if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }
+  catch(e){ const el=$('#startErr'); el.hidden=false;
+    el.textContent = !window.isSecureContext||e.message==='nocam' ? '這個網址開不了鏡頭。請改用 https 網址打開，或先從相簿選照片。'
+      : e.name==='NotAllowedError' ? '需要你允許使用相機。到瀏覽器的網站設定打開它，再按一次。'
+      : '找不到可用的相機，請確認沒有其他 App 正在使用鏡頭。'; }
+};
+(async function init(){
+  await openDB();
+  S.pets=await dbAll('pets'); if(!S.pets.length){const p={id:'p0',name:'我的毛孩',kind:'貓',birthday:''};await dbPut('pets',p);S.pets=[p];}
+  if(!S.pets.some(p=>p.id===S.petId)) S.petId=S.pets[0].id;
+  S.photos=await dbAll('photos');
+  renderPetBtn(); renderSceneBtn(); renderAlbumBtn(); setMode(S.mode,true); setZoom(1);
+  requestAnimationFrame(tick); loadAI();
+})();
+</script>
+</body>
+</html>
