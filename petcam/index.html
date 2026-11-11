@@ -71,6 +71,9 @@ svg{display:block}
   text-shadow:0 1px 10px rgba(0,0,0,.55);pointer-events:none;transition:opacity .14s,color .3s;text-wrap:balance}
 #msg.sw{opacity:0}
 #msg.ok{color:var(--accent)}
+#checks{position:absolute;z-index:2;left:0;right:0;bottom:64px;display:flex;justify-content:center;gap:6px;pointer-events:none}
+#checks span{height:24px;padding:0 10px;border-radius:12px;font-size:11.5px;line-height:24px;letter-spacing:.06em;color:var(--ink3);background:rgba(0,0,0,.3);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:color .3s}
+#checks .no{color:var(--ink)} #checks .ok{color:var(--accent)}
 #zooms{position:absolute;z-index:2;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:2px;padding:3px;border-radius:22px;
   background:rgba(0,0,0,.32);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4)}
 #zooms button{width:36px;height:36px;border-radius:50%;font-size:12px;font-weight:600;color:var(--ink2);font-variant-numeric:tabular-nums;transition:all .25s var(--ease)}
@@ -241,6 +244,7 @@ input[type=range]:disabled{opacity:.35}
     <video id="video" playsinline muted autoplay></video>
     <canvas id="ov"></canvas>
     <div id="msg" role="status"></div>
+    <div id="checks" aria-label="拍法檢查"></div>
     <div id="zooms"></div>
     <div id="burstCount"></div>
     <div id="work"><div id="workMsg"></div></div>
@@ -360,24 +364,50 @@ const I = {
 };
 
 /* ---------------- 情境模板 ---------------- */
-// zone = 牠該放的位置與大小 [x,y,w,h]，以取景框為 1
+// 每一種構圖都對應一位攝影師公開分享過的拍法。
+// zone = 牠該放的位置與大小 [x,y,w,h]；pitch = 手機該有的俯仰角範圍（直立 = 90°，朝下 < 90°）；light = 需要的光線
 const TPL = {
-  head:  {name:'大頭', mode:'portrait', zone:[.13,.10,.74,.62], angle:'蹲低，和牠眼睛同高', steps:['蹲到跟牠眼睛一樣高','靠近，讓臉填滿畫面上的框','按「叫牠」，牠看過來就拍']},
-  half:  {name:'半身', mode:'portrait', zone:[.20,.20,.60,.64], angle:'和牠同高，退後半步', steps:['讓牠坐好','頭到胸口放進框裡','背景會自動變柔和']},
-  body:  {name:'全身', mode:'daily',    zone:[.16,.30,.68,.52], angle:'蹲下來拍，不要從上往下', steps:['退後到整隻都進框','四周留一點空間，別切到尾巴和腳','背景找乾淨的牆或地板']},
-  left:  {name:'靠左', mode:'daily',    zone:[.05,.34,.50,.52], angle:'讓牠看向右邊的空位', steps:['把牠放在左邊的框裡','右邊留白，畫面會更有故事','牠看向右邊時最好看']},
-  right: {name:'靠右', mode:'daily',    zone:[.45,.34,.50,.52], angle:'讓牠看向左邊的空位', steps:['把牠放在右邊的框裡','左邊留白','牠看向左邊時最好看']},
-  sleep: {name:'睡覺', mode:'daily',    zone:[.10,.30,.80,.42], angle:'從正上方，輕輕往下拍', steps:['不要出聲、不要開補光燈','從正上方慢慢靠近','整隻放進橫的框裡']},
-  play:  {name:'玩耍', mode:'action',   zone:[.20,.40,.60,.50], angle:'手機放到地板的高度', steps:['到光線亮的地方，動作才清楚','手機放低，鏡頭跟牠一樣高','牠衝過來時按一下，相機會連拍再幫你挑']},
-  bday:  {name:'生日', mode:'portrait', zone:[.20,.08,.60,.50], prop:[.25,.66,.50,.26], propName:'蛋糕', angle:'和牠同高，蛋糕放在前面', steps:['蛋糕或禮物放在下面的框','讓牠坐好，臉放進上面的框','蠟燭點著時不要開補光燈']},
-  far:   {name:'遠景', mode:'daily',    zone:[.36,.56,.28,.28], angle:'退後，讓風景當主角', steps:['退得遠遠的','牠小小地站在下方的框裡','上面留給天空或風景']},
+  eye:   {name:'平視', who:'Walter Chandoha', why:'貓攝影的開創者。他會趴到地上，讓鏡頭和貓的眼睛一樣高。', mode:'portrait', zone:[.18,.16,.64,.64], pitch:[72,108], light:'any',
+          steps:['蹲下或趴下，手機和牠的眼睛一樣高','手機立直，不要往下看牠','按「叫牠」，牠看過來就拍']},
+  low:   {name:'低角度', who:'Kaylee Greer', why:'國家地理頻道的狗攝影師。她教學的第一條就是「放低」。', mode:'daily', zone:[.20,.34,.60,.54], pitch:[86,125], light:'any', pitchLow:'再放低：手機貼近地面，鏡頭微微朝上',
+          steps:['手機貼近地面','鏡頭微微朝上，讓天空或天花板當背景','牠會顯得特別有精神']},
+  rim:   {name:'逆光毛邊', who:'Walter Chandoha', why:'他用牠背後的光，把毛的邊緣一根根照亮。', mode:'daily', zone:[.20,.24,.60,.58], pitch:[70,110], light:'back',
+          steps:['讓窗戶或夕陽在牠的正後方','你面對光，牠背對光','毛的邊緣會亮起一圈']},
+  side:  {name:'側光', who:'佐藤誠', why:'日本貓攝影師。他認為光從側面來，最能拍出立體感，而且不要用閃光燈。', mode:'portrait', zone:[.18,.18,.64,.62], pitch:[70,110], light:'side',
+          steps:['讓窗戶在牠的左邊或右邊','不要開補光燈','臉一邊亮一邊暗，輪廓會更立體']},
+  face:  {name:'表情特寫', who:'Elke Vogelsang', why:'德國寵物肖像攝影師。沒有干擾的環境，一手相機、一手零食。', mode:'portrait', zone:[.10,.10,.80,.68], pitch:[72,108], light:'any', bg:true,
+          steps:['找一面乾淨的牆或地板當背景','靠近，讓臉填滿框','另一隻手拿零食，或按「叫牠」']},
+  treat: {name:'接零食', who:'Christian Vieler', why:'以「狗接零食」系列聞名：用很快的快門，拍下張嘴那一瞬間。', mode:'action', zone:[.16,.14,.68,.62], pitch:[72,108], light:'bright', manual:true,
+          steps:['到很亮的地方，動作才凍得住','讓牠坐好、正面看你','從手機後面把零食丟向牠的鼻子，同時按快門']},
+  up:    {name:'俯拍抬頭', who:'Nikon 攝影教學', why:'從上往下拍，牠抬頭看鏡頭時，眼睛會收進更多光。', mode:'daily', zone:[.20,.22,.60,.56], pitch:[25,68], light:'any',
+          steps:['站著，手機朝下','按「叫牠」讓牠抬頭','眼睛裡出現亮點時最好看']},
+  left:  {name:'留白·左', who:'經典構圖', why:'牠靠一邊，視線前方留空，畫面才有呼吸。', mode:'daily', zone:[.05,.32,.50,.54], pitch:[68,110], light:'any',
+          steps:['把牠放在左邊的框裡','右邊留白','牠看向右邊時最好看']},
+  right: {name:'留白·右', who:'經典構圖', why:'牠靠一邊，視線前方留空，畫面才有呼吸。', mode:'daily', zone:[.45,.32,.50,.54], pitch:[68,110], light:'any',
+          steps:['把牠放在右邊的框裡','左邊留白','牠看向左邊時最好看']},
+  sleep: {name:'睡覺', who:'經典構圖', why:'睡著時從正上方拍，身形最完整。', mode:'daily', zone:[.10,.30,.80,.42], pitch:[0,38], light:'any',
+          steps:['不要出聲、不要開補光燈','站到牠正上方，手機朝下','整隻放進橫的框裡']},
 };
-const SCENE_NAME = id => id==='daily' ? '日常' : (TPL[id] ? TPL[id].name : '日常');
-const MODE = {
-  daily:    {desc:'自動調整，適合日常隨手拍'},
-  action:   {desc:'按一下連拍 10 張，自動挑出最清楚的'},
-  portrait: {desc:'辨識寵物輪廓，把背景變柔和'},
-};
+const OLD_SCENE={head:'大頭',half:'半身',body:'全身',play:'玩耍',bday:'生日',far:'遠景'};
+const SCENE_NAME = id => id==='daily' ? '日常' : (TPL[id] ? TPL[id].name : (OLD_SCENE[id]||'日常'));
+// 逐項檢查使用者有沒有照這個拍法做。ok: true 做到 / false 沒做到 / null 無法判斷
+function checks(b){
+  const t=TPL[S.tpl],out=[],lm=S.lm;
+  if(t.pitch){ let ok=null,msg=''; if(S.pitch!=null){ ok=S.pitch>=t.pitch[0]&&S.pitch<=t.pitch[1];
+      if(!ok){ const down=S.pitch<t.pitch[0]; msg=t.pitch[1]<70?(down?'手機太平了，稍微立起來一點':'這張要從上往下拍：站高，手機朝下'):(down?(t.pitchLow||'你正從上往下拍。蹲下來，把手機立直'):'手機仰太高了，放平一點'); } }
+    out.push({k:'角度',ok,msg}); }
+  if(S.ai!=='ready') out.push({k:'位置',ok:null,msg:''}); else if(!b) out.push({k:'位置',ok:false,msg:'把牠放進框裡'}); else { const m=matchInfo(b,t.zone); out.push({k:'位置',ok:m.ok,msg:m.msg}); }
+  let ok=null,msg='';
+  if(S.bright<55){ ok=false; msg='太暗了，靠近窗邊或開燈'; }
+  else if(t.light==='bright'){ ok=S.bright>=95; msg='這裡不夠亮，動作會糊。到窗邊或戶外'; }
+  else if(t.light==='back'){ if(lm){ ok=lm.out>lm.in*1.18; msg='光要在牠背後：讓窗戶或夕陽在牠正後方'; } }
+  else if(t.light==='side'){ if(lm){ ok=lm.side>.12; msg='光要從側面來：轉個方向，讓窗戶在牠旁邊'; } }
+  else ok=true;
+  out.push({k:'光線',ok,msg});
+  if(t.bg) out.push({k:'背景',ok:lm?lm.clutter<15:null,msg:'背景有點亂，換一面乾淨的牆或地板'});
+  return out;
+}
+window.addEventListener('deviceorientation',e=>{ if(e.beta!=null) S.pitch=S.pitch==null?e.beta:S.pitch*.7+e.beta*.3; });
 function tplSvg(id){
   const t=TPL[id],r=z=>`x="${4+z[0]*40}" y="${4+z[1]*56}" width="${z[2]*40}" height="${z[3]*56}"`;
   const g=t?`<rect ${r(t.zone)} rx="4" fill="rgba(255,201,120,.22)" stroke="#ffc978" stroke-width="1.4"/>${t.prop?`<rect ${r(t.prop)} rx="3" fill="none" stroke="#8e8e93" stroke-width="1.2" stroke-dasharray="2 2"/>`:''}`
@@ -431,7 +461,7 @@ const dbDel=(s,id)=>db?tx(s,'readwrite',o=>o.delete(id)):(mem[s].delete(id),Prom
 const LS={get(k,d){try{const v=localStorage.getItem('mh.'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem('mh.'+k,JSON.stringify(v));}catch(e){}}};
 
 /* ---------------- 狀態 ---------------- */
-const S={snd:LS.get('snd','squeak'), note:null, mode:LS.get('mode','daily'), tpl:null, grid:LS.get('grid',false), auto:LS.get('auto',true), sndShoot:LS.get('sndShoot',true),
+const S={pitch:null, lm:null, chk:null, snd:LS.get('snd','squeak'), note:null, mode:LS.get('mode','daily'), tpl:null, grid:LS.get('grid',false), auto:LS.get('auto',true), sndShoot:LS.get('sndShoot',true),
   facing:'environment', zoom:1, dz:1, pets:[], petId:LS.get('pet',null), photos:[], busy:false,
   ai:'loading', det:null, bright:128, moving:0, okSince:0, lastAuto:0, focusPt:null};
 let stream=null, track=null, caps={}, detector=null, segmenter=null, vision=null, fileset=null;
@@ -533,7 +563,7 @@ function detectOn(src){ // 回傳影像像素座標的最佳寵物框
 }
 
 /* ---------------- 即時分析迴圈 ---------------- */
-const probe=document.createElement('canvas'); probe.width=32; probe.height=24; const pctx=probe.getContext('2d',{willReadFrequently:true});
+const probe=document.createElement('canvas'); probe.width=24; probe.height=32; const pctx=probe.getContext('2d',{willReadFrequently:true});
 let lastDet=0,lastBright=0,miss=0;
 function tick(now){
   requestAnimationFrame(tick);
@@ -546,28 +576,46 @@ function tick(now){
       else {S.det=d;S.moving=0;} }
     else if(++miss>5){ S.det=null; S.moving=0; }
   }
-  if(now-lastBright>500){ lastBright=now; try{ pctx.drawImage(video,0,0,32,24); const d=pctx.getImageData(0,0,32,24).data; let s=0;
-    for(let i=0;i<d.length;i+=4) s+=.299*d[i]+.587*d[i+1]+.114*d[i+2]; S.bright=s/(d.length/4); }catch(e){} }
+  if(now-lastBright>400){ lastBright=now; try{ const {sx,sy,cw,ch}=cropRect(),PW=24,PH=32; pctx.drawImage(video,sx,sy,cw,ch,0,0,PW,PH);
+      const d=pctx.getImageData(0,0,PW,PH).data,g=new Float32Array(PW*PH); let s=0; for(let i=0,j=0;i<d.length;i+=4,j++){ g[j]=.299*d[i]+.587*d[i+1]+.114*d[i+2]; s+=g[j]; } S.bright=s/g.length;
+      const b=detBoxNorm();
+      if(b){ const x0=b.x*PW,x1=(b.x+b.w)*PW,y0=b.y*PH,y1=(b.y+b.h)*PH,xm=(x0+x1)/2; let a=0,an=0,o=0,on=0,L=0,Ln=0,R=0,Rn=0,cl=0,cn=0;
+        for(let y=0;y<PH;y++)for(let x=0;x<PW;x++){ const v=g[y*PW+x];
+          if(x>=x0&&x<x1&&y>=y0&&y<y1){ a+=v;an++; if(x<xm){L+=v;Ln++;}else{R+=v;Rn++;} }
+          else { o+=v;on++; if(x<PW-1&&y<PH-1){ cl+=Math.abs(v-g[y*PW+x+1])+Math.abs(v-g[(y+1)*PW+x]); cn++; } } }
+        const l=L/Math.max(Ln,1),r=R/Math.max(Rn,1),n={in:a/Math.max(an,1),out:on?o/on:a/Math.max(an,1),side:Math.abs(l-r)/Math.max(l,r,1),clutter:cn?cl/cn:0};
+        S.lm=S.lm?{in:(S.lm.in+n.in)/2,out:(S.lm.out+n.out)/2,side:(S.lm.side+n.side)/2,clutter:(S.lm.clutter+n.clutter)/2}:n; }
+      else S.lm=null; }catch(e){} }
   const g=guide(); renderStatus(g); drawOverlay(now);
-  if(S.auto&&S.tpl&&!S.busy&&g.level==='ok'&&S.det){ if(!S.okSince) S.okSince=now;
+  if(S.auto&&S.tpl&&!TPL[S.tpl].manual&&!S.busy&&g.level==='ok'&&S.det){ if(!S.okSince) S.okSince=now;
     if(now-S.okSince>650&&now-S.lastAuto>3000&&S.moving<.06){ S.lastAuto=now; S.okSince=0; shoot(); } } else S.okSince=0;
 }
 function note(text,ms){ S.note={text,until:performance.now()+(ms||2600)}; }
 function guide(){
-  if(S.note){ if(performance.now()<S.note.until) return {level:'idle',msg:S.note.text}; S.note=null; }
   const b=viewBox(), dark=S.bright<55, dim=S.bright<85, t=S.tpl&&TPL[S.tpl];
-  if(S.ai==='loading') return {level:'idle',msg:t?'把牠放進框裡':''};
-  if(S.ai==='off') return {level:'idle',msg:dark?'太暗了，靠近窗邊或開燈':(t?'把牠放進框裡':'')};
-  if(!b) return {level:'idle',msg:t?'把牠放進框裡':'把鏡頭對準牠'};
-  if(dark) return {level:'warn',msg:'太暗了，靠近窗邊或開燈'};
-  if(t){ const m=matchInfo(b,t.zone); if(!m.ok) return {level:'warn',msg:m.msg}; }
-  else { const area=b.w*b.h; if(area<.07) return {level:'warn',msg:'再靠近一點'}; if(b.cut&&area>.5) return {level:'warn',msg:'退後一點，耳朵被切到了'}; }
+  S.chk=t?checks(b):null;
+  if(S.note){ if(performance.now()<S.note.until) return {level:'idle',msg:S.note.text}; S.note=null; }
+  if(t){
+    const bad=S.chk.find(c=>c.ok===false);
+    if(S.ai!=='ready'){ const hard=S.chk.find(c=>c.ok===false&&c.k!=='位置'); return {level:hard?'warn':'idle',msg:hard?hard.msg:'把牠放進框裡'}; }
+    if(!b) return {level:'idle',msg:'把牠放進框裡'};
+    if(bad) return {level:'warn',msg:bad.msg};
+  } else {
+    if(S.ai==='loading') return {level:'idle',msg:''};
+    if(S.ai==='off') return {level:'idle',msg:dark?'太暗了，靠近窗邊或開燈':''};
+    if(!b) return {level:'idle',msg:'把鏡頭對準牠'};
+    if(dark) return {level:'warn',msg:'太暗了，靠近窗邊或開燈'};
+    const area=b.w*b.h; if(area<.07) return {level:'warn',msg:'再靠近一點'}; if(b.cut&&area>.5) return {level:'warn',msg:'退後一點，耳朵被切到了'};
+  }
   if(S.moving>.12&&S.mode!=='action') return {level:'warn',msg:'牠在動，換成「動態」試試'};
-  if(S.mode==='action'&&dim) return {level:'warn',msg:'這裡偏暗，動作容易糊'};
-  return {level:'ok',msg:'就是現在'};
+  if(S.mode==='action'&&dim&&!t) return {level:'warn',msg:'這裡偏暗，動作容易糊'};
+  return {level:'ok',msg:t&&t.manual?'現在丟零食，同時按快門':'就是現在'};
 }
+let lastChk='';
+function renderChecks(){ const k=S.chk?S.chk.map(c=>c.k+c.ok).join():''; if(k===lastChk) return; lastChk=k;
+  $('#checks').innerHTML=S.chk?S.chk.map(c=>`<span class="${c.ok===true?'ok':c.ok===false?'no':''}">${c.ok===true?'✓ ':''}${c.k}</span>`).join(''):''; }
 let lastStatus='',msgT=0;
-function renderStatus(g){ const k=g.level+g.msg; if(k===lastStatus) return; lastStatus=k;
+function renderStatus(g){ renderChecks(); const k=g.level+g.msg; if(k===lastStatus) return; lastStatus=k;
   const m=$('#msg'); m.classList.add('sw'); clearTimeout(msgT); msgT=setTimeout(()=>{m.textContent=g.msg;m.className=g.level;},140);
   $('#shutter').classList.toggle('ready',g.level==='ok'); }
 function drawOverlay(now){
@@ -746,15 +794,16 @@ function flash(){stage.classList.add('blink');setTimeout(()=>stage.classList.rem
 async function shoot(){
   if(S.busy||!stream||video.readyState<2) return; S.busy=true;
   try{
-    const scene=S.tpl||'daily';
+    const scene=S.tpl||'daily', miss=S.tpl&&S.chk?S.chk.find(c=>c.ok===false):null;
     if(S.mode==='action'){ await burst(scene); return; }
     const box=detBoxNorm(), c=grabFrame(); flash(); if(navigator.vibrate) navigator.vibrate(12);
     if(S.mode==='portrait'){
       work('讓背景安靜下來…'); await sleep(30);
       const mask=await computeMask(c,box), edit={style:'natural',strength:50,blur:60}, edited=renderEdit(c,edit,mask);
       await savePhoto({canvas:c,mode:'portrait',scene,edit,mask,edited}); work('');
-      if(mask.kind!=='ai') toast('沒認出牠的輪廓，先柔化了四周');
+      if(mask.kind!=='ai'&&!miss) toast('沒認出牠的輪廓，先柔化了四周');
     } else { await savePhoto({canvas:c,mode:'daily',scene}); }
+    if(miss) toast(`拍到了。不過「${miss.k}」還沒到位：${miss.msg}`,4600);
   }catch(e){ console.error(e); work(''); toast('這張沒存成功，再拍一次'); }
   finally{ S.busy=false; }
 }
@@ -953,12 +1002,12 @@ function setMode(m,quiet){ S.mode=m; LS.set('mode',m); document.querySelectorAll
 $('#modes').onclick=e=>{const b=e.target.closest('button');if(b)setMode(b.dataset.m);};
 function renderSceneBtn(){ $('#sceneBtn').innerHTML=`<span>${S.tpl?TPL[S.tpl].name:'自由拍'}</span>`+I.chev;
   $('#comps').innerHTML=[['','自由'],...Object.entries(TPL).map(([k,t])=>[k,t.name])].map(([k,n])=>`<button data-t="${k}" class="${(S.tpl||'')===k?'act':''}" aria-label="${n}構圖">${tplSvg(k)}${n}</button>`).join(''); }
-function setTpl(id){ S.tpl=id||null; S.okSince=0; renderSceneBtn(); if(S.tpl){ setMode(TPL[S.tpl].mode,true); note(TPL[S.tpl].angle,3200); if(navigator.vibrate) navigator.vibrate(8); }
+function setTpl(id){ S.tpl=id||null; S.okSince=0; renderSceneBtn(); if(S.tpl){ setMode(TPL[S.tpl].mode,true); note(TPL[S.tpl].steps[0],3200); if(navigator.vibrate) navigator.vibrate(8); }
   const a=$('#comps .act'); if(a&&a.scrollIntoView) a.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); }
 $('#comps').onclick=e=>{const b=e.target.closest('button');if(b)setTpl(b.dataset.t);};
 function sceneSheet(){
-  const row=(k,name,lines)=>`<button class="tpl ${(S.tpl||'')===k?'act':''}" data-t="${k}">${tplSvg(k)}<span class="t"><b>${name}</b>${lines.map(s=>`<i>${s}</i>`).join('')}</span><span class="ck">${I.check}</span></button>`;
-  openSheet(`<h2>想把牠放在哪裡？</h2><p class="muted small" style="margin:0 0 6px">選一種，畫面上會出現一個框。把牠放進去就好。</p>`+row('','自由拍',['看到就拍，不用對位'])+Object.entries(TPL).map(([k,t])=>row(k,t.name,t.steps)).join('')+
+  const row=(k,name,lines,who)=>`<button class="tpl ${(S.tpl||'')===k?'act':''}" data-t="${k}">${tplSvg(k)}<span class="t"><b>${name}${who?`<span style="font-weight:400;font-size:13px;color:var(--accent);margin-left:8px">${who}</span>`:''}</b>${lines.map(s=>`<i>${s}</i>`).join('')}</span><span class="ck">${I.check}</span></button>`;
+  openSheet(`<h2>跟著攝影師的方法拍</h2><p class="muted small" style="margin:0 0 6px">每一種都來自攝影師公開分享的拍法。選一種，相機會逐項檢查你有沒有做到，沒做到會直接告訴你。</p>`+row('','自由拍',['看到就拍，不用對位'])+Object.entries(TPL).map(([k,t])=>row(k,t.name,[t.why,...t.steps.map((x,i)=>`${i+1}. ${x}`)],t.who)).join('')+
     `<h3>輔助</h3><button class="tog ${S.auto?'on':''}" id="tgAuto"><span><b>對進框裡時自動拍</b></span><span class="sw"></span></button>
      <button class="tog ${S.grid?'on':''}" id="tgGrid"><span><b>顯示構圖格線</b></span><span class="sw"></span></button>`);
   $('#sheet').onclick=e=>{ const b=e.target.closest('.tpl'); if(b){ setTpl(b.dataset.t); closeSheet(); return; }
@@ -971,6 +1020,7 @@ $('#flipBtn').innerHTML=I.flip; $('#torchBtn').innerHTML=I.torch; $('#callBtn .t
 /* ---------------- 啟動 ---------------- */
 $('#startBtn').onclick=async()=>{
   audio(); $('#startErr').hidden=true;
+  try{ if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission) DeviceOrientationEvent.requestPermission().catch(()=>{}); }catch(e){}
   try{ await startCamera(); $('#startCard').hidden=true; if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }
   catch(e){ const el=$('#startErr'); el.hidden=false;
     el.textContent = !window.isSecureContext||e.message==='nocam' ? '這個網址開不了鏡頭。請改用 https 網址打開，或先從相簿選照片。'
