@@ -388,6 +388,7 @@ const TPL = {
   sleep: {name:'睡覺', who:'經典構圖', why:'睡著時從正上方拍，身形最完整。', mode:'daily', zone:[.10,.30,.80,.42], pitch:[0,38], light:'any',
           steps:['不要出聲、不要開補光燈','站到牠正上方，手機朝下','整隻放進橫的框裡']},
 };
+const MODE = {daily:{desc:'自動調整，適合隨手拍'},action:{desc:'按一下連拍 10 張，自動挑最清楚的'},portrait:{desc:'辨識牠的輪廓，把背景變柔和'}};
 const OLD_SCENE={head:'大頭',half:'半身',body:'全身',play:'玩耍',bday:'生日',far:'遠景'};
 const SCENE_NAME = id => id==='daily' ? '日常' : (TPL[id] ? TPL[id].name : (OLD_SCENE[id]||'日常'));
 // 逐項檢查使用者有沒有照這個拍法做。ok: true 做到 / false 沒做到 / null 無法判斷
@@ -707,7 +708,7 @@ function resizeF32(src,sw,sh,w,h){ if(sw===w&&sh===h) return src; const o=new Fl
     for(let x=0;x<w;x++){const fx=(x+.5)*sw/w-.5,x0=clamp(Math.floor(fx),0,sw-1),x1=Math.min(sw-1,x0+1),tx=clamp(fx-x0,0,1);
       o[y*w+x]=(src[y0*sw+x0]*(1-tx)+src[y0*sw+x1]*tx)*(1-ty)+(src[y1*sw+x0]*(1-tx)+src[y1*sw+x1]*tx)*ty;}} return o; }
 async function computeMask(src,box){
-  const c=scaled(src,384),w=c.width,h=c.height,n=w*h; let p=null,kind='ai';
+  const c=scaled(src,512),w=c.width,h=c.height,n=w*h; let p=null,kind='ai';
   const seg=await loadSeg();
   if(seg){ try{ const res=seg.segment(c),ms=res.confidenceMasks;
       if(ms&&ms.length>17){ const mw=ms[0].width,mh=ms[0].height,acc=new Float32Array(mw*mh);
@@ -720,9 +721,15 @@ async function computeMask(src,box){
     for(let y=0;y<h;y++)for(let x=0;x<w;x++){const d=Math.hypot((x-cx)/rx,(y-cy)/ry);p[y*w+x]=clamp((1.12-d)/.3,0,1);} }
   const d=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,w,h).data,Ig=new Float32Array(n);
   for(let i=0,j=0;j<n;i+=4,j++) Ig[j]=(.299*d[i]+.587*d[i+1]+.114*d[i+2])/255;
-  const q=kind==='ai'?guidedFilter(Ig,p,w,h,Math.max(4,Math.round(w/48)),8e-4):p, out=new Uint8Array(n);
-  for(let i=0;i<n;i++){ let v=clamp((q[i]-.12)/.76,0,1); v=v*v*(3-2*v); out[i]=Math.round(v*255); }
-  return {w,h,data:out,kind};
+  if(kind==='ai'){ // 先往外擴一點，保住耳朵尖和鬍鬚，再用導向濾波貼回真正的邊緣
+    for(let pass=0;pass<2;pass++){ const o=p.slice(); for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){ const i=y*w+x; p[i]=Math.max(o[i],o[i-1],o[i+1],o[i-w],o[i+w]); } } }
+  const q=kind==='ai'?guidedFilter(Ig,p,w,h,Math.max(4,Math.round(w/64)),4e-4):p, out=new Uint8Array(n);
+  for(let i=0;i<n;i++){ let v=kind==='ai'?clamp((q[i]-.3)/.4,0,1):clamp((q[i]-.12)/.76,0,1); v=v*v*(3-2*v); out[i]=Math.round(v*255); }
+  if(kind==='ai'){ // 景深：牠腳下那一條地面和牠一樣遠，應該是清楚的；離那條線越遠才越模糊
+    let foot=-1; const need=Math.max(3,w*.03); for(let y=h-1;y>=0&&foot<0;y--){ let c2=0; for(let x=0;x<w;x++) if(out[y*w+x]>128) c2++; if(c2>need) foot=y; }
+    if(foot>=0){ const ss=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+      for(let y=0;y<h;y++){ const dd=(y-foot)/h, g=(dd<0?1-ss(-dd/.04):1-ss(dd/.3))*.92*255; if(g>1) for(let x=0;x<w;x++){ const i=y*w+x; if(g>out[i]) out[i]=g; } } } }
+  return {w,h,data:out,kind,v:2};
 }
 function maskCanvas(m){ const c=document.createElement('canvas'); c.width=m.w; c.height=m.h; const x=c.getContext('2d'),id=x.createImageData(m.w,m.h);
   for(let i=0,j=0;j<m.data.length;i+=4,j++){id.data[i]=id.data[i+1]=id.data[i+2]=255;id.data[i+3]=m.data[j];} x.putImageData(id,0,0); return c; }
@@ -730,12 +737,18 @@ function boxBlurRGBA(d,w,h,r){ const t=new Uint8ClampedArray(d.length);
   for(let pass=0;pass<2;pass++){ const a=pass?t:d,b=pass?d:t, hz=!pass;
     for(let y=0;y<h;y++)for(let x=0;x<w;x++){let R=0,G=0,B=0,c=0;for(let k=-r;k<=r;k++){const xx=hz?clamp(x+k,0,w-1):x,yy=hz?y:clamp(y+k,0,h-1),i=(yy*w+xx)*4;R+=a[i];G+=a[i+1];B+=a[i+2];c++;}
       const o=(y*w+x)*4;b[o]=R/c;b[o+1]=G/c;b[o+2]=B/c;b[o+3]=255;} } }
-function blurred(src,s){ // 縮小→方框模糊→放大：所有瀏覽器都能用的大光圈模糊
-  const long=Math.max(src.width,src.height), small=scaled(scaled(src,Math.max(64,long/2)),Math.max(40,Math.round(long/(5+s*20))));
-  const x=small.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,small.width,small.height);
-  for(let i=0;i<2;i++) boxBlurRGBA(id.data,small.width,small.height,2); x.putImageData(id,0,0);
+function blurred(src,s,mask){ // 縮小→模糊→放大。模糊時不把清楚區域（寵物）的顏色算進去，邊緣才不會有一圈暈
+  const long=Math.max(src.width,src.height), small=scaled(scaled(src,Math.max(64,long/2)),Math.max(48,Math.round(long/(6+s*16))));
+  const w=small.width,h=small.height,x=small.getContext('2d',{willReadFrequently:true}),id=x.getImageData(0,0,w,h),d=id.data,n=w*h,wt=new Float32Array(n).fill(1);
+  if(mask){ const mc=document.createElement('canvas'); mc.width=w; mc.height=h; const mx=mc.getContext('2d',{willReadFrequently:true}); mx.imageSmoothingQuality='high'; mx.drawImage(maskCanvas(mask),0,0,w,h);
+    const md=mx.getImageData(0,0,w,h).data; for(let i=0;i<n;i++) wt[i]=1.02-md[i*4+3]/255; }
+  let ch=[new Float32Array(n),new Float32Array(n),new Float32Array(n),wt];
+  for(let i=0;i<n;i++){ ch[0][i]=d[i*4]*wt[i]; ch[1][i]=d[i*4+1]*wt[i]; ch[2][i]=d[i*4+2]*wt[i]; }
+  for(let p=0;p<3;p++) ch=ch.map(a=>boxMean(a,w,h,2));
+  for(let i=0;i<n;i++){ const k=ch[3][i]||1; d[i*4]=ch[0][i]/k; d[i*4+1]=ch[1][i]/k; d[i*4+2]=ch[2][i]/k; d[i*4+3]=255; }
+  x.putImageData(id,0,0);
   const c=document.createElement('canvas'); c.width=src.width; c.height=src.height; const cx=c.getContext('2d'); cx.imageSmoothingQuality='high'; cx.drawImage(small,0,0,c.width,c.height);
-  cx.fillStyle='rgba(0,0,0,.05)'; cx.fillRect(0,0,c.width,c.height); return c;
+  return c;
 }
 
 /* ---------------- 修圖 ---------------- */
@@ -768,7 +781,7 @@ function renderEdit(src,edit,mask){
     ctx.putImageData(id,0,0);
   }
   if(edit.blur>0&&mask){
-    const bg=blurred(out,edit.blur/100),tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tx_=tmp.getContext('2d');
+    const bg=blurred(out,edit.blur/100,mask),tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tx_=tmp.getContext('2d');
     tx_.imageSmoothingQuality='high'; tx_.drawImage(maskCanvas(mask),0,0,w,h); tx_.globalCompositeOperation='source-in'; tx_.drawImage(out,0,0);
     const bx=bg.getContext('2d'); bx.drawImage(tmp,0,0); return bg;
   }
@@ -799,7 +812,7 @@ async function shoot(){
     const box=detBoxNorm(), c=grabFrame(); flash(); if(navigator.vibrate) navigator.vibrate(12);
     if(S.mode==='portrait'){
       work('讓背景安靜下來…'); await sleep(30);
-      const mask=await computeMask(c,box), edit={style:'natural',strength:50,blur:60}, edited=renderEdit(c,edit,mask);
+      const mask=await computeMask(c,box), edit={style:'natural',strength:50,blur:45}, edited=renderEdit(c,edit,mask);
       await savePhoto({canvas:c,mode:'portrait',scene,edit,mask,edited}); work('');
       if(mask.kind!=='ai'&&!miss) toast('沒認出牠的輪廓，先柔化了四周');
     } else { await savePhoto({canvas:c,mode:'daily',scene}); }
@@ -860,6 +873,7 @@ async function openEditor(meta){
   const bl=await dbGet('blobs',meta.id), full=await blobToCanvas(bl.orig), prev=scaled(full,900);
   ED={meta,bl,full,prev,edit:{...meta.edit},mask:bl.mask||null,hold:false,from:ED&&ED.from};
   $('#edStyles').innerHTML=Object.entries(STYLES).map(([k,v])=>`<button class="chip" data-s="${k}">${v.name}</button>`).join('');
+  if(ED.edit.blur>0&&ED.mask&&ED.mask.v!==2) await needMask(); // 舊照片用新的輪廓演算法重算
   syncEditor(); drawEditor();
 }
 function syncEditor(){ const e=ED.edit; $('#edStr').value=e.strength; $('#edStrO').textContent=e.strength; $('#edBlur').value=e.blur; $('#edBlurO').textContent=e.blur;
@@ -868,7 +882,7 @@ let edRaf=0;
 function drawEditor(){ cancelAnimationFrame(edRaf); edRaf=requestAnimationFrame(()=>{ if(!ED) return;
   const c=$('#edCanvas'),r=ED.hold?ED.prev:renderEdit(ED.prev,ED.edit,ED.mask); c.width=r.width; c.height=r.height; c.getContext('2d').drawImage(r,0,0);
   $('#edNote').textContent=ED.hold?'原圖':(ED.edit.blur>0&&ED.mask&&ED.mask.kind==='simple'?'沒認出牠的輪廓，改成只留中間清楚':'只調光線和顏色，牠還是牠'); }); }
-async function needMask(){ if(ED.mask) return; $('#edNote').textContent='正在辨識寵物輪廓…'; await sleep(20);
+async function needMask(){ if(ED.mask&&(ED.mask.v===2||ED.mask.kind==='simple')) return; $('#edNote').textContent='正在辨識寵物輪廓…'; await sleep(20);
   let box=null; const d=detectOn(ED.prev); if(d) box={x:d.x/ED.prev.width,y:d.y/ED.prev.height,w:d.w/ED.prev.width,h:d.h/ED.prev.height};
   ED.mask=await computeMask(ED.full,box); }
 $('#edStyles').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;ED.edit.style=b.dataset.s;syncEditor();drawEditor();};
