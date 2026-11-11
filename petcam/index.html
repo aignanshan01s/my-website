@@ -81,12 +81,17 @@ svg{display:block}
 #work.on{display:flex}
 #work::before{content:"";width:26px;height:26px;border-radius:50%;border:2px solid var(--hair);border-top-color:var(--ink);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-#modes{display:flex;justify-content:center;gap:34px;padding:16px 0 4px;flex:none}
+#comps{gap:4px;padding:12px 14px 0;flex:none}
+#comps button{flex:none;display:flex;flex-direction:column;align-items:center;gap:5px;width:54px;font-size:11px;color:var(--ink3);letter-spacing:.04em;transition:color .25s}
+#comps svg{width:36px;height:48px;border-radius:8px;background:rgba(255,255,255,.07);transition:all .3s var(--ease)}
+#comps button.act{color:var(--ink)}
+#comps button.act svg{background:rgba(255,255,255,.14);box-shadow:0 0 0 1.5px var(--accent)}
+#modes{display:flex;justify-content:center;gap:34px;padding:8px 0 2px;flex:none}
 #modes button{position:relative;height:36px;font-size:15px;letter-spacing:.12em;color:var(--ink3);font-weight:500;transition:color .25s}
 #modes button.act{color:var(--ink);font-weight:600}
 #modes button::after{content:"";position:absolute;left:50%;bottom:0;width:4px;height:4px;margin-left:-3px;border-radius:50%;background:var(--accent);opacity:0;transform:scale(0);transition:all .3s var(--ease)}
 #modes button.act::after{opacity:1;transform:none}
-#shootRow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 30px 18px;flex:none}
+#shootRow{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:6px 30px 14px;flex:none}
 .sideBtn{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:var(--ink3);letter-spacing:.06em;width:56px}
 .sideBtn .th{width:48px;height:48px;border-radius:50%;overflow:hidden;background:var(--fill);display:grid;place-items:center;color:var(--ink);transition:transform .2s var(--ease)}
 .sideBtn:active .th{transform:scale(.9)}
@@ -240,6 +245,7 @@ input[type=range]:disabled{opacity:.35}
     <div id="burstCount"></div>
     <div id="work"><div id="workMsg"></div></div>
   </div></div>
+  <div class="scrollx" id="comps" aria-label="構圖"></div>
   <div id="modes" role="tablist">
     <button role="tab" data-m="daily">日常</button>
     <button role="tab" data-m="action">動態</button>
@@ -254,7 +260,7 @@ input[type=range]:disabled{opacity:.35}
     <div class="hero">
       <div class="mark"></div>
       <h2>毛孩相機</h2>
-      <p>對準牠。<br>快門亮起來的時候，按下去。</p>
+      <p>選一個構圖，把牠放進框裡。<br>框亮起來，就拍好了。</p>
     </div>
     <div class="cta">
       <p class="err" id="startErr" hidden></p>
@@ -354,12 +360,17 @@ const I = {
 };
 
 /* ---------------- 情境模板 ---------------- */
+// zone = 牠該放的位置與大小 [x,y,w,h]，以取景框為 1
 const TPL = {
-  head:  {name:'大頭照', mode:'portrait', steps:['蹲到跟牠眼睛一樣高','把眼睛放在畫面上方那條線','按「叫牠」，牠看過來就拍'], goal:'靠近到臉佔畫面一半'},
-  body:  {name:'全身照', mode:'daily',    steps:['退後到整隻都進框','四周留一點空間，別切到尾巴和腳','背景找乾淨的牆或地板'], goal:'整隻放進虛線框'},
-  sleep: {name:'睡覺照', mode:'daily',    steps:['不要出聲、不要開補光燈','從正上方或側面慢慢靠近','身體沿著斜線擺，畫面比較好看'], goal:'安靜靠近，沿斜線構圖'},
-  play:  {name:'玩耍照', mode:'action',   steps:['到光線亮的地方，動作才拍得清楚','手機放低，鏡頭跟牠一樣高','牠衝過來時按一下，相機會連拍再幫你挑'], goal:'放低手機，按一下連拍'},
-  bday:  {name:'生日照', mode:'portrait', steps:['蛋糕或禮物放在牠前面下方','讓牠坐好，帽子戴上後馬上拍','蠟燭點著時不要開補光燈'], goal:'上面放臉，下面留給蛋糕'},
+  head:  {name:'大頭', mode:'portrait', zone:[.13,.10,.74,.62], angle:'蹲低，和牠眼睛同高', steps:['蹲到跟牠眼睛一樣高','靠近，讓臉填滿畫面上的框','按「叫牠」，牠看過來就拍']},
+  half:  {name:'半身', mode:'portrait', zone:[.20,.20,.60,.64], angle:'和牠同高，退後半步', steps:['讓牠坐好','頭到胸口放進框裡','背景會自動變柔和']},
+  body:  {name:'全身', mode:'daily',    zone:[.16,.30,.68,.52], angle:'蹲下來拍，不要從上往下', steps:['退後到整隻都進框','四周留一點空間，別切到尾巴和腳','背景找乾淨的牆或地板']},
+  left:  {name:'靠左', mode:'daily',    zone:[.05,.34,.50,.52], angle:'讓牠看向右邊的空位', steps:['把牠放在左邊的框裡','右邊留白，畫面會更有故事','牠看向右邊時最好看']},
+  right: {name:'靠右', mode:'daily',    zone:[.45,.34,.50,.52], angle:'讓牠看向左邊的空位', steps:['把牠放在右邊的框裡','左邊留白','牠看向左邊時最好看']},
+  sleep: {name:'睡覺', mode:'daily',    zone:[.10,.30,.80,.42], angle:'從正上方，輕輕往下拍', steps:['不要出聲、不要開補光燈','從正上方慢慢靠近','整隻放進橫的框裡']},
+  play:  {name:'玩耍', mode:'action',   zone:[.20,.40,.60,.50], angle:'手機放到地板的高度', steps:['到光線亮的地方，動作才清楚','手機放低，鏡頭跟牠一樣高','牠衝過來時按一下，相機會連拍再幫你挑']},
+  bday:  {name:'生日', mode:'portrait', zone:[.20,.08,.60,.50], prop:[.25,.66,.50,.26], propName:'蛋糕', angle:'和牠同高，蛋糕放在前面', steps:['蛋糕或禮物放在下面的框','讓牠坐好，臉放進上面的框','蠟燭點著時不要開補光燈']},
+  far:   {name:'遠景', mode:'daily',    zone:[.36,.56,.28,.28], angle:'退後，讓風景當主角', steps:['退得遠遠的','牠小小地站在下方的框裡','上面留給天空或風景']},
 };
 const SCENE_NAME = id => id==='daily' ? '日常' : (TPL[id] ? TPL[id].name : '日常');
 const MODE = {
@@ -368,26 +379,36 @@ const MODE = {
   portrait: {desc:'辨識寵物輪廓，把背景變柔和'},
 };
 function tplSvg(id){
-  const s = 'stroke="#ffc978" stroke-width="1.6" fill="none" stroke-dasharray="4 3"';
-  const g = {
-    head:`<path d="M8 30h48" ${s}/><circle cx="24" cy="30" r="3" fill="#ffc978"/><circle cx="40" cy="30" r="3" fill="#ffc978"/><path d="M14 22c0 26 36 26 36 0" stroke="#8e8e93" stroke-width="1.6" fill="none"/>`,
-    body:`<rect x="10" y="16" width="44" height="52" rx="6" ${s}/><ellipse cx="32" cy="46" rx="14" ry="10" fill="#8e8e93"/><circle cx="44" cy="34" r="6" fill="#8e8e93"/>`,
-    sleep:`<path d="M8 66L56 18" ${s}/><ellipse cx="32" cy="42" rx="18" ry="9" transform="rotate(-45 32 42)" fill="#8e8e93"/>`,
-    play:`<path d="M8 56h48" ${s}/><circle cx="26" cy="46" r="8" fill="#8e8e93"/><path d="M42 30l8-6M44 38l10-2" stroke="#ffc978" stroke-width="1.6"/>`,
-    bday:`<path d="M8 50h48" ${s}/><circle cx="32" cy="30" r="10" fill="#8e8e93"/><path d="M32 14l-5 8h10z" fill="#ffc978"/><rect x="22" y="58" width="20" height="10" rx="2" fill="#ffc978"/>`,
-  }[id];
-  return `<svg class="il" viewBox="0 0 64 84">${g||'<circle cx="32" cy="42" r="13" stroke="#8e8e93" stroke-width="1.6" fill="none"/><circle cx="32" cy="42" r="8" fill="#ffc978"/>'}</svg>`;
+  const t=TPL[id],r=z=>`x="${4+z[0]*40}" y="${4+z[1]*56}" width="${z[2]*40}" height="${z[3]*56}"`;
+  const g=t?`<rect ${r(t.zone)} rx="4" fill="rgba(255,201,120,.22)" stroke="#ffc978" stroke-width="1.4"/>${t.prop?`<rect ${r(t.prop)} rx="3" fill="none" stroke="#8e8e93" stroke-width="1.2" stroke-dasharray="2 2"/>`:''}`
+    :'<path d="M17 24v-4h4M31 20h-4M31 24v-4M17 40v4h4M31 44h-4M31 40v4" transform="translate(0,0)" stroke="#8e8e93" stroke-width="1.4" fill="none" stroke-linecap="round"/>';
+  return `<svg class="il" viewBox="0 0 48 64">${g}</svg>`;
 }
-function drawGuide(ctx, id, W, H){
-  ctx.save(); ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.fillStyle='rgba(255,255,255,.9)'; ctx.lineWidth=1; ctx.setLineDash([3,7]);
-  ctx.font='500 12px '+getComputedStyle(document.body).fontFamily; ctx.shadowColor='rgba(0,0,0,.7)'; ctx.shadowBlur=4;
-  const line=(x1,y1,x2,y2)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
-  if(id==='head'){ line(W*.1,H*.38,W*.9,H*.38); ctx.fillText('眼睛放這條線',W*.1,H*.38-8); }
-  if(id==='body'){ ctx.beginPath(); roundRect(ctx,W*.1,H*.14,W*.8,H*.66,18); ctx.stroke(); ctx.fillText('整隻放進框裡',W*.1+10,H*.14+22); }
-  if(id==='sleep'){ line(W*.1,H*.78,W*.9,H*.22); ctx.fillText('身體沿著這條斜線',W*.1,H*.78+20); }
-  if(id==='play'){ line(W*.06,H*.67,W*.94,H*.67); ctx.fillText('腳踩在這條線附近',W*.06,H*.67+20); }
-  if(id==='bday'){ line(W*.06,H*.62,W*.94,H*.62); ctx.fillText('上面：牠的臉',W*.06,H*.62-8); ctx.fillText('下面：蛋糕、禮物',W*.06,H*.62+20); }
-  ctx.restore();
+// 目前偵測框換到「畫面上看到的」座標（前鏡頭左右相反）
+function viewBox(){ const b=detBoxNorm(); if(!b) return null; return S.facing==='user'?{...b,x:1-b.x-b.w}:b; }
+// 寵物和目標框差多少 → 告訴新手怎麼移
+function matchInfo(b,z){
+  const s=Math.sqrt((b.w*b.h)/(z[2]*z[3])), dx=(b.x+b.w/2)-(z[0]+z[2]/2), dy=(b.y+b.h/2)-(z[1]+z[3]/2), f=S.facing==='user'?-1:1;
+  if(s<.7) return {ok:false,msg:'再靠近一點'};
+  if(s>1.4) return {ok:false,msg:'退後一點'};
+  if(Math.abs(dx)>.08&&Math.abs(dx)>=Math.abs(dy)) return {ok:false,msg:(dx*f<0)?'手機往左移一點':'手機往右移一點'};
+  if(Math.abs(dy)>.08) return {ok:false,msg:dy<0?'手機往上抬一點':'手機往下放一點'};
+  return {ok:true,msg:''};
+}
+function drawTarget(c,W,H,b,ok){
+  const t=TPL[S.tpl],z=t.zone,x=z[0]*W,y=z[1]*H,w=z[2]*W,h=z[3]*H,r=Math.min(30,Math.min(w,h)*.2);
+  c.save(); c.shadowColor='rgba(0,0,0,.3)'; c.shadowBlur=8;
+  if(ok){ c.strokeStyle='rgba(255,201,120,1)'; c.lineWidth=2.5; c.beginPath(); roundRect(c,x,y,w,h,r); c.stroke(); }
+  else { c.strokeStyle='rgba(255,255,255,.85)'; c.lineWidth=1.5; c.setLineDash([2,8]); c.lineCap='round'; c.beginPath(); roundRect(c,x,y,w,h,r); c.stroke(); c.setLineDash([]);
+    if(b){ const bx=b.x*W,by=b.y*H,bw=b.w*W,bh=b.h*H; c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=1; c.beginPath(); roundRect(c,bx,by,bw,bh,Math.min(22,Math.min(bw,bh)*.18)); c.stroke();
+      const x0=bx+bw/2,y0=by+bh/2,x1=x+w/2,y1=y+h/2,d=Math.hypot(x1-x0,y1-y0);
+      if(d>24){ const ux=(x1-x0)/d,uy=(y1-y0)/d; c.strokeStyle='rgba(255,201,120,.95)'; c.fillStyle='rgba(255,201,120,.95)'; c.lineWidth=2;
+        c.beginPath(); c.moveTo(x0,y0); c.lineTo(x1-ux*8,y1-uy*8); c.stroke();
+        c.beginPath(); c.moveTo(x1,y1); c.lineTo(x1-ux*12-uy*6,y1-uy*12+ux*6); c.lineTo(x1-ux*12+uy*6,y1-uy*12-ux*6); c.closePath(); c.fill();
+        c.beginPath(); c.arc(x0,y0,4,0,7); c.fill(); } } }
+  if(t.prop){ const p=t.prop; c.strokeStyle='rgba(255,255,255,.6)'; c.lineWidth=1; c.setLineDash([2,6]); c.beginPath(); roundRect(c,p[0]*W,p[1]*H,p[2]*W,p[3]*H,16); c.stroke(); c.setLineDash([]);
+    c.fillStyle='rgba(255,255,255,.85)'; c.font='500 12px '+getComputedStyle(document.body).fontFamily; c.textAlign='center'; c.fillText(t.propName,(p[0]+p[2]/2)*W,(p[1]+p[3]/2)*H+4); }
+  c.restore();
 }
 function roundRect(ctx,x,y,w,h,r){ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 
@@ -410,7 +431,7 @@ const dbDel=(s,id)=>db?tx(s,'readwrite',o=>o.delete(id)):(mem[s].delete(id),Prom
 const LS={get(k,d){try{const v=localStorage.getItem('mh.'+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem('mh.'+k,JSON.stringify(v));}catch(e){}}};
 
 /* ---------------- 狀態 ---------------- */
-const S={snd:LS.get('snd','squeak'), note:null, mode:LS.get('mode','daily'), tpl:null, grid:LS.get('grid',false), auto:false, sndShoot:LS.get('sndShoot',true),
+const S={snd:LS.get('snd','squeak'), note:null, mode:LS.get('mode','daily'), tpl:null, grid:LS.get('grid',false), auto:LS.get('auto',true), sndShoot:LS.get('sndShoot',true),
   facing:'environment', zoom:1, dz:1, pets:[], petId:LS.get('pet',null), photos:[], busy:false,
   ai:'loading', det:null, bright:128, moving:0, okSince:0, lastAuto:0, focusPt:null};
 let stream=null, track=null, caps={}, detector=null, segmenter=null, vision=null, fileset=null;
@@ -528,25 +549,22 @@ function tick(now){
   if(now-lastBright>500){ lastBright=now; try{ pctx.drawImage(video,0,0,32,24); const d=pctx.getImageData(0,0,32,24).data; let s=0;
     for(let i=0;i<d.length;i+=4) s+=.299*d[i]+.587*d[i+1]+.114*d[i+2]; S.bright=s/(d.length/4); }catch(e){} }
   const g=guide(); renderStatus(g); drawOverlay(now);
-  if(S.auto&&!S.busy&&g.level==='ok'&&S.det){ if(!S.okSince) S.okSince=now;
+  if(S.auto&&S.tpl&&!S.busy&&g.level==='ok'&&S.det){ if(!S.okSince) S.okSince=now;
     if(now-S.okSince>650&&now-S.lastAuto>3000&&S.moving<.06){ S.lastAuto=now; S.okSince=0; shoot(); } } else S.okSince=0;
 }
 function note(text,ms){ S.note={text,until:performance.now()+(ms||2600)}; }
 function guide(){
   if(S.note){ if(performance.now()<S.note.until) return {level:'idle',msg:S.note.text}; S.note=null; }
-  const b=detBoxNorm(), dark=S.bright<55, dim=S.bright<85, t=S.tpl;
-  if(S.ai==='loading') return {level:'idle',msg:''};
-  if(S.ai==='off') return {level:'idle',msg:dark?'太暗了，靠近窗邊或開燈':''};
-  if(!b) return {level:'idle',msg:'把鏡頭對準牠'};
-  const area=b.w*b.h;
+  const b=viewBox(), dark=S.bright<55, dim=S.bright<85, t=S.tpl&&TPL[S.tpl];
+  if(S.ai==='loading') return {level:'idle',msg:t?'把牠放進框裡':''};
+  if(S.ai==='off') return {level:'idle',msg:dark?'太暗了，靠近窗邊或開燈':(t?'把牠放進框裡':'')};
+  if(!b) return {level:'idle',msg:t?'把牠放進框裡':'把鏡頭對準牠'};
   if(dark) return {level:'warn',msg:'太暗了，靠近窗邊或開燈'};
-  if(t==='head'&&area<.28) return {level:'warn',msg:'再靠近一點，讓臉佔滿半個畫面'};
-  if(area<.07) return {level:'warn',msg:'再靠近一點'};
-  if(t!=='head'&&b.cut&&area>.5) return {level:'warn',msg:'退後一點，耳朵被切到了'};
-  if(t==='body'&&b.cut) return {level:'warn',msg:'退後一點，讓牠整隻入鏡'};
+  if(t){ const m=matchInfo(b,t.zone); if(!m.ok) return {level:'warn',msg:m.msg}; }
+  else { const area=b.w*b.h; if(area<.07) return {level:'warn',msg:'再靠近一點'}; if(b.cut&&area>.5) return {level:'warn',msg:'退後一點，耳朵被切到了'}; }
   if(S.moving>.12&&S.mode!=='action') return {level:'warn',msg:'牠在動，換成「動態」試試'};
   if(S.mode==='action'&&dim) return {level:'warn',msg:'這裡偏暗，動作容易糊'};
-  return {level:'ok',msg:t?TPL[t].goal:'就是現在'};
+  return {level:'ok',msg:'就是現在'};
 }
 let lastStatus='',msgT=0;
 function renderStatus(g){ const k=g.level+g.msg; if(k===lastStatus) return; lastStatus=k;
@@ -558,10 +576,9 @@ function drawOverlay(now){
   const c=ov.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H);
   if(S.grid){ c.strokeStyle='rgba(255,255,255,.18)'; c.lineWidth=.5; c.beginPath();
     for(const f of [1/3,2/3]){c.moveTo(W*f,0);c.lineTo(W*f,H);c.moveTo(0,H*f);c.lineTo(W,H*f);} c.stroke(); }
-  if(S.tpl) drawGuide(c,S.tpl,W,H);
-  const b=detBoxNorm();
-  if(b){ let x=b.x*W,y=b.y*H,w=b.w*W,h=b.h*H; if(S.facing==='user') x=W-x-w;
-    const ok=lastStatus.startsWith('ok'),r=Math.min(26,Math.min(w,h)*.18); c.strokeStyle=ok?'rgba(255,201,120,.95)':'rgba(255,255,255,.55)'; c.lineWidth=ok?2:1.25;
+  const b=viewBox(), ok=lastStatus.startsWith('ok');
+  if(S.tpl) drawTarget(c,W,H,b,ok);
+  else if(b){ const x=b.x*W,y=b.y*H,w=b.w*W,h=b.h*H,r=Math.min(26,Math.min(w,h)*.18); c.strokeStyle=ok?'rgba(255,201,120,.95)':'rgba(255,255,255,.55)'; c.lineWidth=ok?2:1.25;
     c.shadowColor='rgba(0,0,0,.25)'; c.shadowBlur=6; c.beginPath(); roundRect(c,x,y,w,h,r); c.stroke(); c.shadowBlur=0; }
   if(S.focusPt){ const a=1-(now-S.focusPt.t)/900; if(a<=0) S.focusPt=null; else { c.strokeStyle=`rgba(255,201,120,${a})`; c.lineWidth=1.25;
     c.beginPath(); c.arc(S.focusPt.x*W,S.focusPt.y*H,24+10*a,0,7); c.stroke(); } }
@@ -934,15 +951,18 @@ $('#petBtn').onclick=petSheet;
 function setMode(m,quiet){ S.mode=m; LS.set('mode',m); document.querySelectorAll('#modes button').forEach(b=>{b.classList.toggle('act',b.dataset.m===m);b.setAttribute('aria-selected',b.dataset.m===m);});
   if(m==='portrait') loadSeg(); if(!quiet){ note(MODE[m].desc); if(navigator.vibrate) navigator.vibrate(8); } }
 $('#modes').onclick=e=>{const b=e.target.closest('button');if(b)setMode(b.dataset.m);};
-function renderSceneBtn(){ $('#sceneBtn').innerHTML=`<span>${S.tpl?TPL[S.tpl].name:'隨手拍'}</span>`+I.chev; }
-function setTpl(id){ S.tpl=id||null; renderSceneBtn(); if(S.tpl){ setMode(TPL[S.tpl].mode,true); note(TPL[S.tpl].steps[0],3600); } }
+function renderSceneBtn(){ $('#sceneBtn').innerHTML=`<span>${S.tpl?TPL[S.tpl].name:'自由拍'}</span>`+I.chev;
+  $('#comps').innerHTML=[['','自由'],...Object.entries(TPL).map(([k,t])=>[k,t.name])].map(([k,n])=>`<button data-t="${k}" class="${(S.tpl||'')===k?'act':''}" aria-label="${n}構圖">${tplSvg(k)}${n}</button>`).join(''); }
+function setTpl(id){ S.tpl=id||null; S.okSince=0; renderSceneBtn(); if(S.tpl){ setMode(TPL[S.tpl].mode,true); note(TPL[S.tpl].angle,3200); if(navigator.vibrate) navigator.vibrate(8); }
+  const a=$('#comps .act'); if(a&&a.scrollIntoView) a.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); }
+$('#comps').onclick=e=>{const b=e.target.closest('button');if(b)setTpl(b.dataset.t);};
 function sceneSheet(){
   const row=(k,name,lines)=>`<button class="tpl ${(S.tpl||'')===k?'act':''}" data-t="${k}">${tplSvg(k)}<span class="t"><b>${name}</b>${lines.map(s=>`<i>${s}</i>`).join('')}</span><span class="ck">${I.check}</span></button>`;
-  openSheet(`<h2>今天想拍什麼？</h2>`+row('','隨手拍',['看到就拍，不用對位'])+Object.entries(TPL).map(([k,t])=>row(k,t.name,t.steps)).join('')+
-    `<h3>輔助</h3><button class="tog ${S.auto?'on':''}" id="tgAuto"><span><b>牠停下來時自動拍</b></span><span class="sw"></span></button>
+  openSheet(`<h2>想把牠放在哪裡？</h2><p class="muted small" style="margin:0 0 6px">選一種，畫面上會出現一個框。把牠放進去就好。</p>`+row('','自由拍',['看到就拍，不用對位'])+Object.entries(TPL).map(([k,t])=>row(k,t.name,t.steps)).join('')+
+    `<h3>輔助</h3><button class="tog ${S.auto?'on':''}" id="tgAuto"><span><b>對進框裡時自動拍</b></span><span class="sw"></span></button>
      <button class="tog ${S.grid?'on':''}" id="tgGrid"><span><b>顯示構圖格線</b></span><span class="sw"></span></button>`);
   $('#sheet').onclick=e=>{ const b=e.target.closest('.tpl'); if(b){ setTpl(b.dataset.t); closeSheet(); return; }
-    if(e.target.closest('#tgAuto')){ S.auto=!S.auto; $('#tgAuto').classList.toggle('on',S.auto); }
+    if(e.target.closest('#tgAuto')){ S.auto=!S.auto; LS.set('auto',S.auto); $('#tgAuto').classList.toggle('on',S.auto); }
     if(e.target.closest('#tgGrid')){ S.grid=!S.grid; LS.set('grid',S.grid); $('#tgGrid').classList.toggle('on',S.grid); } };
 }
 $('#sceneBtn').onclick=sceneSheet;
