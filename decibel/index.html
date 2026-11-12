@@ -106,6 +106,48 @@ h2 { font-size: 15px; margin: 0 0 8px; }
 .ref i { width: 10px; height: 10px; border-radius: 2px; }
 .ref div.on { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.law, .health { display: grid; gap: 12px; }
+.law h2, .health h2 { margin: 0; font-size: 17px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 400px) { .row2 { grid-template-columns: 1fr; } }
+.field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.field select {
+  font: 500 15px var(--font-body); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; width: 100%;
+}
+.field select:focus-visible, .btn.sm:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.period { margin: 0; font-size: 14px; }
+.period b { font-weight: 700; }
+.verdict {
+  --tone: var(--muted);
+  border: 1px solid var(--tone); border-left-width: 6px; border-radius: 10px; padding: 12px 14px;
+  background: color-mix(in srgb, var(--tone) 10%, var(--panel)); display: grid; gap: 6px;
+}
+.verdict.ok { --tone: var(--ok); }
+.verdict.near { --tone: var(--mid); }
+.verdict.over { --tone: var(--risk); }
+.verdict.info { --tone: var(--accent); }
+.verdict .vt { font-size: 18px; font-weight: 700; color: var(--tone); }
+.verdict .vs { font-size: 14px; }
+.verdict dl { margin: 2px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 14px; }
+.verdict dt { color: var(--muted); }
+.verdict dd { margin: 0; font-variant-numeric: tabular-nums; }
+.howto { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+.howto a { color: var(--accent); font-weight: 700; }
+.btn.sm { padding: 8px 10px; font-size: 14px; border-radius: 8px; width: 100%; }
+.bgline { font-size: 13px; color: var(--muted); margin: 0; }
+.bgline button { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+textarea.record {
+  width: 100%; min-height: 150px; font: 13px/1.5 var(--font-body); color: var(--ink);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px;
+}
+.hhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.hhead b { font: 700 28px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.hhead span { font-weight: 700; font-size: 16px; }
+.health p { margin: 0; }
+.safe { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 10px 12px; border-radius: 8px; background: var(--bg); font-size: 14px; }
+.safe b { font: 700 20px var(--font-display); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.src { font-size: 12px; color: var(--muted); margin: 0; }
 </style>
 </head>
 <body>
@@ -145,6 +187,57 @@ h2 { font-size: 15px; margin: 0 0 8px; }
     <input class="visually-hidden" id="fileInput" type="file" accept="audio/*,video/*" capture>
   </section>
 
+  <section class="panel law" aria-labelledby="lawTitle">
+    <h2 id="lawTitle">有沒有超過台灣噪音標準？</h2>
+    <div class="row2">
+      <label class="field" for="srcSel"><span>噪音從哪裡來</span>
+        <select id="srcSel">
+          <option value="neighbor">住家鄰居（人聲、跑跳、樂器、寵物）</option>
+          <option value="business">店家（餐廳、KTV、冷氣室外機、抽風機）</option>
+          <option value="construction">施工、裝潢</option>
+          <option value="amplifier">擴音喇叭（宣傳車、廣播、音響）</option>
+          <option value="factory">工廠</option>
+        </select>
+      </label>
+      <label class="field" for="zoneSel"><span>你家在哪種地區</span>
+        <select id="zoneSel">
+          <option value="0">第一類：風景區、保護區</option>
+          <option value="1" selected>第二類：住宅區、文教區（多數住家）</option>
+          <option value="2">第三類：住商混合、商業區</option>
+          <option value="3">第四類：工業區</option>
+        </select>
+      </label>
+    </div>
+    <div class="row2">
+      <label class="field" for="periodSel"><span>時段</span>
+        <select id="periodSel">
+          <option value="auto">依現在時間自動判斷</option>
+          <option value="0">日間</option>
+          <option value="1">晚間</option>
+          <option value="2">夜間</option>
+        </select>
+      </label>
+      <div class="field"><span>背景音量（選用）</span>
+        <button class="btn sm" id="bgBtn" type="button">把目前平均設為背景音量</button>
+      </div>
+    </div>
+    <p class="period" id="periodText"></p>
+    <p class="bgline" id="bgLine"></p>
+    <div class="verdict" id="verdict" aria-live="polite"></div>
+    <ul class="howto" id="howto"></ul>
+    <button class="btn" id="copyBtn" type="button">複製量測紀錄（陳情、報警時用）</button>
+    <textarea class="record" id="recordText" readonly hidden aria-label="量測紀錄"></textarea>
+    <p class="src">依據：噪音管制標準（102 年 8 月 5 日修正）、噪音管制區劃定作業準則、社會秩序維護法第 72 條。手機量測只能當參考與佐證，是否違規以環保局用專業噪音計量測為準。你家屬於第幾類，可在縣市環保局網站搜尋「噪音管制區」。</p>
+  </section>
+
+  <section class="panel health" aria-labelledby="healthTitle">
+    <h2 id="healthTitle">這個音量會造成什麼影響？</h2>
+    <div class="hhead"><b id="hLevel">58 dB(A)</b><span id="hTitle"></span></div>
+    <p id="hText"></p>
+    <div class="safe"><span id="hSafeLabel">一天最多可以聽多久</span><b id="hSafe">不限</b></div>
+    <p class="src">睡眠與干擾的數字來自世界衛生組織（WHO）社區噪音指引；可聽多久依美國 NIOSH 建議（85 dB 8 小時，每多 3 dB 時間減半）；85 dB 聽力保護門檻依台灣職業安全衛生法規。</p>
+  </section>
+
   <section class="panel cal">
     <label for="offset"><span>校正偏移</span><span id="offVal">+100 dB</span></label>
     <input id="offset" type="range" min="60" max="140" step="1" value="100">
@@ -154,7 +247,6 @@ h2 { font-size: 15px; margin: 0 0 8px; }
   <section class="panel">
     <h2>常見聲音大約幾分貝</h2>
     <div class="ref" id="ref"></div>
-    <p class="note" style="margin-top:8px">長時間處在 85 dB(A) 以上（一天 8 小時）會增加聽力受損風險；每多 3 dB，安全時間大約減半。</p>
   </section>
 </div>
 
@@ -338,6 +430,12 @@ h2 { font-size: 15px; margin: 0 0 8px; }
     g.setLineDash([]); g.globalAlpha = 1;
     g.fillStyle = css("--risk"); g.textAlign = "right"; g.textBaseline = "bottom";
     g.fillText("85", w - 6, y(85) - 2);
+    if (limitLine != null) {
+      g.setLineDash([2, 4]); g.strokeStyle = css("--loud"); g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(padL, y(limitLine)); g.lineTo(w - 4, y(limitLine)); g.stroke();
+      g.setLineDash([]); g.lineWidth = 1; g.fillStyle = css("--loud"); g.textAlign = "left";
+      g.fillText("法規 " + limitLine, padL + 4, y(limitLine) - 2);
+    }
 
     let vals, totalSec;
     if (mode === "file" && fileSeries) { vals = fileSeries.vals; totalSec = fileSeries.dur; }
@@ -387,6 +485,180 @@ h2 { font-size: 15px; margin: 0 0 8px; }
     if (r !== lastRefDb) { lastRefDb = r; renderRef(db); }
   }
 
+  // ---------- Taiwan noise law ----------
+  const ZONES = ["第一類", "第二類", "第三類", "第四類"];
+  const PERIODS = ["日間", "晚間", "夜間"];
+  // 噪音管制標準 (102.08.05) 20 Hz–20 kHz, [zone][day, evening, night]
+  const SOURCES = {
+    neighbor: { name: "住家鄰居" },
+    business: { name: "店家／娛樂場所", law: "噪音管制標準第 5 條（娛樂場所、營業場所）",
+      leq: [[55, 50, 40], [57, 52, 47], [67, 57, 52], [80, 70, 65]] },
+    construction: { name: "施工／裝潢", law: "噪音管制標準第 6 條（營建工程）",
+      leq: [[67, 47, 47], [67, 57, 47], [72, 67, 62], [80, 70, 65]],
+      lmax: [[100, 80, 70], [100, 80, 70], [100, 85, 75], [100, 85, 75]] },
+    amplifier: { name: "擴音設施", law: "噪音管制標準第 7 條（擴音設施）",
+      leq: [[57, 47, 40], [72, 57, 47], [77, 62, 52], [82, 72, 62]] },
+    factory: { name: "工廠", law: "噪音管制標準第 4 條（工廠）",
+      leq: [[50, 45, 40], [57, 52, 47], [67, 57, 52], [80, 70, 65]] }
+  };
+  let bgLevel = null, startWall = null, limitLine = null, lastLawT = 0, lastState = null;
+
+  function taipeiHour(d) {
+    try {
+      return parseInt(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: "Asia/Taipei" }).format(d), 10) % 24;
+    } catch (e) { return d.getHours(); }
+  }
+  function autoPeriod(zone, d) {
+    const h = taipeiHour(d), eveEnd = zone < 2 ? 22 : 23;
+    return h >= 7 && h < 19 ? 0 : h >= 19 && h < eveEnd ? 1 : 2;
+  }
+  function periodRange(zone, p) {
+    return p === 0 ? "07:00–19:00" : p === 1 ? (zone < 2 ? "19:00–22:00" : "19:00–23:00") : (zone < 2 ? "22:00–07:00" : "23:00–07:00");
+  }
+  function getStats() {
+    if (mode === "demo") return { leq: 56, max: 72, secs: 60, demo: true };
+    if (!cntP) return null;
+    return { leq: toDb(sumP / cntP) + offset, max: maxDb + offset, secs: elapsed };
+  }
+  const r0 = v => Math.round(v);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function evaluate() {
+    const srcKey = $("srcSel").value, src = SOURCES[srcKey];
+    const zone = +$("zoneSel").value;
+    const pSel = $("periodSel").value;
+    const period = pSel === "auto" ? autoPeriod(zone, new Date()) : +pSel;
+    const st = getStats();
+    const out = { srcKey, src, zone, period, st, auto: pSel === "auto" };
+    if (!src.leq) { out.state = "info"; return out; }
+    out.limit = src.leq[zone][period];
+    out.lmaxLimit = src.lmax ? src.lmax[zone][period] : null;
+    if (!st) { out.state = "idle"; return out; }
+    let leq = st.leq;
+    if (bgLevel != null) {
+      const diff = st.leq - bgLevel;
+      if (diff < 3) { out.state = "bgbad"; out.leq = leq; return out; }
+      if (diff < 10) { leq = 10 * Math.log10(Math.pow(10, st.leq / 10) - Math.pow(10, bgLevel / 10)); out.corrected = true; }
+    }
+    out.leq = leq;
+    out.over = leq - out.limit;
+    out.lmaxOver = out.lmaxLimit != null && Number.isFinite(st.max) && st.max > out.lmaxLimit;
+    out.state = out.over > 3 || out.lmaxOver ? "over" : out.over > -3 ? "near" : "ok";
+    out.short = !st.demo && mode === "live" && st.secs < 120;
+    return out;
+  }
+
+  function updateLaw() {
+    const e = evaluate();
+    const { zone, period, st } = e;
+    $("periodText").innerHTML = `${e.auto ? "現在是" : "選擇的時段："}<b>${PERIODS[period]}</b>（${ZONES[zone]}管制區 ${periodRange(zone, period)}）`;
+    $("bgLine").innerHTML = bgLevel == null
+      ? "想更準：噪音停的時候先量 1 分鐘，按上面按鈕存成背景音量，再按「重設數據」量噪音，會自動扣掉背景。"
+      : `背景音量：${r0(bgLevel)} dB(A)，判斷時已扣除。 <button type="button" id="bgClear">清除背景</button>`;
+    const bc = $("bgClear"); if (bc) bc.onclick = () => { bgLevel = null; updateLaw(); };
+
+    const v = $("verdict");
+    v.className = "verdict " + (e.state === "idle" || e.state === "bgbad" ? "" : e.state);
+    limitLine = e.limit != null ? e.limit : null;
+    let html = "";
+    const lmaxTxt = e.lmaxLimit != null ? `<dt>最大音量</dt><dd>${st && Number.isFinite(st.max) ? r0(st.max) : "–"} dB(A)（上限 ${e.lmaxLimit}）</dd>` : "";
+    if (e.state === "info") {
+      const night = autoPeriod(1, new Date()) === 2;
+      html = `<span class="vt">不用達到分貝標準也能檢舉</span>
+        <span class="vs">鄰居的人聲、跑跳、拖椅子、樂器、寵物叫，屬於「不具持續性或不易量測」的聲音，不套用分貝標準。只要妨害安寧就能報警，法條也明列「深夜喧嘩」，最高可罰 6,000 元。${night ? "現在是深夜，" : ""}這裡量到的數字可以和錄音、錄影一起當佐證。</span>
+        <dl><dt>目前平均</dt><dd>${st ? r0(st.leq) + " dB(A)" : "–"}</dd><dt>最大</dt><dd>${st && Number.isFinite(st.max) ? r0(st.max) + " dB(A)" : "–"}</dd></dl>`;
+    } else if (e.state === "idle") {
+      html = `<span class="vt">按「開始量測」後自動判斷</span>
+        <dl><dt>這個時段的標準</dt><dd>均能音量 ${e.limit} dB(A)</dd>${e.lmaxLimit != null ? `<dt>最大音量上限</dt><dd>${e.lmaxLimit} dB(A)</dd>` : ""}</dl>`;
+    } else if (e.state === "bgbad") {
+      html = `<span class="vt">背景太吵，無法判斷</span>
+        <span class="vs">噪音和背景音量相差不到 3 dB，環保局遇到這種情況也會停止量測。請換時間或地點再量，或清除背景音量。</span>`;
+    } else {
+      const d = Math.abs(e.over);
+      const title = e.state === "over" ? (e.lmaxOver && e.over <= 3 ? "最大音量超標，可以陳情" : `超過標準約 ${r0(d)} dB，可以陳情`)
+        : e.state === "near" ? "接近標準，在手機誤差範圍內" : `低於標準約 ${r0(d)} dB`;
+      const sub = e.state === "over" ? "建議錄影存證，並照下面方式陳情，由環保局到場用專業儀器量測。"
+        : e.state === "near" ? "手機讀數有幾 dB 誤差，建議多量幾次、錄影存證，覺得受影響仍可陳情請環保局來量。"
+        : "照目前數字看沒有超過法定標準。";
+      html = `<span class="vt">${title}${st.demo ? "（範例）" : ""}</span><span class="vs">${sub}</span>
+        <dl><dt>法定標準</dt><dd>均能音量 ${e.limit} dB(A)</dd>
+        <dt>你量到的平均</dt><dd>${r0(e.leq)} dB(A)${e.corrected ? "（已扣背景）" : ""}</dd>${lmaxTxt}
+        <dt>已量時間</dt><dd>${fmtTime(st.secs)}${e.short ? "（滿 2 分鐘較準）" : ""}</dd></dl>`;
+      if (mode === "file" && e.auto) html += `<span class="vs">分析錄音檔時，請把「時段」改成錄音當時的時段。</span>`;
+    }
+    v.innerHTML = html;
+
+    const items = e.srcKey === "neighbor" ? [
+      `報警：撥 <a href="tel:110">110</a>，請警察到場處理（社會秩序維護法第 72 條）。`,
+      `住公寓大廈：可先請管委會制止；制止不從，可報請縣市政府處 3,000–15,000 元罰鍰（公寓大廈管理條例）。`,
+      `留下證據：錄影錄音，記下日期、時間、持續多久，再按下方按鈕複製量測紀錄。`
+    ] : [
+      `公害陳情專線：<a href="tel:0800066666">0800-066-666</a>（免付費），或撥各縣市 <a href="tel:1999">1999</a>。`,
+      `陳情時可以指定在你家量測，並說明噪音最常出現的時段，環保局會在那時候來量。`,
+      e.srcKey === "business" ? "店家經限期改善仍未符合標準，可處 3,000–30,000 元罰鍰。" :
+      e.srcKey === "construction" ? "施工超過標準或在禁止時段施工，可處 3,000–30,000 元罰鍰，並可按次處罰。" :
+      e.srcKey === "amplifier" ? "如果是有人用喇叭唱歌、喧嘩，直接撥 110 報警通常比較快。" :
+      "經限期改善仍未符合標準，環保局可依法處罰。",
+      ...(e.srcKey === "business" || e.srcKey === "factory" ? ["冷氣室外機、抽風機的「嗡嗡」低頻聲另有更嚴格的低頻標準（例如住宅區店家夜間 27 dB），手機量不準，直接陳情請環保局在室內量。"] : [])
+    ];
+    $("howto").innerHTML = items.map(t => `<li>${t}</li>`).join("");
+    lastState = e;
+  }
+
+  function buildRecord() {
+    const e = lastState || evaluate();
+    const st = e.st;
+    const now = new Date();
+    const fmtD = d => d.toLocaleString("zh-TW", { timeZone: "Asia/Taipei", hour12: false, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const lines = ["【噪音量測紀錄】"];
+    lines.push(`量測時間：${startWall ? fmtD(startWall) + " 起" : fmtD(now)}，共 ${st ? fmtTime(st.secs) : "–"}`);
+    lines.push(`噪音來源：${e.src.name}`);
+    lines.push(`地區類別：${ZONES[e.zone]}噪音管制區；時段：${PERIODS[e.period]}（${periodRange(e.zone, e.period)}）`);
+    if (st) {
+      lines.push(`均能音量 Leq：${r0(st.leq)} dB(A)${bgLevel != null ? `（背景 ${r0(bgLevel)}，扣除後 ${e.leq != null ? r0(e.leq) : "–"}）` : ""}`);
+      lines.push(`最大音量 Lmax：${Number.isFinite(st.max) ? r0(st.max) : "–"} dB(A)；最小：${Number.isFinite(minDb) ? r0(minDb + offset) : "–"} dB(A)`);
+    }
+    if (e.limit != null) {
+      lines.push(`適用標準：${e.src.law}，均能音量 ${e.limit} dB(A)${e.lmaxLimit != null ? `，最大音量 ${e.lmaxLimit} dB(A)` : ""}`);
+      if (e.over != null) lines.push(`比較結果：${e.over > 0 ? "超過約 " + r0(e.over) : "低於約 " + r0(-e.over)} dB`);
+    } else {
+      lines.push("適用法規：社會秩序維護法第 72 條（製造噪音或深夜喧嘩，妨害公眾安寧）");
+    }
+    lines.push("備註：以手機分貝計量測（A 加權、Fast），僅供參考，請以主管機關專業噪音計量測為準。");
+    return lines.join("\n");
+  }
+
+  // ---------- health ----------
+  const HEALTH = [
+    [30, "適合睡覺", "--ok", "WHO 建議臥室夜間的連續噪音不要超過 30 dB(A)，這個音量不會影響睡眠。"],
+    [45, "會干擾睡眠", "--ok", "臥室的連續噪音超過 30 dB(A) 就會開始影響睡眠品質；突然的單一聲響超過 45 dB(A) 容易把人吵醒。"],
+    [55, "白天還可以，晚上偏吵", "--mid", "白天大多數人不會覺得被干擾。但晚上窗外超過 45 dB(A)，開窗睡覺就會受影響。"],
+    [70, "會讓人煩躁", "--mid", "WHO 指出白天戶外超過 55 dB(A)，多數人會覺得嚴重干擾。長期處在這種環境，容易睡不好、壓力大，也和血壓上升有關。"],
+    [85, "很吵，難好好講話", "--loud", "要提高音量才能交談。長時間待著容易疲勞、頭痛、注意力下降。"],
+    [100, "長時間會傷聽力", "--risk", "台灣職安法規規定，工作時 8 小時平均超過 85 dB(A)，雇主必須實施聽力保護。長期暴露會造成永久聽力損失，而且不會恢復。"],
+    [999, "短時間就可能傷耳朵", "--risk", "幾分鐘內就可能傷害聽力，出現耳鳴、耳朵悶塞是警訊。WHO 建議連夜店、演唱會 4 小時平均都不要超過 100 dB(A)。請戴耳塞或離開。"]
+  ];
+  function safeTime(db) {
+    if (!Number.isFinite(db) || db < 80) return "不會傷聽力";
+    const h = 8 / Math.pow(2, (db - 85) / 3);
+    if (h >= 24) return "不會傷聽力";
+    if (h >= 1) return `約 ${h >= 10 ? Math.round(h) : h.toFixed(1)} 小時`;
+    const m = h * 60;
+    return m >= 1 ? `約 ${Math.round(m)} 分鐘` : "不到 1 分鐘";
+  }
+  function updateHealth(db) {
+    if (!Number.isFinite(db)) {
+      $("hLevel").textContent = "–"; $("hTitle").textContent = "等待量測";
+      $("hTitle").style.color = css("--muted"); $("hText").textContent = "開始量測後，這裡會說明目前音量對睡眠和聽力的影響。";
+      $("hSafe").textContent = "–"; return;
+    }
+    const b = HEALTH.find(x => db < x[0]);
+    $("hLevel").textContent = Math.round(db) + " dB(A)";
+    $("hTitle").textContent = b[1]; $("hTitle").style.color = css(b[2]);
+    $("hText").textContent = b[3];
+    $("hSafe").textContent = safeTime(db);
+  }
+
   // ---------- live ----------
   async function startLive() {
     hideMsg();
@@ -404,7 +676,7 @@ h2 { font-size: 15px; margin: 0 0 8px; }
     const src = ctx.createMediaStreamSource(stream);
     analyser = ctx.createAnalyser(); analyser.fftSize = N; analyser.smoothingTimeConstant = 0;
     src.connect(analyser);
-    mode = "live"; history = []; fileSeries = null; resetStats(); smoothP = 0; lastT = performance.now(); accT = 0;
+    mode = "live"; history = []; fileSeries = null; resetStats(); startWall = new Date(); smoothP = 0; lastT = performance.now(); accT = 0;
     $("startBtn").textContent = "停止量測";
     $("dot").classList.add("live");
     $("statusText").textContent = "量測中 · Fast 時間加權";
@@ -442,6 +714,7 @@ h2 { font-size: 15px; margin: 0 0 8px; }
     $("sAvg").textContent = cntP ? fmt(toDb(sumP / cntP)) : "–";
     $("sTime").textContent = fmtTime(elapsed);
     maybeRef(dbfs + offset);
+    if (now - lastLawT > 500) { lastLawT = now; updateLaw(); updateHealth(dbfs + offset); }
     drawChart();
   }
 
@@ -486,6 +759,8 @@ h2 { font-size: 15px; margin: 0 0 8px; }
       $("statusText").textContent = "錄音檔分析結果 · 大數字為整段平均 Leq";
       $("chartTitle").textContent = file.name || "錄音檔"; $("chartNote").textContent = "整段錄音";
       maybeRef(leq + offset);
+      startWall = null;
+      updateLaw(); updateHealth(leq + offset);
       drawChart();
     } catch (e) {
       $("statusText").textContent = "分析失敗";
@@ -502,7 +777,8 @@ h2 { font-size: 15px; margin: 0 0 8px; }
     resetStats(); history = []; fileSeries = null;
     if (mode !== "live") { mode = "paused"; $("statusText").textContent = "已重設 · 按「開始量測」"; setReadout(NaN, NaN); }
     $("sTimeLabel").textContent = "時間"; $("chartTitle").textContent = "最近 60 秒"; $("chartNote").textContent = "";
-    refreshStatsDisplay(); drawChart(); renderRef(NaN);
+    startWall = mode === "live" ? new Date() : null;
+    refreshStatsDisplay(); updateLaw(); updateHealth(NaN); drawChart(); renderRef(NaN);
   });
   $("fileBtn").addEventListener("click", () => $("fileInput").click());
   $("fileInput").addEventListener("change", e => { const f = e.target.files[0]; if (f) analyzeFile(f); e.target.value = ""; });
@@ -524,10 +800,31 @@ h2 { font-size: 15px; margin: 0 0 8px; }
     try { localStorage.setItem("dbm-offset", offset); } catch (e) {}
     if (mode !== "live") {
       if (mode === "file" && cntP) setReadout(toDb(sumP / cntP), peak);
-      refreshStatsDisplay(); drawChart();
+      refreshStatsDisplay(); updateLaw(); drawChart();
     }
   });
   $("offVal").textContent = "+" + offset + " dB";
+
+  ["srcSel", "zoneSel", "periodSel"].forEach(id => {
+    try { const v = localStorage.getItem("dbm-" + id); if (v != null && [...$(id).options].some(o => o.value === v)) $(id).value = v; } catch (e) {}
+    $(id).addEventListener("change", () => {
+      try { localStorage.setItem("dbm-" + id, $(id).value); } catch (e) {}
+      updateLaw(); drawChart();
+    });
+  });
+  $("bgBtn").addEventListener("click", () => {
+    const st = getStats();
+    if (!st || st.demo) { showMsg("請先在噪音停止時按「開始量測」量一段時間，再把它設為背景音量。"); return; }
+    bgLevel = st.leq; hideMsg(); updateLaw();
+  });
+  $("copyBtn").addEventListener("click", async () => {
+    const text = buildRecord(), ta = $("recordText");
+    ta.value = text; ta.hidden = false;
+    try { await navigator.clipboard.writeText(text); $("copyBtn").textContent = "已複製，可以貼到陳情單或訊息"; }
+    catch (e) { ta.focus(); ta.select(); $("copyBtn").textContent = "請長按下方文字複製"; }
+    setTimeout(() => { $("copyBtn").textContent = "複製量測紀錄（陳情、報警時用）"; }, 3000);
+  });
+  setInterval(() => { if (mode !== "live") updateLaw(); }, 60000);
 
   window.addEventListener("resize", () => { drawChart(); if (mode !== "live") drawGauge(NaN, NaN); });
 
@@ -536,6 +833,7 @@ h2 { font-size: 15px; margin: 0 0 8px; }
   drawGauge(58 - offset, 72 - offset);
   $("num").textContent = "58";
   $("chip").style.color = css("--mid");
+  updateLaw(); updateHealth(58);
   drawChart();
 })();
 if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {})); }
