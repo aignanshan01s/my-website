@@ -2,275 +2,326 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>分貝計</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>台灣噪音通</title>
+<meta name="description" content="用手機量分貝，依台灣噪音管制法規判斷有沒有超標，並錄音存證、一鍵撥打陳情專線。">
 <meta name="theme-color" content="#0e1319">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="分貝計">
+<meta name="apple-mobile-web-app-title" content="台灣噪音通">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-/* Layout: one-column instrument panel. Readout → gauge → stats → 60 s trace → controls → reference scale. */
+/* Layout: one column, answer first. Big reading + plain verdict → start / record → law card with tap choices and call buttons → history → health → advanced (collapsed). */
 :root {
   --bg: #eef1f4;
   --panel: #ffffff;
-  --ink: #17202b;
-  --muted: #5d6a78;
-  --line: #d5dce3;
-  --accent: #1f5fd1;
-  --ok: #2e8b57;
-  --mid: #c99a06;
-  --loud: #e06c16;
-  --risk: #c62f2f;
+  --ink: #141b24;
+  --muted: #4b5664;
+  --line: #cfd7df;
+  --accent: #1859c9;
+  --ok: #217a49;
+  --mid: #9a7400;
+  --loud: #c45a0c;
+  --risk: #c22a2a;
   --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
   --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1319; --panel: #161d26; --ink: #e8edf2; --muted: #93a1b0; --line: #2a3542;
-    --accent: #6ea2ff; --ok: #4cc283; --mid: #e8bb2e; --loud: #f08a3c; --risk: #f05c5c;
+    --bg: #0e1319; --panel: #172029; --ink: #edf1f5; --muted: #aab6c3; --line: #2d3946;
+    --accent: #79aaff; --ok: #4cc283; --mid: #e8bb2e; --loud: #f08a3c; --risk: #ff6b6b;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e1319; --panel: #161d26; --ink: #e8edf2; --muted: #93a1b0; --line: #2a3542;
-  --accent: #6ea2ff; --ok: #4cc283; --mid: #e8bb2e; --loud: #f08a3c; --risk: #f05c5c;
+  --bg: #0e1319; --panel: #172029; --ink: #edf1f5; --muted: #aab6c3; --line: #2d3946;
+  --accent: #79aaff; --ok: #4cc283; --mid: #e8bb2e; --loud: #f08a3c; --risk: #ff6b6b;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 body {
   background: var(--bg); color: var(--ink); font-family: var(--font-body);
-  font-size: 15px; line-height: 1.5;
+  font-size: 17px; line-height: 1.6; -webkit-text-size-adjust: 100%;
 }
-.wrap { max-width: 560px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-h1 { font-size: 20px; margin: 0; letter-spacing: .04em; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
-.seg button {
-  font: 600 15px var(--font-display); letter-spacing: .03em; border: 0; background: transparent;
-  color: var(--muted); padding: 6px 12px; cursor: pointer;
+.wrap {
+  max-width: 560px; margin: 0 auto; display: grid; gap: 14px;
+  padding: calc(14px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
 }
-.seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
-.readout { display: grid; gap: 10px; }
-.status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+header { display: grid; gap: 0; }
+h1 { font-size: 24px; margin: 0; letter-spacing: .04em; }
+.tagline { margin: 0; color: var(--muted); font-size: 15px; }
+h2 { margin: 0; font-size: 19px; text-wrap: balance; }
+h3 { margin: 0; font-size: 16px; color: var(--muted); font-weight: 500; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+.status { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--muted); }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex: none; }
 .dot.live { background: var(--risk); animation: pulse 1.2s infinite; }
 @keyframes pulse { 50% { opacity: .3; } }
 @media (prefers-reduced-motion: reduce) { .dot.live { animation: none; } }
-.big { display: flex; align-items: baseline; gap: 8px; }
-.num {
-  font: 700 96px/0.95 var(--font-display); font-variant-numeric: tabular-nums;
-  letter-spacing: -.01em; min-width: 3ch;
+.big { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.num { font: 700 104px/0.9 var(--font-display); font-variant-numeric: tabular-nums; min-width: 2.2ch; }
+.unit { font-size: 24px; font-weight: 700; color: var(--muted); }
+.level { font-size: 22px; font-weight: 700; }
+.gauge canvas { width: 100%; height: 42px; display: block; }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+.stat { display: grid; gap: 2px; padding: 8px 2px; border-radius: 10px; background: var(--bg); }
+.stat b { font: 700 28px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 14px; color: var(--muted); }
+.summary {
+  --tone: var(--muted);
+  display: block; text-decoration: none; color: var(--ink); font-size: 17px; font-weight: 700;
+  padding: 12px 14px; border-radius: 10px; border-left: 6px solid var(--tone);
+  background: color-mix(in srgb, var(--tone) 12%, var(--panel));
 }
-.unit { font: 600 24px var(--font-display); color: var(--muted); }
-.chip {
-  justify-self: start; font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 999px;
-  border: 1px solid currentColor; color: var(--muted);
-}
-.gauge { position: relative; height: 40px; }
-.gauge canvas { width: 100%; height: 40px; display: block; }
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.stat { display: grid; gap: 2px; }
-.stat b { font: 600 26px/1 var(--font-display); font-variant-numeric: tabular-nums; }
-.stat span { font-size: 12px; color: var(--muted); }
-.chart-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-.chart-head strong { color: var(--ink); font-size: 14px; }
-#chart { width: 100%; height: 190px; display: block; }
+.summary small { display: block; font-weight: 400; font-size: 15px; color: var(--muted); }
+.ok-t { --tone: var(--ok); } .near-t { --tone: var(--mid); } .over-t { --tone: var(--risk); } .info-t { --tone: var(--accent); }
 .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .btn {
-  font: 500 15px var(--font-body); padding: 12px; border-radius: 10px; cursor: pointer;
-  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  font: 700 17px var(--font-body); min-height: 52px; padding: 10px 12px; border-radius: 12px; cursor: pointer;
+  border: 1.5px solid var(--line); background: var(--panel); color: var(--ink);
 }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; grid-column: 1 / -1; font-weight: 700; font-size: 17px; }
-.btn:focus-visible, .seg button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.note { font-size: 13px; color: var(--muted); margin: 0; }
-.msg { font-size: 14px; padding: 10px 12px; border-radius: 8px; border-left: 4px solid var(--loud); background: var(--bg); margin: 0; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; grid-column: 1 / -1; font-size: 20px; min-height: 60px; }
+.btn.rec { border-color: var(--risk); color: var(--risk); }
+.btn.rec.on { background: var(--risk); color: #fff; }
+.btn.wide { width: 100%; }
+.btn:disabled { opacity: .5; }
+.btn:focus-visible, .opt:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.msg { font-size: 16px; padding: 12px 14px; border-radius: 10px; border-left: 5px solid var(--loud); background: var(--panel); margin: 0; }
 .msg[hidden] { display: none; }
-.cal { display: grid; gap: 6px; }
-.cal label { display: flex; justify-content: space-between; font-size: 14px; }
-.cal input[type="range"] { width: 100%; accent-color: var(--accent); }
-h2 { font-size: 15px; margin: 0 0 8px; }
-.ref { display: grid; gap: 0; }
-.ref div { display: grid; grid-template-columns: 52px 10px 1fr; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
-.ref div:first-child { border-top: 0; }
-.ref b { font: 600 18px var(--font-display); font-variant-numeric: tabular-nums; text-align: right; }
-.ref i { width: 10px; height: 10px; border-radius: 2px; }
-.ref div.on { background: color-mix(in srgb, var(--accent) 12%, transparent); }
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.law, .health { display: grid; gap: 12px; }
-.law h2, .health h2 { margin: 0; font-size: 17px; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-@media (max-width: 400px) { .row2 { grid-template-columns: 1fr; } }
-.field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
-.field select {
-  font: 500 15px var(--font-body); color: var(--ink); background: var(--bg);
-  border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; width: 100%;
+.chart-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; color: var(--muted); }
+.chart-head strong { color: var(--ink); font-size: 16px; }
+#chart { width: 100%; height: 180px; display: block; }
+.q { display: grid; gap: 8px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt {
+  font: 500 17px var(--font-body); min-height: 46px; padding: 6px 16px; border-radius: 999px; cursor: pointer;
+  border: 1.5px solid var(--line); background: var(--panel); color: var(--ink);
 }
-.field select:focus-visible, .btn.sm:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.period { margin: 0; font-size: 14px; }
-.period b { font-weight: 700; }
+.opt[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.hint { margin: 0; font-size: 15px; color: var(--muted); }
+.period { margin: 0; font-size: 17px; padding: 10px 12px; border-radius: 10px; background: var(--bg); }
 .verdict {
   --tone: var(--muted);
-  border: 1px solid var(--tone); border-left-width: 6px; border-radius: 10px; padding: 12px 14px;
-  background: color-mix(in srgb, var(--tone) 10%, var(--panel)); display: grid; gap: 6px;
+  border: 1.5px solid var(--tone); border-left-width: 7px; border-radius: 12px; padding: 14px;
+  background: color-mix(in srgb, var(--tone) 10%, var(--panel)); display: grid; gap: 8px;
 }
-.verdict.ok { --tone: var(--ok); }
-.verdict.near { --tone: var(--mid); }
-.verdict.over { --tone: var(--risk); }
-.verdict.info { --tone: var(--accent); }
-.verdict .vt { font-size: 18px; font-weight: 700; color: var(--tone); }
-.verdict .vs { font-size: 14px; }
-.verdict dl { margin: 2px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font-size: 14px; }
+.verdict.ok { --tone: var(--ok); } .verdict.near { --tone: var(--mid); } .verdict.over { --tone: var(--risk); } .verdict.info { --tone: var(--accent); }
+.vt { font-size: 21px; font-weight: 700; color: var(--tone); line-height: 1.35; }
+.vs { font-size: 16px; }
+.verdict dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 17px; }
 .verdict dt { color: var(--muted); }
-.verdict dd { margin: 0; font-variant-numeric: tabular-nums; }
-.howto { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
-.howto a { color: var(--accent); font-weight: 700; }
-.btn.sm { padding: 8px 10px; font-size: 14px; border-radius: 8px; width: 100%; }
-.bgline { font-size: 13px; color: var(--muted); margin: 0; }
-.bgline button { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
-textarea.record {
-  width: 100%; min-height: 150px; font: 13px/1.5 var(--font-body); color: var(--ink);
-  background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px;
+.verdict dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.calls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.call {
+  display: grid; gap: 0; text-align: center; padding: 10px; border-radius: 12px; text-decoration: none;
+  background: var(--bg); border: 1.5px solid var(--line); color: var(--ink);
 }
+.call b { font: 700 24px var(--font-display); color: var(--accent); letter-spacing: .02em; }
+.call span { font-size: 15px; }
+.tips { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 16px; }
+.clips, .hist { display: grid; gap: 10px; }
+.clip { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: var(--bg); }
+.clip audio { width: 100%; }
+.clip p { margin: 0; font-size: 15px; }
+.hist-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 16px; }
+.hist-row:first-child { border-top: 0; }
+.hist-row .when { font-weight: 700; }
+.hist-row .what { color: var(--muted); font-size: 15px; }
+.hist-row .val { grid-row: 1 / 3; grid-column: 2; text-align: right; font: 700 24px/1 var(--font-display); font-variant-numeric: tabular-nums; align-self: center; }
+.hist-row .val small { display: block; font: 500 13px var(--font-body); }
+.empty { margin: 0; color: var(--muted); font-size: 16px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .hhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.hhead b { font: 700 28px/1 var(--font-display); font-variant-numeric: tabular-nums; }
-.hhead span { font-weight: 700; font-size: 16px; }
+.hhead b { font: 700 30px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.hhead span { font-weight: 700; font-size: 19px; }
 .health p { margin: 0; }
-.safe { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 10px 12px; border-radius: 8px; background: var(--bg); font-size: 14px; }
-.safe b { font: 700 20px var(--font-display); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.src { font-size: 12px; color: var(--muted); margin: 0; }
+.safe { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 12px; border-radius: 10px; background: var(--bg); }
+.safe b { font-size: 19px; white-space: nowrap; }
+details.panel { gap: 0; }
+details.panel > summary { cursor: pointer; font-size: 18px; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 32px; }
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel > summary::after { content: "展開"; font-size: 15px; font-weight: 500; color: var(--accent); }
+details.panel[open] > summary::after { content: "收合"; }
+.adv { display: grid; gap: 18px; margin-top: 14px; }
+.adv section { display: grid; gap: 8px; }
+.adv input[type="range"] { width: 100%; accent-color: var(--accent); height: 32px; }
+.adv label.line { display: flex; justify-content: space-between; font-weight: 700; }
+.ref { display: grid; }
+.ref div { display: grid; grid-template-columns: 48px 10px 1fr; gap: 10px; align-items: center; padding: 7px 4px; border-top: 1px solid var(--line); font-size: 16px; }
+.ref div:first-child { border-top: 0; }
+.ref b { font: 700 20px var(--font-display); font-variant-numeric: tabular-nums; text-align: right; }
+.ref i { width: 10px; height: 10px; border-radius: 2px; }
+.ref div.on { background: color-mix(in srgb, var(--accent) 14%, transparent); border-radius: 6px; }
+.src { font-size: 14px; color: var(--muted); margin: 0; }
+textarea.record { width: 100%; min-height: 160px; font: 15px/1.5 var(--font-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+footer { display: grid; gap: 6px; padding: 0 4px; }
+@media (max-width: 380px) { .num { font-size: 88px; } .stat b { font-size: 24px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>分貝計</h1>
-    <div class="seg" role="group" aria-label="頻率加權">
-      <button id="wA" type="button" aria-pressed="true">dB(A)</button>
-      <button id="wZ" type="button" aria-pressed="false">dB(Z)</button>
-    </div>
+    <h1>台灣噪音通</h1>
+    <p class="tagline">量分貝・查台灣法規・錄音存證</p>
   </header>
 
-  <section class="panel readout" aria-live="polite">
-    <div class="status"><span class="dot" id="dot"></span><span id="statusText">範例畫面 · 按「開始量測」使用麥克風</span></div>
-    <div class="big"><span class="num" id="num">58</span><span class="unit" id="unit">dB(A)</span></div>
-    <span class="chip" id="chip">一般對話</span>
+  <section class="panel" aria-live="polite" aria-label="目前音量">
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">範例畫面，按下方「開始量測」使用麥克風</span></div>
+    <div class="big"><span class="num" id="num">58</span><span class="unit">分貝</span><span class="level" id="level">一般對話</span></div>
     <div class="gauge"><canvas id="gauge" aria-hidden="true"></canvas></div>
     <div class="stats">
       <div class="stat"><b id="sMin">41</b><span>最低</span></div>
-      <div class="stat"><b id="sAvg">56</b><span>平均 Leq</span></div>
+      <div class="stat"><b id="sAvg">56</b><span>平均</span></div>
       <div class="stat"><b id="sMax">72</b><span>最高</span></div>
-      <div class="stat"><b id="sTime">0:60</b><span id="sTimeLabel">時間</span></div>
+      <div class="stat"><b id="sTime">1:00</b><span id="sTimeLabel">已量</span></div>
     </div>
+    <a class="summary info-t" id="summary" href="#law"></a>
   </section>
 
-  <section class="panel">
+  <section class="controls" aria-label="操作">
+    <button class="btn primary" id="startBtn" type="button">開始量測</button>
+    <button class="btn rec" id="recBtn" type="button">錄音存證</button>
+    <button class="btn" id="resetBtn" type="button">重新開始</button>
+  </section>
+  <p class="msg" id="msg" hidden></p>
+
+  <section class="panel" aria-label="音量變化">
     <div class="chart-head"><strong id="chartTitle">最近 60 秒</strong><span id="chartNote">範例資料</span></div>
     <canvas id="chart" aria-label="音量變化圖"></canvas>
   </section>
 
-  <p class="msg" id="msg" hidden></p>
-
-  <section class="controls">
-    <button class="btn primary" id="startBtn" type="button">開始量測</button>
-    <button class="btn" id="resetBtn" type="button">重設數據</button>
-    <button class="btn" id="fileBtn" type="button">分析錄音檔</button>
-    <input class="visually-hidden" id="fileInput" type="file" accept="audio/*,video/*" capture>
+  <section class="panel" id="clipsPanel" hidden>
+    <h2>錄音存證</h2>
+    <p class="hint">錄音只存在這個畫面，關掉就不見了。請馬上按「儲存或傳到 LINE」。</p>
+    <div class="clips" id="clips"></div>
   </section>
 
-  <section class="panel law" aria-labelledby="lawTitle">
-    <h2 id="lawTitle">有沒有超過台灣噪音標準？</h2>
-    <div class="row2">
-      <label class="field" for="srcSel"><span>噪音從哪裡來</span>
-        <select id="srcSel">
-          <option value="neighbor">住家鄰居（人聲、跑跳、樂器、寵物）</option>
-          <option value="business">店家（餐廳、KTV、冷氣室外機、抽風機）</option>
-          <option value="construction">施工、裝潢</option>
-          <option value="amplifier">擴音喇叭（宣傳車、廣播、音響）</option>
-          <option value="factory">工廠</option>
-        </select>
-      </label>
-      <label class="field" for="zoneSel"><span>你家在哪種地區</span>
-        <select id="zoneSel">
-          <option value="0">第一類：風景區、保護區</option>
-          <option value="1" selected>第二類：住宅區、文教區（多數住家）</option>
-          <option value="2">第三類：住商混合、商業區</option>
-          <option value="3">第四類：工業區</option>
-        </select>
-      </label>
-    </div>
-    <div class="row2">
-      <label class="field" for="periodSel"><span>時段</span>
-        <select id="periodSel">
-          <option value="auto">依現在時間自動判斷</option>
-          <option value="0">日間</option>
-          <option value="1">晚間</option>
-          <option value="2">夜間</option>
-        </select>
-      </label>
-      <div class="field"><span>背景音量（選用）</span>
-        <button class="btn sm" id="bgBtn" type="button">把目前平均設為背景音量</button>
+  <section class="panel" id="law" aria-labelledby="lawTitle">
+    <h2 id="lawTitle">可以檢舉嗎？</h2>
+    <div class="q">
+      <h3>1. 噪音從哪裡來？</h3>
+      <div class="opts" id="srcOpts" role="group" aria-label="噪音來源">
+        <button class="opt" type="button" data-v="neighbor">鄰居</button>
+        <button class="opt" type="button" data-v="business">店家</button>
+        <button class="opt" type="button" data-v="construction">施工裝潢</button>
+        <button class="opt" type="button" data-v="amplifier">擴音喇叭</button>
+        <button class="opt" type="button" data-v="factory">工廠</button>
       </div>
+      <p class="hint" id="srcHint"></p>
+    </div>
+    <div class="q">
+      <h3>2. 你家在哪種地方？</h3>
+      <div class="opts" id="zoneOpts" role="group" aria-label="地區類別">
+        <button class="opt" type="button" data-v="1">住宅區</button>
+        <button class="opt" type="button" data-v="2">住商混合</button>
+        <button class="opt" type="button" data-v="3">工業區</button>
+        <button class="opt" type="button" data-v="0">風景區、保護區</button>
+      </div>
+      <p class="hint">不確定就選「住宅區」，大多數住家屬於這類。樓下有店面、在大馬路旁通常是「住商混合」。</p>
     </div>
     <p class="period" id="periodText"></p>
-    <p class="bgline" id="bgLine"></p>
-    <div class="verdict" id="verdict" aria-live="polite"></div>
-    <ul class="howto" id="howto"></ul>
-    <button class="btn" id="copyBtn" type="button">複製量測紀錄（陳情、報警時用）</button>
+    <div class="verdict" id="verdict"></div>
+    <div class="calls" id="calls"></div>
+    <ul class="tips" id="tips"></ul>
+    <button class="btn wide" id="shareBtn" type="button">傳送這次量測紀錄（LINE、簡訊）</button>
     <textarea class="record" id="recordText" readonly hidden aria-label="量測紀錄"></textarea>
-    <p class="src">依據：噪音管制標準（102 年 8 月 5 日修正）、噪音管制區劃定作業準則、社會秩序維護法第 72 條。手機量測只能當參考與佐證，是否違規以環保局用專業噪音計量測為準。你家屬於第幾類，可在縣市環保局網站搜尋「噪音管制區」。</p>
+    <p class="src">手機量到的數字可以當佐證，但是否違規，要由環保局用專業噪音計量測認定。</p>
+  </section>
+
+  <section class="panel" aria-labelledby="histTitle">
+    <h2 id="histTitle">我的量測紀錄</h2>
+    <p class="hint">每次按「停止量測」會自動記下來。噪音天天發生的話，多存幾天的紀錄，陳情時更有說服力。</p>
+    <div class="hist" id="hist"></div>
+    <div class="row2">
+      <button class="btn" id="histShare" type="button">傳送全部紀錄</button>
+      <button class="btn" id="histClear" type="button">清除紀錄</button>
+    </div>
   </section>
 
   <section class="panel health" aria-labelledby="healthTitle">
-    <h2 id="healthTitle">這個音量會造成什麼影響？</h2>
-    <div class="hhead"><b id="hLevel">58 dB(A)</b><span id="hTitle"></span></div>
+    <h2 id="healthTitle">這個音量對身體的影響</h2>
+    <div class="hhead"><b id="hLevel">58 分貝</b><span id="hTitle"></span></div>
     <p id="hText"></p>
-    <div class="safe"><span id="hSafeLabel">一天最多可以聽多久</span><b id="hSafe">不限</b></div>
-    <p class="src">睡眠與干擾的數字來自世界衛生組織（WHO）社區噪音指引；可聽多久依美國 NIOSH 建議（85 dB 8 小時，每多 3 dB 時間減半）；85 dB 聽力保護門檻依台灣職業安全衛生法規。</p>
+    <div class="safe"><span>一天最多可以聽</span><b id="hSafe">不會傷聽力</b></div>
   </section>
 
-  <section class="panel cal">
-    <label for="offset"><span>校正偏移</span><span id="offVal">+100 dB</span></label>
-    <input id="offset" type="range" min="60" max="140" step="1" value="100">
-    <p class="note">手機與電腦麥克風沒有出廠校正，數值是估計。若身邊有已知音量的音源（或專業分貝計），調整這裡讓兩者讀數一致；安靜的臥室通常約 30–35 dB(A)。</p>
-  </section>
+  <details class="panel" id="advanced">
+    <summary>進階設定</summary>
+    <div class="adv">
+      <section>
+        <label class="line" for="offset"><span>校正讀數</span><span id="offVal">0</span></label>
+        <input id="offset" type="range" min="-40" max="40" step="1" value="0">
+        <p class="hint">手機麥克風沒有經過專業校正。安靜的臥室大約 30 到 35 分貝；如果讀數差很多，用這裡調高或調低。</p>
+      </section>
+      <section>
+        <h3>扣除背景音量</h3>
+        <p class="hint" id="bgLine"></p>
+        <button class="btn" id="bgBtn" type="button">把這次平均存成背景音量</button>
+      </section>
+      <section>
+        <h3>時段</h3>
+        <div class="opts" id="periodOpts" role="group" aria-label="時段">
+          <button class="opt" type="button" data-v="auto">依現在時間</button>
+          <button class="opt" type="button" data-v="0">日間</button>
+          <button class="opt" type="button" data-v="1">晚間</button>
+          <button class="opt" type="button" data-v="2">夜間</button>
+        </div>
+        <p class="hint">分析以前的錄音時，請選錄音當時的時段。</p>
+      </section>
+      <section>
+        <h3>分析手機裡的錄音、錄影</h3>
+        <button class="btn" id="fileBtn" type="button">選擇檔案</button>
+        <input class="visually-hidden" id="fileInput" type="file" accept="audio/*,video/*">
+      </section>
+      <section>
+        <h3>加權方式</h3>
+        <div class="opts" id="wOpts" role="group" aria-label="加權方式">
+          <button class="opt" type="button" data-v="A">A 加權（法規用）</button>
+          <button class="opt" type="button" data-v="Z">不加權</button>
+        </div>
+        <p class="hint">台灣噪音法規用 A 加權，接近人耳聽到的感覺。一般請維持 A 加權。</p>
+      </section>
+    </div>
+  </details>
 
   <section class="panel">
     <h2>常見聲音大約幾分貝</h2>
     <div class="ref" id="ref"></div>
   </section>
+
+  <footer>
+    <p class="src">法規依據：噪音管制標準（102 年 8 月 5 日修正）、噪音管制區劃定作業準則、社會秩序維護法第 72 條、公寓大廈管理條例。健康資料參考世界衛生組織（WHO）社區噪音指引、美國 NIOSH 建議與台灣職業安全衛生法規。</p>
+    <p class="src">你家屬於第幾類噪音管制區，可在縣市環保局網站搜尋「噪音管制區」查詢。</p>
+  </footer>
 </div>
 
 <script>
 (() => {
   const $ = id => document.getElementById(id);
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("tnm-" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem("tnm-" + k, JSON.stringify(v)); } catch (e) {} }
+  };
 
   const REF = [
-    [20, "樹葉沙沙聲、錄音室"],
-    [30, "安靜的臥室、輕聲耳語"],
-    [40, "圖書館、安靜住宅區"],
-    [50, "安靜的辦公室、冷氣運轉"],
-    [60, "一般對話"],
-    [70, "吸塵器、熱鬧餐廳"],
-    [85, "交通繁忙的路口"],
-    [100, "捷運進站、機車近距離"],
-    [110, "演唱會前排、夜店"],
-    [120, "救護車鳴笛近距離、疼痛閾值"]
+    [20, "樹葉沙沙聲"], [30, "安靜的臥室、輕聲耳語"], [40, "圖書館、安靜住宅區"],
+    [50, "安靜的辦公室、冷氣運轉"], [60, "一般對話"], [70, "吸塵器、熱鬧餐廳"],
+    [85, "交通繁忙的路口"], [100, "捷運進站、機車近距離"], [110, "演唱會前排、夜店"],
+    [120, "救護車鳴笛近距離"]
   ];
   const LEVELS = [
     [35, "非常安靜", "--ok"], [45, "安靜", "--ok"], [55, "輕微聲響", "--ok"],
     [65, "一般對話", "--mid"], [75, "吵雜", "--mid"], [85, "很吵", "--loud"],
-    [100, "長時間會傷聽力", "--risk"], [999, "危險音量", "--risk"]
+    [100, "會傷聽力", "--risk"], [999, "危險", "--risk"]
   ];
   const levelInfo = db => LEVELS.find(l => db < l[0]);
   const zoneColor = db => db < 55 ? "--ok" : db < 70 ? "--mid" : db < 85 ? "--loud" : "--risk";
@@ -278,24 +329,20 @@ textarea.record {
   // ---------- FFT + A-weighting ----------
   const N = 2048;
   const rev = new Uint32Array(N);
-  for (let i = 0, b = Math.log2(N); i < N; i++) {
-    let r = 0; for (let j = 0; j < b; j++) r |= ((i >> j) & 1) << (b - 1 - j); rev[i] = r;
-  }
+  for (let i = 0, b = Math.log2(N); i < N; i++) { let r = 0; for (let j = 0; j < b; j++) r |= ((i >> j) & 1) << (b - 1 - j); rev[i] = r; }
   const cosT = new Float64Array(N / 2), sinT = new Float64Array(N / 2);
   for (let i = 0; i < N / 2; i++) { cosT[i] = Math.cos(2 * Math.PI * i / N); sinT[i] = -Math.sin(2 * Math.PI * i / N); }
   const hann = new Float64Array(N);
   for (let i = 0; i < N; i++) hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
   const re = new Float64Array(N), im = new Float64Array(N);
-  function fftPower(buf, off) {
+  function fft(buf, off) {
     for (let i = 0; i < N; i++) { re[rev[i]] = buf[off + i] * hann[i]; im[rev[i]] = 0; }
     for (let size = 2; size <= N; size <<= 1) {
       const half = size >> 1, step = N / size;
-      for (let s = 0; s < N; s += size) {
-        for (let k = 0; k < half; k++) {
-          const c = cosT[k * step], si = sinT[k * step], a = s + k, b = a + half;
-          const tr = re[b] * c - im[b] * si, ti = re[b] * si + im[b] * c;
-          re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
-        }
+      for (let s = 0; s < N; s += size) for (let k = 0; k < half; k++) {
+        const c = cosT[k * step], si = sinT[k * step], a = s + k, b = a + half;
+        const tr = re[b] * c - im[b] * si, ti = re[b] * si + im[b] * c;
+        re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
       }
     }
   }
@@ -304,20 +351,18 @@ textarea.record {
     if (aW && aWsr === sr) return aW;
     aW = new Float64Array(N / 2); aWsr = sr;
     for (let k = 1; k < N / 2; k++) {
-      const f = k * sr / N, f2 = f * f;
-      const ra = (12194 ** 2 * f2 * f2) /
-        ((f2 + 20.6 ** 2) * Math.sqrt((f2 + 107.7 ** 2) * (f2 + 737.9 ** 2)) * (f2 + 12194 ** 2));
+      const f2 = (k * sr / N) ** 2;
+      const ra = (12194 ** 2 * f2 * f2) / ((f2 + 20.6 ** 2) * Math.sqrt((f2 + 107.7 ** 2) * (f2 + 737.9 ** 2)) * (f2 + 12194 ** 2));
       aW[k] = ra * ra * Math.pow(10, 0.2);
     }
     return aW;
   }
-  // returns mean-square power of a frame, A- or Z-weighted
   function framePower(buf, off, sr, weightA) {
     let ms = 0;
     for (let i = 0; i < N; i++) { const v = buf[off + i]; ms += v * v; }
     ms /= N;
     if (!weightA || ms < 1e-14) return ms;
-    fftPower(buf, off);
+    fft(buf, off);
     const w = aWeights(sr);
     let pz = 0, pa = 0;
     for (let k = 1; k < N / 2; k++) { const p = re[k] * re[k] + im[k] * im[k]; pz += p; pa += p * w[k]; }
@@ -326,20 +371,18 @@ textarea.record {
   const toDb = p => 10 * Math.log10(Math.max(p, 1e-13));
 
   // ---------- state ----------
-  let weightA = true;
-  let offset = 100;
-  let mode = "demo"; // demo | live | file
+  const BASE = 100; // dBFS → dB SPL rough mapping; user trims with the calibration slider
+  let weightA = store.get("weight", "A") === "A";
+  let trim = store.get("trim", 0);
+  let offset = BASE + trim;
+  let mode = "demo";
   let ctx = null, stream = null, analyser = null, raf = 0;
-  let history = [];        // dBFS values, one per 100 ms
-  let fileSeries = null;   // {vals, dur}
-  let smoothP = 0, lastT = 0, accT = 0, peak = -Infinity;
+  let history = [], fileSeries = null;
+  let smoothP = 0, lastT = 0, accT = 0;
   let sumP = 0, cntP = 0, minDb = Infinity, maxDb = -Infinity, startT = 0, elapsed = 0;
+  let srcKey = store.get("src", "neighbor"), zone = store.get("zone", 1), periodSel = store.get("period", "auto");
+  let bgLevel = null, startWall = null, limitLine = null, lastLawT = 0, savedThisRun = false;
 
-  try { const o = localStorage.getItem("dbm-offset"); if (o) offset = +o; } catch (e) {}
-  try { if (localStorage.getItem("dbm-weight") === "Z") weightA = false; } catch (e) {}
-  $("offset").value = offset;
-
-  // demo trace (marked as example until the user starts)
   const demo = [];
   for (let i = 0; i < 600; i++) {
     const t = i / 10;
@@ -350,296 +393,284 @@ textarea.record {
   }
   history = demo.slice();
 
-  function resetStats() {
-    sumP = 0; cntP = 0; minDb = Infinity; maxDb = -Infinity; peak = -Infinity;
-    startT = performance.now(); elapsed = 0;
-  }
-
+  function resetStats() { sumP = 0; cntP = 0; minDb = Infinity; maxDb = -Infinity; startT = performance.now(); elapsed = 0; savedThisRun = false; }
   const fmt = v => Number.isFinite(v) ? Math.round(v + offset).toString() : "–";
   const fmtTime = s => { s = Math.floor(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+  const r0 = v => Math.round(v);
 
-  function setReadout(dbfs, peakFs) {
-    const db = dbfs + offset;
-    $("num").textContent = Number.isFinite(dbfs) ? Math.round(db) : "–";
+  function setReadout(dbfs) {
+    const db = dbfs + offset, ok = Number.isFinite(dbfs);
+    $("num").textContent = ok ? Math.round(db) : "–";
     const li = levelInfo(db);
-    const chip = $("chip");
-    chip.textContent = Number.isFinite(dbfs) ? li[1] : "等待量測";
-    chip.style.color = Number.isFinite(dbfs) ? css(li[2]) : css("--muted");
-    drawGauge(dbfs, peakFs);
+    $("level").textContent = ok ? li[1] : "";
+    $("level").style.color = ok ? css(li[2]) : css("--muted");
+    drawGauge(dbfs);
   }
-
-  function refreshStatsDisplay() {
-    $("sMin").textContent = fmt(minDb);
-    $("sMax").textContent = fmt(maxDb);
+  function refreshStats() {
+    $("sMin").textContent = fmt(minDb); $("sMax").textContent = fmt(maxDb);
     $("sAvg").textContent = cntP ? fmt(toDb(sumP / cntP)) : "–";
     $("sTime").textContent = fmtTime(elapsed);
-    const cur = cntP ? toDb(sumP / cntP) + offset : NaN;
-    document.querySelectorAll("#ref div").forEach(d => d.classList.remove("on"));
   }
 
   // ---------- drawing ----------
   function fitCanvas(c) {
     const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
-    if (c.width !== Math.round(r.width * d) || c.height !== Math.round(r.height * d)) {
-      c.width = Math.round(r.width * d); c.height = Math.round(r.height * d);
-    }
+    if (c.width !== Math.round(r.width * d) || c.height !== Math.round(r.height * d)) { c.width = Math.round(r.width * d); c.height = Math.round(r.height * d); }
     const g = c.getContext("2d"); g.setTransform(d, 0, 0, d, 0, 0);
     return [g, r.width, r.height];
   }
   const LO = 20, HI = 120;
-
-  function drawGauge(dbfs, peakFs) {
+  function drawGauge(dbfs) {
     const [g, w, h] = fitCanvas($("gauge"));
     g.clearRect(0, 0, w, h);
     const x = db => (Math.min(HI, Math.max(LO, db)) - LO) / (HI - LO) * w;
-    const barH = 14, y0 = 4;
+    const barH = 16, y0 = 2;
     const zones = [[LO, 55, "--ok"], [55, 70, "--mid"], [70, 85, "--loud"], [85, HI, "--risk"]];
     g.globalAlpha = 0.22;
     zones.forEach(([a, b, c]) => { g.fillStyle = css(c); g.fillRect(x(a), y0, x(b) - x(a), barH); });
     g.globalAlpha = 1;
     const db = dbfs + offset;
-    if (Number.isFinite(dbfs)) {
-      zones.forEach(([a, b, c]) => {
-        if (db > a) { g.fillStyle = css(c); g.fillRect(x(a), y0, x(Math.min(db, b)) - x(a), barH); }
-      });
-    }
-    if (Number.isFinite(peakFs)) {
-      g.fillStyle = css("--ink"); g.fillRect(x(peakFs + offset) - 1, y0 - 3, 2, barH + 6);
-    }
-    g.fillStyle = css("--muted"); g.font = "12px " + css("--font-display"); g.textBaseline = "top";
-    for (let t = LO; t <= HI; t += 20) {
-      g.textAlign = t === LO ? "left" : t === HI ? "right" : "center";
-      g.fillText(t, x(t), y0 + barH + 6);
-    }
+    if (Number.isFinite(dbfs)) zones.forEach(([a, b, c]) => { if (db > a) { g.fillStyle = css(c); g.fillRect(x(a), y0, x(Math.min(db, b)) - x(a), barH); } });
+    if (limitLine != null) { g.fillStyle = css("--ink"); g.fillRect(x(limitLine) - 1.5, 0, 3, barH + 4); }
+    g.fillStyle = css("--muted"); g.font = "13px " + css("--font-display"); g.textBaseline = "top";
+    for (let t = LO; t <= HI; t += 20) { g.textAlign = t === LO ? "left" : t === HI ? "right" : "center"; g.fillText(t, x(t), y0 + barH + 6); }
   }
-
   function drawChart() {
     const [g, w, h] = fitCanvas($("chart"));
     g.clearRect(0, 0, w, h);
     const padL = 28, padB = 18, padT = 6, cw = w - padL - 4, ch = h - padB - padT;
     const y = db => padT + (1 - (Math.min(HI, Math.max(LO, db)) - LO) / (HI - LO)) * ch;
-    g.font = "12px " + css("--font-display"); g.textBaseline = "middle"; g.textAlign = "right";
+    g.font = "13px " + css("--font-display"); g.textBaseline = "middle"; g.textAlign = "right";
     for (let t = LO; t <= HI; t += 20) {
       g.strokeStyle = css("--line"); g.lineWidth = 1;
       g.beginPath(); g.moveTo(padL, Math.round(y(t)) + .5); g.lineTo(w - 4, Math.round(y(t)) + .5); g.stroke();
       g.fillStyle = css("--muted"); g.fillText(t, padL - 6, y(t));
     }
-    // 85 dB reference
-    g.setLineDash([4, 4]); g.strokeStyle = css("--risk"); g.globalAlpha = .7;
-    g.beginPath(); g.moveTo(padL, y(85)); g.lineTo(w - 4, y(85)); g.stroke();
-    g.setLineDash([]); g.globalAlpha = 1;
-    g.fillStyle = css("--risk"); g.textAlign = "right"; g.textBaseline = "bottom";
-    g.fillText("85", w - 6, y(85) - 2);
     if (limitLine != null) {
-      g.setLineDash([2, 4]); g.strokeStyle = css("--loud"); g.lineWidth = 1.5;
+      g.setLineDash([5, 4]); g.strokeStyle = css("--risk"); g.lineWidth = 1.5;
       g.beginPath(); g.moveTo(padL, y(limitLine)); g.lineTo(w - 4, y(limitLine)); g.stroke();
-      g.setLineDash([]); g.lineWidth = 1; g.fillStyle = css("--loud"); g.textAlign = "left";
-      g.fillText("法規 " + limitLine, padL + 4, y(limitLine) - 2);
+      g.setLineDash([]); g.lineWidth = 1; g.fillStyle = css("--risk"); g.textAlign = "left"; g.textBaseline = "bottom";
+      g.fillText("法規上限 " + limitLine, padL + 4, y(limitLine) - 2);
     }
-
     let vals, totalSec;
-    if (mode === "file" && fileSeries) { vals = fileSeries.vals; totalSec = fileSeries.dur; }
-    else { vals = history; totalSec = 60; }
+    if (mode === "file" && fileSeries) { vals = fileSeries.vals; totalSec = fileSeries.dur; } else { vals = history; totalSec = 60; }
     const n = mode === "file" ? vals.length : 600;
     const xAt = i => padL + (n <= 1 ? 0 : i / (n - 1)) * cw;
     const start = mode === "file" ? 0 : n - vals.length;
-
-    // time labels
     g.fillStyle = css("--muted"); g.textBaseline = "top";
-    g.textAlign = "left"; g.fillText(mode === "file" ? "0:00" : "-60 s", padL, h - padB + 4);
+    g.textAlign = "left"; g.fillText(mode === "file" ? "0:00" : "60 秒前", padL, h - padB + 4);
     g.textAlign = "right"; g.fillText(mode === "file" ? fmtTime(totalSec) : "現在", w - 4, h - padB + 4);
-
     if (!vals.length) return;
     const acc = css("--accent");
-    g.beginPath();
-    vals.forEach((v, i) => { const X = xAt(start + i), Y = y(v + offset); i ? g.lineTo(X, Y) : g.moveTo(X, Y); });
-    const lastX = xAt(start + vals.length - 1);
+    const path = () => { g.beginPath(); vals.forEach((v, i) => { const X = xAt(start + i), Y = y(v + offset); i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); };
+    path(); const lastX = xAt(start + vals.length - 1);
     g.lineTo(lastX, y(LO)); g.lineTo(xAt(start), y(LO)); g.closePath();
-    g.fillStyle = acc; g.globalAlpha = .14; g.fill(); g.globalAlpha = 1;
-    g.beginPath();
-    vals.forEach((v, i) => { const X = xAt(start + i), Y = y(v + offset); i ? g.lineTo(X, Y) : g.moveTo(X, Y); });
-    g.strokeStyle = acc; g.lineWidth = 1.6; g.lineJoin = "round"; g.stroke();
-    if (mode !== "file") {
-      const lv = vals[vals.length - 1];
-      g.beginPath(); g.arc(lastX, y(lv + offset), 3.5, 0, Math.PI * 2); g.fillStyle = acc; g.fill();
-    }
+    g.fillStyle = acc; g.globalAlpha = .15; g.fill(); g.globalAlpha = 1;
+    path(); g.strokeStyle = acc; g.lineWidth = 1.8; g.lineJoin = "round"; g.stroke();
+    if (mode !== "file") { g.beginPath(); g.arc(lastX, y(vals[vals.length - 1] + offset), 4, 0, Math.PI * 2); g.fillStyle = acc; g.fill(); }
   }
-
-  function renderRef(highlightDb) {
+  let lastRefDb = NaN;
+  function renderRef(db) {
     const box = $("ref"); box.innerHTML = "";
-    let best = -1;
-    if (Number.isFinite(highlightDb)) {
-      let bestD = Infinity;
-      REF.forEach(([db], i) => { const d = Math.abs(db - highlightDb); if (d < bestD) { bestD = d; best = i; } });
-    }
-    REF.forEach(([db, label], i) => {
+    let best = -1, bestD = Infinity;
+    if (Number.isFinite(db)) REF.forEach(([v], i) => { const d = Math.abs(v - db); if (d < bestD) { bestD = d; best = i; } });
+    REF.forEach(([v, label], i) => {
       const d = document.createElement("div");
       if (i === best) d.classList.add("on");
-      d.innerHTML = `<b>${db}</b><i style="background:var(${zoneColor(db)})"></i><span>${label}</span>`;
+      d.innerHTML = `<b>${v}</b><i style="background:var(${zoneColor(v)})"></i><span>${label}</span>`;
       box.appendChild(d);
     });
   }
-  let lastRefDb = NaN;
-  function maybeRef(db) {
-    const r = Math.round(db / 5) * 5;
-    if (r !== lastRefDb) { lastRefDb = r; renderRef(db); }
-  }
+  function maybeRef(db) { const r = Math.round(db / 5) * 5; if (r !== lastRefDb) { lastRefDb = r; renderRef(db); } }
 
   // ---------- Taiwan noise law ----------
   const ZONES = ["第一類", "第二類", "第三類", "第四類"];
+  const ZONE_PLAIN = ["風景區、保護區", "住宅區", "住商混合", "工業區"];
   const PERIODS = ["日間", "晚間", "夜間"];
-  // 噪音管制標準 (102.08.05) 20 Hz–20 kHz, [zone][day, evening, night]
+  // 噪音管制標準 (102.08.05) 20 Hz–20 kHz; [zone][日間, 晚間, 夜間]
   const SOURCES = {
-    neighbor: { name: "住家鄰居" },
-    business: { name: "店家／娛樂場所", law: "噪音管制標準第 5 條（娛樂場所、營業場所）",
+    neighbor: { name: "鄰居", hint: "人聲、跑跳、拖椅子、樂器、寵物叫、麻將聲" },
+    business: { name: "店家", hint: "餐廳、KTV、冷氣室外機、抽風機、冷凍設備", law: "噪音管制標準第 5 條（娛樂場所、營業場所）",
       leq: [[55, 50, 40], [57, 52, 47], [67, 57, 52], [80, 70, 65]] },
-    construction: { name: "施工／裝潢", law: "噪音管制標準第 6 條（營建工程）",
+    construction: { name: "施工裝潢", hint: "工地機具、電鑽、敲打、裝潢", law: "噪音管制標準第 6 條（營建工程）",
       leq: [[67, 47, 47], [67, 57, 47], [72, 67, 62], [80, 70, 65]],
       lmax: [[100, 80, 70], [100, 80, 70], [100, 85, 75], [100, 85, 75]] },
-    amplifier: { name: "擴音設施", law: "噪音管制標準第 7 條（擴音設施）",
+    amplifier: { name: "擴音喇叭", hint: "宣傳車、廣播、戶外音響、卡拉 OK 喇叭", law: "噪音管制標準第 7 條（擴音設施）",
       leq: [[57, 47, 40], [72, 57, 47], [77, 62, 52], [82, 72, 62]] },
-    factory: { name: "工廠", law: "噪音管制標準第 4 條（工廠）",
+    factory: { name: "工廠", hint: "工廠機器、加工、修理", law: "噪音管制標準第 4 條（工廠）",
       leq: [[50, 45, 40], [57, 52, 47], [67, 57, 52], [80, 70, 65]] }
   };
-  let bgLevel = null, startWall = null, limitLine = null, lastLawT = 0, lastState = null;
-
   function taipeiHour(d) {
-    try {
-      return parseInt(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: "Asia/Taipei" }).format(d), 10) % 24;
-    } catch (e) { return d.getHours(); }
+    try { return parseInt(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: "Asia/Taipei" }).format(d), 10) % 24; }
+    catch (e) { return d.getHours(); }
   }
-  function autoPeriod(zone, d) {
-    const h = taipeiHour(d), eveEnd = zone < 2 ? 22 : 23;
-    return h >= 7 && h < 19 ? 0 : h >= 19 && h < eveEnd ? 1 : 2;
-  }
-  function periodRange(zone, p) {
-    return p === 0 ? "07:00–19:00" : p === 1 ? (zone < 2 ? "19:00–22:00" : "19:00–23:00") : (zone < 2 ? "22:00–07:00" : "23:00–07:00");
-  }
+  function autoPeriod(z, d) { const h = taipeiHour(d), e = z < 2 ? 22 : 23; return h >= 7 && h < 19 ? 0 : h >= 19 && h < e ? 1 : 2; }
+  function periodRange(z, p) { return p === 0 ? "早上 7 點到晚上 7 點" : p === 1 ? (z < 2 ? "晚上 7 點到 10 點" : "晚上 7 點到 11 點") : (z < 2 ? "晚上 10 點到隔天早上 7 點" : "晚上 11 點到隔天早上 7 點"); }
   function getStats() {
     if (mode === "demo") return { leq: 56, max: 72, secs: 60, demo: true };
     if (!cntP) return null;
-    return { leq: toDb(sumP / cntP) + offset, max: maxDb + offset, secs: elapsed };
+    return { leq: toDb(sumP / cntP) + offset, max: maxDb + offset, min: minDb + offset, secs: elapsed };
   }
-  const r0 = v => Math.round(v);
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-
   function evaluate() {
-    const srcKey = $("srcSel").value, src = SOURCES[srcKey];
-    const zone = +$("zoneSel").value;
-    const pSel = $("periodSel").value;
-    const period = pSel === "auto" ? autoPeriod(zone, new Date()) : +pSel;
+    const src = SOURCES[srcKey];
+    const period = periodSel === "auto" ? autoPeriod(zone, new Date()) : +periodSel;
     const st = getStats();
-    const out = { srcKey, src, zone, period, st, auto: pSel === "auto" };
-    if (!src.leq) { out.state = "info"; return out; }
-    out.limit = src.leq[zone][period];
-    out.lmaxLimit = src.lmax ? src.lmax[zone][period] : null;
-    if (!st) { out.state = "idle"; return out; }
+    const e = { src, zone, period, st, auto: periodSel === "auto" };
+    if (!src.leq) { e.state = "info"; return e; }
+    e.limit = src.leq[zone][period];
+    e.lmaxLimit = src.lmax ? src.lmax[zone][period] : null;
+    if (!st) { e.state = "idle"; return e; }
     let leq = st.leq;
     if (bgLevel != null) {
       const diff = st.leq - bgLevel;
-      if (diff < 3) { out.state = "bgbad"; out.leq = leq; return out; }
-      if (diff < 10) { leq = 10 * Math.log10(Math.pow(10, st.leq / 10) - Math.pow(10, bgLevel / 10)); out.corrected = true; }
+      if (diff < 3) { e.state = "bgbad"; e.leq = leq; return e; }
+      if (diff < 10) { leq = 10 * Math.log10(Math.pow(10, st.leq / 10) - Math.pow(10, bgLevel / 10)); e.corrected = true; }
     }
-    out.leq = leq;
-    out.over = leq - out.limit;
-    out.lmaxOver = out.lmaxLimit != null && Number.isFinite(st.max) && st.max > out.lmaxLimit;
-    out.state = out.over > 3 || out.lmaxOver ? "over" : out.over > -3 ? "near" : "ok";
-    out.short = !st.demo && mode === "live" && st.secs < 120;
-    return out;
+    e.leq = leq; e.over = leq - e.limit;
+    e.lmaxOver = e.lmaxLimit != null && Number.isFinite(st.max) && st.max > e.lmaxLimit;
+    e.state = e.over > 3 || e.lmaxOver ? "over" : e.over > -3 ? "near" : "ok";
+    e.short = !st.demo && mode === "live" && st.secs < 120;
+    return e;
+  }
+  function verdictTitle(e) {
+    if (e.state === "info") return "鄰居噪音不看分貝，吵到就能報警";
+    if (e.state === "idle") return `${PERIODS[e.period]}上限 ${e.limit} 分貝，開始量測就會判斷`;
+    if (e.state === "bgbad") return "背景太吵，沒辦法判斷";
+    const d = r0(Math.abs(e.over));
+    if (e.state === "over") return e.lmaxOver && e.over <= 3 ? "最大音量超過標準，可以陳情" : `超過標準約 ${d} 分貝，可以陳情`;
+    if (e.state === "near") return "接近標準，在手機誤差範圍內";
+    return `沒有超過標準（低約 ${d} 分貝）`;
   }
 
   function updateLaw() {
-    const e = evaluate();
-    const { zone, period, st } = e;
-    $("periodText").innerHTML = `${e.auto ? "現在是" : "選擇的時段："}<b>${PERIODS[period]}</b>（${ZONES[zone]}管制區 ${periodRange(zone, period)}）`;
-    $("bgLine").innerHTML = bgLevel == null
-      ? "想更準：噪音停的時候先量 1 分鐘，按上面按鈕存成背景音量，再按「重設數據」量噪音，會自動扣掉背景。"
-      : `背景音量：${r0(bgLevel)} dB(A)，判斷時已扣除。 <button type="button" id="bgClear">清除背景</button>`;
-    const bc = $("bgClear"); if (bc) bc.onclick = () => { bgLevel = null; updateLaw(); };
+    const e = evaluate(), st = e.st;
+    limitLine = e.limit != null ? e.limit : null;
+    $("periodText").innerHTML = `${e.auto ? "現在是" : "你選的時段："}<b>${PERIODS[e.period]}</b>（${periodRange(e.zone, e.period)}）`;
+    $("srcHint").textContent = "例如：" + e.src.hint;
+
+    // summary in the readout card
+    const sm = $("summary");
+    sm.className = "summary " + ({ ok: "ok-t", near: "near-t", over: "over-t", info: "info-t" }[e.state] || "");
+    sm.innerHTML = `${verdictTitle(e)}${st && st.demo ? "（範例）" : ""}<small>依台灣法規：${e.src.name}・${ZONE_PLAIN[e.zone]}・${PERIODS[e.period]}，點這裡看怎麼檢舉</small>`;
 
     const v = $("verdict");
-    v.className = "verdict " + (e.state === "idle" || e.state === "bgbad" ? "" : e.state);
-    limitLine = e.limit != null ? e.limit : null;
-    let html = "";
-    const lmaxTxt = e.lmaxLimit != null ? `<dt>最大音量</dt><dd>${st && Number.isFinite(st.max) ? r0(st.max) : "–"} dB(A)（上限 ${e.lmaxLimit}）</dd>` : "";
+    v.className = "verdict " + (["ok", "near", "over", "info"].includes(e.state) ? e.state : "");
+    let html = `<span class="vt">${verdictTitle(e)}${st && st.demo ? "（範例）" : ""}</span>`;
     if (e.state === "info") {
-      const night = autoPeriod(1, new Date()) === 2;
-      html = `<span class="vt">不用達到分貝標準也能檢舉</span>
-        <span class="vs">鄰居的人聲、跑跳、拖椅子、樂器、寵物叫，屬於「不具持續性或不易量測」的聲音，不套用分貝標準。只要妨害安寧就能報警，法條也明列「深夜喧嘩」，最高可罰 6,000 元。${night ? "現在是深夜，" : ""}這裡量到的數字可以和錄音、錄影一起當佐證。</span>
-        <dl><dt>目前平均</dt><dd>${st ? r0(st.leq) + " dB(A)" : "–"}</dd><dt>最大</dt><dd>${st && Number.isFinite(st.max) ? r0(st.max) + " dB(A)" : "–"}</dd></dl>`;
+      html += `<span class="vs">鄰居的人聲、跑跳、樂器、寵物叫這類聲音，法律不用分貝判斷。只要妨害安寧就能報警，法條也寫明「深夜喧嘩」，最高可罰 6,000 元。這裡的數字和錄音可以當證據。</span>`;
+      if (st) html += `<dl><dt>平均</dt><dd>${r0(st.leq)} 分貝</dd><dt>最高</dt><dd>${Number.isFinite(st.max) ? r0(st.max) : "–"} 分貝</dd></dl>`;
     } else if (e.state === "idle") {
-      html = `<span class="vt">按「開始量測」後自動判斷</span>
-        <dl><dt>這個時段的標準</dt><dd>均能音量 ${e.limit} dB(A)</dd>${e.lmaxLimit != null ? `<dt>最大音量上限</dt><dd>${e.lmaxLimit} dB(A)</dd>` : ""}</dl>`;
+      html += `<dl><dt>平均不能超過</dt><dd>${e.limit} 分貝</dd>${e.lmaxLimit != null ? `<dt>最大不能超過</dt><dd>${e.lmaxLimit} 分貝</dd>` : ""}</dl>`;
     } else if (e.state === "bgbad") {
-      html = `<span class="vt">背景太吵，無法判斷</span>
-        <span class="vs">噪音和背景音量相差不到 3 dB，環保局遇到這種情況也會停止量測。請換時間或地點再量，或清除背景音量。</span>`;
+      html += `<span class="vs">噪音跟平常的背景聲音差不到 3 分貝，環保局遇到這種情況也會停止量測。請換時間再量，或到「進階設定」清除背景音量。</span>`;
     } else {
-      const d = Math.abs(e.over);
-      const title = e.state === "over" ? (e.lmaxOver && e.over <= 3 ? "最大音量超標，可以陳情" : `超過標準約 ${r0(d)} dB，可以陳情`)
-        : e.state === "near" ? "接近標準，在手機誤差範圍內" : `低於標準約 ${r0(d)} dB`;
-      const sub = e.state === "over" ? "建議錄影存證，並照下面方式陳情，由環保局到場用專業儀器量測。"
-        : e.state === "near" ? "手機讀數有幾 dB 誤差，建議多量幾次、錄影存證，覺得受影響仍可陳情請環保局來量。"
-        : "照目前數字看沒有超過法定標準。";
-      html = `<span class="vt">${title}${st.demo ? "（範例）" : ""}</span><span class="vs">${sub}</span>
-        <dl><dt>法定標準</dt><dd>均能音量 ${e.limit} dB(A)</dd>
-        <dt>你量到的平均</dt><dd>${r0(e.leq)} dB(A)${e.corrected ? "（已扣背景）" : ""}</dd>${lmaxTxt}
-        <dt>已量時間</dt><dd>${fmtTime(st.secs)}${e.short ? "（滿 2 分鐘較準）" : ""}</dd></dl>`;
-      if (mode === "file" && e.auto) html += `<span class="vs">分析錄音檔時，請把「時段」改成錄音當時的時段。</span>`;
+      const sub = e.state === "over" ? "建議按「錄音存證」留下證據，再打下面的電話陳情，環保局會派人用專業儀器來量。"
+        : e.state === "near" ? "手機會有幾分貝的誤差。建議多量幾天、錄音存證；覺得受影響一樣可以陳情請環保局來量。"
+        : "照目前的數字，沒有超過法定標準。";
+      html += `<span class="vs">${sub}</span><dl>
+        <dt>法規上限</dt><dd>平均 ${e.limit} 分貝${e.lmaxLimit != null ? `，最大 ${e.lmaxLimit}` : ""}</dd>
+        <dt>你量到</dt><dd>平均 ${r0(e.leq)} 分貝${e.corrected ? "（已扣背景）" : ""}${e.lmaxLimit != null && Number.isFinite(st.max) ? `，最大 ${r0(st.max)}` : ""}</dd>
+        <dt>已量</dt><dd>${fmtTime(st.secs)}${e.short ? "（量滿 2 分鐘比較準）" : ""}</dd></dl>`;
     }
     v.innerHTML = html;
 
-    const items = e.srcKey === "neighbor" ? [
-      `報警：撥 <a href="tel:110">110</a>，請警察到場處理（社會秩序維護法第 72 條）。`,
-      `住公寓大廈：可先請管委會制止；制止不從，可報請縣市政府處 3,000–15,000 元罰鍰（公寓大廈管理條例）。`,
-      `留下證據：錄影錄音，記下日期、時間、持續多久，再按下方按鈕複製量測紀錄。`
+    const call = (num, label, show) => `<a class="call" href="tel:${num}"><b>${show || num}</b><span>${label}</span></a>`;
+    $("calls").innerHTML = srcKey === "neighbor"
+      ? call("110", "報警，請警察到場")
+      : call("0800066666", "環保局公害陳情（免付費）", "0800-066-666") + call("1999", "縣市市民專線") + (srcKey === "amplifier" ? call("110", "有人喧嘩、唱歌") : "");
+
+    const tips = srcKey === "neighbor" ? [
+      "住公寓大廈可以先找管委會制止；制止不聽，可以報請縣市政府罰 3,000 到 15,000 元（公寓大廈管理條例）。",
+      "按「錄音存證」錄下聲音，並記下日期、時間、吵了多久。報警時可以提供。",
+      "可以先匿名報案；要開罰的話，警察通常需要你具名作證。"
     ] : [
-      `公害陳情專線：<a href="tel:0800066666">0800-066-666</a>（免付費），或撥各縣市 <a href="tel:1999">1999</a>。`,
-      `陳情時可以指定在你家量測，並說明噪音最常出現的時段，環保局會在那時候來量。`,
-      e.srcKey === "business" ? "店家經限期改善仍未符合標準，可處 3,000–30,000 元罰鍰。" :
-      e.srcKey === "construction" ? "施工超過標準或在禁止時段施工，可處 3,000–30,000 元罰鍰，並可按次處罰。" :
-      e.srcKey === "amplifier" ? "如果是有人用喇叭唱歌、喧嘩，直接撥 110 報警通常比較快。" :
-      "經限期改善仍未符合標準，環保局可依法處罰。",
-      ...(e.srcKey === "business" || e.srcKey === "factory" ? ["冷氣室外機、抽風機的「嗡嗡」低頻聲另有更嚴格的低頻標準（例如住宅區店家夜間 27 dB），手機量不準，直接陳情請環保局在室內量。"] : [])
+      "打電話時說清楚地址、噪音來源、最常吵的時段，並可以要求在你家量測。",
+      srcKey === "business" ? "店家被要求限期改善後仍超過標準，可罰 3,000 到 30,000 元。" :
+      srcKey === "construction" ? "施工超過標準或在禁止時段施工，可罰 3,000 到 30,000 元，而且可以按次處罰。" :
+      srcKey === "amplifier" ? "很多縣市晚上禁止使用擴音設備；有人在喇叭裡唱歌、喧嘩，打 110 通常比較快。" :
+      "工廠被要求限期改善後仍超過標準，環保局可以依法處罰。",
+      ...(srcKey === "business" || srcKey === "factory" ? ["冷氣室外機、抽風機那種「嗡嗡」的低頻聲有更嚴格的標準，手機量不準，直接陳情請環保局在你家室內量。"] : [])
     ];
-    $("howto").innerHTML = items.map(t => `<li>${t}</li>`).join("");
-    lastState = e;
+    $("tips").innerHTML = tips.map(t => `<li>${t}</li>`).join("");
+
+    $("bgLine").innerHTML = bgLevel == null
+      ? "想更準：先在噪音停的時候量 1 分鐘，按下面按鈕存成背景音量，再按「重新開始」量噪音，判斷時會自動扣掉背景。"
+      : `已存背景音量 ${r0(bgLevel)} 分貝，判斷時會自動扣除。<button class="opt" type="button" id="bgClear" style="margin-left:6px">清除</button>`;
+    const bc = $("bgClear"); if (bc) bc.onclick = () => { bgLevel = null; updateLaw(); };
+    return e;
   }
 
+  const fmtDate = d => d.toLocaleString("zh-TW", { timeZone: "Asia/Taipei", hour12: false, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
   function buildRecord() {
-    const e = lastState || evaluate();
-    const st = e.st;
-    const now = new Date();
-    const fmtD = d => d.toLocaleString("zh-TW", { timeZone: "Asia/Taipei", hour12: false, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const e = evaluate(), st = e.st;
     const lines = ["【噪音量測紀錄】"];
-    lines.push(`量測時間：${startWall ? fmtD(startWall) + " 起" : fmtD(now)}，共 ${st ? fmtTime(st.secs) : "–"}`);
-    lines.push(`噪音來源：${e.src.name}`);
-    lines.push(`地區類別：${ZONES[e.zone]}噪音管制區；時段：${PERIODS[e.period]}（${periodRange(e.zone, e.period)}）`);
+    lines.push(`時間：${startWall ? fmtDate(startWall) + " 起" : fmtDate(new Date())}，共量 ${st ? fmtTime(st.secs) : "–"}`);
+    lines.push(`噪音來源：${e.src.name}（${e.src.hint}）`);
+    lines.push(`地點類別：${ZONE_PLAIN[e.zone]}（${ZONES[e.zone]}噪音管制區）；時段：${PERIODS[e.period]}`);
     if (st) {
-      lines.push(`均能音量 Leq：${r0(st.leq)} dB(A)${bgLevel != null ? `（背景 ${r0(bgLevel)}，扣除後 ${e.leq != null ? r0(e.leq) : "–"}）` : ""}`);
-      lines.push(`最大音量 Lmax：${Number.isFinite(st.max) ? r0(st.max) : "–"} dB(A)；最小：${Number.isFinite(minDb) ? r0(minDb + offset) : "–"} dB(A)`);
+      lines.push(`平均音量（均能音量 Leq）：${r0(st.leq)} dB(A)${bgLevel != null && e.leq != null ? `，扣除背景 ${r0(bgLevel)} 後 ${r0(e.leq)} dB(A)` : ""}`);
+      lines.push(`最大音量（Lmax）：${Number.isFinite(st.max) ? r0(st.max) : "–"} dB(A)`);
     }
     if (e.limit != null) {
-      lines.push(`適用標準：${e.src.law}，均能音量 ${e.limit} dB(A)${e.lmaxLimit != null ? `，最大音量 ${e.lmaxLimit} dB(A)` : ""}`);
-      if (e.over != null) lines.push(`比較結果：${e.over > 0 ? "超過約 " + r0(e.over) : "低於約 " + r0(-e.over)} dB`);
-    } else {
-      lines.push("適用法規：社會秩序維護法第 72 條（製造噪音或深夜喧嘩，妨害公眾安寧）");
-    }
-    lines.push("備註：以手機分貝計量測（A 加權、Fast），僅供參考，請以主管機關專業噪音計量測為準。");
+      lines.push(`適用標準：${e.src.law}，均能音量 ${e.limit} dB(A)${e.lmaxLimit != null ? `、最大音量 ${e.lmaxLimit} dB(A)` : ""}`);
+      if (e.over != null) lines.push(`結果：${e.over > 0 ? "超過約 " + r0(e.over) : "低於約 " + r0(-e.over)} dB`);
+    } else lines.push("適用法規：社會秩序維護法第 72 條（製造噪音或深夜喧嘩，妨害公眾安寧）");
+    lines.push("備註：以手機量測（A 加權、Fast），僅供參考，以主管機關專業噪音計量測為準。");
     return lines.join("\n");
+  }
+  async function shareText(text, btn, label) {
+    try {
+      if (navigator.share) { await navigator.share({ text }); return; }
+    } catch (err) { if (err && err.name === "AbortError") return; }
+    const ta = $("recordText"); ta.value = text; ta.hidden = false;
+    try { await navigator.clipboard.writeText(text); btn.textContent = "已複製，可以貼到 LINE 或陳情表單"; }
+    catch (e) { ta.focus(); ta.select(); btn.textContent = "請長按下方文字複製"; }
+    setTimeout(() => { btn.textContent = label; }, 3500);
+  }
+
+  // ---------- history ----------
+  let hist = store.get("history", []);
+  function saveRun() {
+    if (savedThisRun || mode !== "live" || elapsed < 10 || !cntP) return;
+    const e = evaluate(), st = e.st;
+    hist.unshift({
+      t: (startWall || new Date()).toISOString(), secs: Math.round(st.secs), src: srcKey, zone, period: e.period,
+      leq: Math.round(e.leq != null ? e.leq : st.leq), max: Number.isFinite(st.max) ? Math.round(st.max) : null,
+      limit: e.limit != null ? e.limit : null, over: e.over != null ? Math.round(e.over) : null
+    });
+    hist = hist.slice(0, 60); store.set("history", hist); savedThisRun = true; renderHist();
+  }
+  function histLine(h) {
+    const d = new Date(h.t);
+    const res = h.limit == null ? "" : h.over > 3 ? `，超過標準 ${h.over}` : h.over > -3 ? "，接近標準" : "，未超標";
+    return `${fmtDate(d)} ${PERIODS[h.period]}｜${SOURCES[h.src].name}｜平均 ${h.leq}、最高 ${h.max ?? "–"} 分貝${h.limit != null ? `（上限 ${h.limit}${res}）` : ""}｜量 ${fmtTime(h.secs)}`;
+  }
+  function renderHist() {
+    const box = $("hist");
+    if (!hist.length) { box.innerHTML = `<p class="empty">還沒有紀錄。開始量測，再按「停止量測」就會記下來。</p>`; return; }
+    box.innerHTML = hist.slice(0, 15).map(h => {
+      const d = new Date(h.t);
+      const tone = h.limit == null ? "--accent" : h.over > 3 ? "--risk" : h.over > -3 ? "--mid" : "--ok";
+      const tag = h.limit == null ? "鄰居" : h.over > 3 ? `超標 ${h.over}` : h.over > -3 ? "接近標準" : "未超標";
+      return `<div class="hist-row"><span class="when">${fmtDate(d)}（${PERIODS[h.period]}）</span>
+        <span class="val" style="color:var(${tone})">${h.leq}<small>${tag}</small></span>
+        <span class="what">${SOURCES[h.src].name}・最高 ${h.max ?? "–"} 分貝・量 ${fmtTime(h.secs)}</span></div>`;
+    }).join("") + (hist.length > 15 ? `<p class="empty">另有 ${hist.length - 15} 筆較早的紀錄，傳送時會一起附上。</p>` : "");
   }
 
   // ---------- health ----------
   const HEALTH = [
-    [30, "適合睡覺", "--ok", "WHO 建議臥室夜間的連續噪音不要超過 30 dB(A)，這個音量不會影響睡眠。"],
-    [45, "會干擾睡眠", "--ok", "臥室的連續噪音超過 30 dB(A) 就會開始影響睡眠品質；突然的單一聲響超過 45 dB(A) 容易把人吵醒。"],
-    [55, "白天還可以，晚上偏吵", "--mid", "白天大多數人不會覺得被干擾。但晚上窗外超過 45 dB(A)，開窗睡覺就會受影響。"],
-    [70, "會讓人煩躁", "--mid", "WHO 指出白天戶外超過 55 dB(A)，多數人會覺得嚴重干擾。長期處在這種環境，容易睡不好、壓力大，也和血壓上升有關。"],
-    [85, "很吵，難好好講話", "--loud", "要提高音量才能交談。長時間待著容易疲勞、頭痛、注意力下降。"],
-    [100, "長時間會傷聽力", "--risk", "台灣職安法規規定，工作時 8 小時平均超過 85 dB(A)，雇主必須實施聽力保護。長期暴露會造成永久聽力損失，而且不會恢復。"],
-    [999, "短時間就可能傷耳朵", "--risk", "幾分鐘內就可能傷害聽力，出現耳鳴、耳朵悶塞是警訊。WHO 建議連夜店、演唱會 4 小時平均都不要超過 100 dB(A)。請戴耳塞或離開。"]
+    [30, "適合睡覺", "--ok", "世界衛生組織建議，臥室晚上的持續噪音不要超過 30 分貝。這個音量不會影響睡眠。"],
+    [45, "會影響睡眠", "--ok", "臥室持續超過 30 分貝就會影響睡眠品質；突然一聲超過 45 分貝，容易把人吵醒。"],
+    [55, "白天還好，晚上偏吵", "--mid", "白天多數人不覺得被打擾。但晚上窗外超過 45 分貝，就不適合開窗睡覺。"],
+    [70, "讓人煩躁", "--mid", "白天戶外超過 55 分貝，多數人會覺得嚴重干擾。長期在這種環境，容易睡不好、壓力大，也和血壓升高有關。"],
+    [85, "很吵，要提高音量講話", "--loud", "長時間待著容易疲勞、頭痛、注意力不集中。"],
+    [100, "長時間會傷聽力", "--risk", "台灣職安法規規定，工作時 8 小時平均超過 85 分貝，雇主就要做聽力保護。長期聽這種音量會造成永久聽力損失，無法恢復。"],
+    [999, "短時間就會傷耳朵", "--risk", "幾分鐘內就可能傷害聽力，出現耳鳴、耳朵悶悶的就是警訊。請戴耳塞或離開。"]
   ];
   function safeTime(db) {
-    if (!Number.isFinite(db) || db < 80) return "不會傷聽力";
+    if (!Number.isFinite(db)) return "–";
+    if (db < 80) return "不會傷聽力";
     const h = 8 / Math.pow(2, (db - 85) / 3);
     if (h >= 24) return "不會傷聽力";
     if (h >= 1) return `約 ${h >= 10 ? Math.round(h) : h.toFixed(1)} 小時`;
@@ -648,28 +679,25 @@ textarea.record {
   }
   function updateHealth(db) {
     if (!Number.isFinite(db)) {
-      $("hLevel").textContent = "–"; $("hTitle").textContent = "等待量測";
-      $("hTitle").style.color = css("--muted"); $("hText").textContent = "開始量測後，這裡會說明目前音量對睡眠和聽力的影響。";
-      $("hSafe").textContent = "–"; return;
+      $("hLevel").textContent = "–"; $("hTitle").textContent = ""; $("hText").textContent = "開始量測後，這裡會說明目前音量對睡眠和聽力的影響。"; $("hSafe").textContent = "–"; return;
     }
     const b = HEALTH.find(x => db < x[0]);
-    $("hLevel").textContent = Math.round(db) + " dB(A)";
+    $("hLevel").textContent = Math.round(db) + " 分貝";
     $("hTitle").textContent = b[1]; $("hTitle").style.color = css(b[2]);
-    $("hText").textContent = b[3];
-    $("hSafe").textContent = safeTime(db);
+    $("hText").textContent = b[3]; $("hSafe").textContent = safeTime(db);
   }
 
   // ---------- live ----------
+  function showMsg(t) { const m = $("msg"); m.textContent = t; m.hidden = false; }
+  function hideMsg() { $("msg").hidden = true; }
   async function startLive() {
     hideMsg();
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("nomedia");
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
-      });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
     } catch (e) {
-      showMsg("沒辦法使用麥克風。在 Claude App 或內嵌視窗裡開啟時，系統不允許網頁收音；請用 Safari 或 Chrome 直接開啟這個網頁，或按「分析錄音檔」錄一段聲音來分析。若是權限被拒，請到瀏覽器設定允許麥克風。");
-      return;
+      showMsg("沒辦法使用麥克風。請到手機的「設定」允許瀏覽器使用麥克風；如果是在 LINE 或 Facebook 裡打開，請改用 Safari 或 Chrome 開啟這個網址。");
+      return false;
     }
     ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === "suspended") await ctx.resume();
@@ -679,19 +707,25 @@ textarea.record {
     mode = "live"; history = []; fileSeries = null; resetStats(); startWall = new Date(); smoothP = 0; lastT = performance.now(); accT = 0;
     $("startBtn").textContent = "停止量測";
     $("dot").classList.add("live");
-    $("statusText").textContent = "量測中 · Fast 時間加權";
-    $("chartTitle").textContent = "最近 60 秒"; $("chartNote").textContent = "";
-    $("sTimeLabel").textContent = "時間";
+    $("statusText").textContent = "量測中，手機放平、別遮住麥克風";
+    $("chartTitle").textContent = "最近 60 秒"; $("chartNote").textContent = ""; $("sTimeLabel").textContent = "已量";
+    try { if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request("screen"); } catch (e) {}
     loop();
+    return true;
   }
+  let wakeLock = null;
   function stopLive() {
+    if (recorder && recorder.state === "recording") recorder.stop();
+    saveRun();
     cancelAnimationFrame(raf);
     if (stream) stream.getTracks().forEach(t => t.stop());
     stream = null; analyser = null;
     if (mode === "live") mode = "paused";
+    try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) {}
     $("startBtn").textContent = "開始量測";
     $("dot").classList.remove("live");
-    $("statusText").textContent = "已暫停 · 數據保留到重設為止";
+    $("statusText").textContent = "已停止，這次結果已存到「我的量測紀錄」";
+    updateLaw();
   }
   const buf = new Float32Array(N);
   function loop() {
@@ -700,22 +734,73 @@ textarea.record {
     const now = performance.now(), dt = Math.min(0.25, (now - lastT) / 1000); lastT = now;
     analyser.getFloatTimeDomainData(buf);
     const p = framePower(buf, 0, ctx.sampleRate, weightA);
-    const a = 1 - Math.exp(-dt / 0.125); // Fast = 125 ms
+    const a = 1 - Math.exp(-dt / 0.125);
     smoothP = smoothP ? smoothP + a * (p - smoothP) : p;
     const dbfs = toDb(smoothP);
     sumP += p * dt; cntP += dt;
     if (elapsed > 0.5) { minDb = Math.min(minDb, dbfs); maxDb = Math.max(maxDb, dbfs); }
-    peak = Math.max(peak, dbfs);
     elapsed = (now - startT) / 1000;
     accT += dt;
     while (accT >= 0.1) { accT -= 0.1; history.push(dbfs); if (history.length > 600) history.shift(); }
-    setReadout(dbfs, peak);
-    $("sMin").textContent = fmt(minDb); $("sMax").textContent = fmt(maxDb);
-    $("sAvg").textContent = cntP ? fmt(toDb(sumP / cntP)) : "–";
-    $("sTime").textContent = fmtTime(elapsed);
-    maybeRef(dbfs + offset);
-    if (now - lastLawT > 500) { lastLawT = now; updateLaw(); updateHealth(dbfs + offset); }
+    setReadout(dbfs); refreshStats();
+    if (now - lastLawT > 500) { lastLawT = now; updateLaw(); updateHealth(dbfs + offset); maybeRef(dbfs + offset); }
     drawChart();
+  }
+
+  // ---------- evidence recording ----------
+  let recorder = null, recChunks = [], recStartT = 0, recTick = 0;
+  const REC_MAX = 10 * 60 * 1000;
+  function pickMime() {
+    if (!window.MediaRecorder) return null;
+    for (const m of ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg"]) { try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (e) {} }
+    return "";
+  }
+  async function startRec() {
+    const mime = pickMime();
+    if (mime === null) { showMsg("這支手機的瀏覽器不支援錄音。可以改用手機內建的錄音或錄影 App，再到「進階設定」分析檔案。"); return; }
+    if (mode !== "live") { const ok = await startLive(); if (!ok) return; }
+    try { recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined); } catch (e) { showMsg("無法開始錄音，請再試一次。"); return; }
+    recChunks = [];
+    const recStartWall = new Date();
+    recorder.ondataavailable = ev => { if (ev.data && ev.data.size) recChunks.push(ev.data); };
+    recorder.onstop = () => {
+      clearInterval(recTick);
+      const type = recorder.mimeType || mime || "audio/webm";
+      const blob = new Blob(recChunks, { type });
+      addClip(blob, type, recStartWall, (performance.now() - recStartT) / 1000);
+      $("recBtn").textContent = "錄音存證"; $("recBtn").classList.remove("on");
+    };
+    recorder.start(1000); recStartT = performance.now();
+    $("recBtn").classList.add("on");
+    const tick = () => {
+      const s = (performance.now() - recStartT) / 1000;
+      $("recBtn").textContent = "停止錄音 " + fmtTime(s);
+      if (s * 1000 >= REC_MAX && recorder.state === "recording") recorder.stop();
+    };
+    tick(); recTick = setInterval(tick, 500);
+  }
+  function addClip(blob, type, when, secs) {
+    const ext = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
+    const pad = n => String(n).padStart(2, "0");
+    const name = `噪音存證_${when.getFullYear()}${pad(when.getMonth() + 1)}${pad(when.getDate())}_${pad(when.getHours())}${pad(when.getMinutes())}.${ext}`;
+    const url = URL.createObjectURL(blob);
+    const e = evaluate();
+    const note = `${fmtDate(when)} 錄音 ${fmtTime(secs)}｜${e.src.name}｜錄音時平均 ${e.st ? r0(e.st.leq) : "–"}、最高 ${e.st && Number.isFinite(e.st.max) ? r0(e.st.max) : "–"} 分貝`;
+    const div = document.createElement("div"); div.className = "clip";
+    div.innerHTML = `<p><b>${note}</b></p><audio controls preload="metadata" src="${url}"></audio>`;
+    const btn = document.createElement("button"); btn.className = "btn"; btn.type = "button"; btn.textContent = "儲存或傳到 LINE";
+    btn.onclick = async () => {
+      const file = new File([blob], name, { type });
+      const text = buildRecord();
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
+      } catch (err) { if (err && err.name === "AbortError") return; }
+      const a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      btn.textContent = "已下載到手機";
+    };
+    div.appendChild(btn);
+    $("clips").prepend(div); $("clipsPanel").hidden = false;
+    $("clipsPanel").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
   }
 
   // ---------- file ----------
@@ -726,18 +811,12 @@ textarea.record {
     try {
       ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
       const ab = await file.arrayBuffer();
-      const audio = await new Promise((res, rej) => {
-        const r = ctx.decodeAudioData(ab, res, rej); if (r && r.then) r.then(res, rej);
-      });
+      const audio = await new Promise((res, rej) => { const r = ctx.decodeAudioData(ab, res, rej); if (r && r.then) r.then(res, rej); });
       const sr = audio.sampleRate, len = audio.length;
       if (len < N) throw new Error("short");
       const mono = new Float32Array(len);
-      for (let c = 0; c < audio.numberOfChannels; c++) {
-        const d = audio.getChannelData(c);
-        for (let i = 0; i < len; i++) mono[i] += d[i] / audio.numberOfChannels;
-      }
-      const hop = Math.round(sr * 0.025); // 25 ms hop
-      const dt = hop / sr, a = 1 - Math.exp(-dt / 0.125);
+      for (let c = 0; c < audio.numberOfChannels; c++) { const d = audio.getChannelData(c); for (let i = 0; i < len; i++) mono[i] += d[i] / audio.numberOfChannels; }
+      const hop = Math.round(sr * 0.025), dt = hop / sr, a = 1 - Math.exp(-dt / 0.125);
       let s = 0, sP = 0, c = 0, mn = Infinity, mx = -Infinity, acc = 0, t = 0;
       const vals = [];
       for (let off = 0; off + N <= len; off += hop) {
@@ -751,92 +830,79 @@ textarea.record {
       }
       if (!Number.isFinite(mn)) { mn = Math.min(...vals); mx = Math.max(...vals); }
       mode = "file"; fileSeries = { vals, dur: len / sr };
-      sumP = sP; cntP = c; minDb = mn; maxDb = mx; elapsed = len / sr; peak = mx;
+      sumP = sP; cntP = c; minDb = mn; maxDb = mx; elapsed = len / sr; startWall = null;
       const leq = toDb(sP / c);
-      setReadout(leq, mx);
-      refreshStatsDisplay();
-      $("sTimeLabel").textContent = "錄音長度";
-      $("statusText").textContent = "錄音檔分析結果 · 大數字為整段平均 Leq";
-      $("chartTitle").textContent = file.name || "錄音檔"; $("chartNote").textContent = "整段錄音";
-      maybeRef(leq + offset);
-      startWall = null;
-      updateLaw(); updateHealth(leq + offset);
-      drawChart();
+      setReadout(leq); refreshStats();
+      $("sTimeLabel").textContent = "長度";
+      $("statusText").textContent = "檔案分析結果，大數字是整段平均";
+      $("chartTitle").textContent = file.name || "錄音檔"; $("chartNote").textContent = "整段";
+      updateLaw(); updateHealth(leq + offset); maybeRef(leq + offset); drawChart();
+      document.querySelector(".wrap").scrollIntoView({ behavior: "auto" });
     } catch (e) {
       $("statusText").textContent = "分析失敗";
-      showMsg(e.message === "short" ? "錄音太短了，請錄至少 1 秒。" : "讀不了這個檔案。請改用 m4a、mp3、wav 或手機錄影檔再試一次。");
+      showMsg(e.message === "short" ? "檔案太短了，請錄至少 1 秒。" : "讀不了這個檔案。請改用手機錄音（m4a）、mp3、wav 或錄影檔。");
     }
   }
 
-  function showMsg(t) { const m = $("msg"); m.textContent = t; m.hidden = false; }
-  function hideMsg() { $("msg").hidden = true; }
-
   // ---------- controls ----------
+  function bindOpts(id, current, onPick) {
+    const box = $(id);
+    const sync = v => box.querySelectorAll(".opt").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === String(v))));
+    sync(current);
+    box.addEventListener("click", ev => { const b = ev.target.closest(".opt"); if (!b) return; sync(b.dataset.v); onPick(b.dataset.v); });
+  }
+  bindOpts("srcOpts", srcKey, v => { srcKey = v; store.set("src", v); updateLaw(); drawChart(); drawGauge(NaN); });
+  bindOpts("zoneOpts", zone, v => { zone = +v; store.set("zone", zone); updateLaw(); drawChart(); });
+  bindOpts("periodOpts", periodSel, v => { periodSel = v; store.set("period", v); updateLaw(); drawChart(); });
+  bindOpts("wOpts", weightA ? "A" : "Z", v => { weightA = v === "A"; store.set("weight", v); if (mode === "live") { history = []; resetStats(); } });
+
   $("startBtn").addEventListener("click", () => { if (mode === "live") stopLive(); else startLive(); });
+  $("recBtn").addEventListener("click", () => { if (recorder && recorder.state === "recording") recorder.stop(); else startRec(); });
   $("resetBtn").addEventListener("click", () => {
+    if (mode === "live") saveRun();
     resetStats(); history = []; fileSeries = null;
-    if (mode !== "live") { mode = "paused"; $("statusText").textContent = "已重設 · 按「開始量測」"; setReadout(NaN, NaN); }
-    $("sTimeLabel").textContent = "時間"; $("chartTitle").textContent = "最近 60 秒"; $("chartNote").textContent = "";
-    startWall = mode === "live" ? new Date() : null;
-    refreshStatsDisplay(); updateLaw(); updateHealth(NaN); drawChart(); renderRef(NaN);
+    if (mode !== "live") { mode = "paused"; $("statusText").textContent = "已清空，按「開始量測」"; setReadout(NaN); startWall = null; }
+    else startWall = new Date();
+    $("sTimeLabel").textContent = "已量"; $("chartTitle").textContent = "最近 60 秒"; $("chartNote").textContent = "";
+    refreshStats(); updateLaw(); updateHealth(NaN); drawChart(); renderRef(NaN);
   });
   $("fileBtn").addEventListener("click", () => $("fileInput").click());
   $("fileInput").addEventListener("change", e => { const f = e.target.files[0]; if (f) analyzeFile(f); e.target.value = ""; });
-
-  function setWeight(a) {
-    weightA = a;
-    $("wA").setAttribute("aria-pressed", a); $("wZ").setAttribute("aria-pressed", !a);
-    $("unit").textContent = a ? "dB(A)" : "dB(Z)";
-    try { localStorage.setItem("dbm-weight", a ? "A" : "Z"); } catch (e) {}
-    if (mode === "live") { history = []; resetStats(); }
-  }
-  $("wA").addEventListener("click", () => setWeight(true));
-  $("wZ").addEventListener("click", () => setWeight(false));
-  setWeight(weightA);
-
-  $("offset").addEventListener("input", e => {
-    offset = +e.target.value;
-    $("offVal").textContent = "+" + offset + " dB";
-    try { localStorage.setItem("dbm-offset", offset); } catch (e) {}
-    if (mode !== "live") {
-      if (mode === "file" && cntP) setReadout(toDb(sumP / cntP), peak);
-      refreshStatsDisplay(); updateLaw(); drawChart();
-    }
+  $("shareBtn").addEventListener("click", () => shareText(buildRecord(), $("shareBtn"), "傳送這次量測紀錄（LINE、簡訊）"));
+  $("histShare").addEventListener("click", () => {
+    if (!hist.length) { showMsg("還沒有紀錄可以傳送。"); return; }
+    const text = [`【噪音量測紀錄，共 ${hist.length} 筆】`, ...hist.map(histLine), "以手機量測（A 加權），僅供參考，以主管機關量測為準。"].join("\n");
+    shareText(text, $("histShare"), "傳送全部紀錄");
   });
-  $("offVal").textContent = "+" + offset + " dB";
-
-  ["srcSel", "zoneSel", "periodSel"].forEach(id => {
-    try { const v = localStorage.getItem("dbm-" + id); if (v != null && [...$(id).options].some(o => o.value === v)) $(id).value = v; } catch (e) {}
-    $(id).addEventListener("change", () => {
-      try { localStorage.setItem("dbm-" + id, $(id).value); } catch (e) {}
-      updateLaw(); drawChart();
-    });
+  let clearArmed = false;
+  $("histClear").addEventListener("click", () => {
+    if (!hist.length) return;
+    if (!clearArmed) { clearArmed = true; $("histClear").textContent = "再按一次確定清除"; setTimeout(() => { clearArmed = false; $("histClear").textContent = "清除紀錄"; }, 4000); return; }
+    hist = []; store.set("history", hist); renderHist(); clearArmed = false; $("histClear").textContent = "清除紀錄";
   });
   $("bgBtn").addEventListener("click", () => {
     const st = getStats();
-    if (!st || st.demo) { showMsg("請先在噪音停止時按「開始量測」量一段時間，再把它設為背景音量。"); return; }
+    if (!st || st.demo) { showMsg("請先在噪音停的時候按「開始量測」量一段時間，再存成背景音量。"); return; }
     bgLevel = st.leq; hideMsg(); updateLaw();
   });
-  $("copyBtn").addEventListener("click", async () => {
-    const text = buildRecord(), ta = $("recordText");
-    ta.value = text; ta.hidden = false;
-    try { await navigator.clipboard.writeText(text); $("copyBtn").textContent = "已複製，可以貼到陳情單或訊息"; }
-    catch (e) { ta.focus(); ta.select(); $("copyBtn").textContent = "請長按下方文字複製"; }
-    setTimeout(() => { $("copyBtn").textContent = "複製量測紀錄（陳情、報警時用）"; }, 3000);
+  const showTrim = () => { $("offVal").textContent = (trim > 0 ? "+" : "") + trim + " 分貝"; };
+  $("offset").value = trim; showTrim();
+  $("offset").addEventListener("input", e => {
+    trim = +e.target.value; offset = BASE + trim; store.set("trim", trim); showTrim();
+    if (mode !== "live") { if (mode === "file" && cntP) setReadout(toDb(sumP / cntP)); refreshStats(); updateLaw(); drawChart(); }
   });
+  document.addEventListener("visibilitychange", () => { if (document.hidden && mode === "live") saveRun(); });
   setInterval(() => { if (mode !== "live") updateLaw(); }, 60000);
+  window.addEventListener("resize", () => { drawChart(); if (mode !== "live") drawGauge(mode === "demo" ? 58 - offset : NaN); });
 
-  window.addEventListener("resize", () => { drawChart(); if (mode !== "live") drawGauge(NaN, NaN); });
-
-  // initial example state
-  renderRef(58);
-  drawGauge(58 - offset, 72 - offset);
-  $("num").textContent = "58";
-  $("chip").style.color = css("--mid");
+  // ---------- initial example state ----------
+  renderRef(58); renderHist();
   updateLaw(); updateHealth(58);
+  setReadout(58 - offset);
   drawChart();
+
+  if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 })();
-if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {})); }
 </script>
 </body>
 </html>
