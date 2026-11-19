@@ -72,6 +72,32 @@ svg{display:block}
 .dock .btn{flex:1}
 .dock .shoot{flex:1.3}
 
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0 16px}
+.quick button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:64px;padding:0 4px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);font-size:14px;font-weight:600;white-space:nowrap}
+.quick svg{width:22px;height:22px;color:var(--accent)}
+
+/* ---------- Word 轉 PDF ---------- */
+#word main{flex:1;overflow:auto;background:var(--stage);position:relative}
+#wordHost{width:max-content;min-width:100%}
+#wordHost .docx-wrapper{background:transparent!important;padding:16px!important}
+#wordHost section.docx{box-shadow:0 2px 12px rgba(0,0,0,.25)!important;margin-bottom:16px!important}
+.wpick{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:60px 24px;color:var(--ink2)}
+.wpick svg{width:80px;height:80px;color:var(--ink3)}
+.wpick h2{margin:0;color:var(--ink);font-size:20px}
+.wpick p{margin:0;max-width:300px}
+#word .panel{flex-direction:row}
+#word .panel .btn{flex:1;padding:0 12px}
+@media print{
+  @page{margin:0}
+  body>*:not(#word){display:none!important}
+  #word{position:static!important;display:block!important;padding:0!important}
+  #word>*:not(main){display:none!important}
+  #word main{overflow:visible;background:none}
+  #wordHost{zoom:1!important}
+  #wordHost .docx-wrapper{padding:0!important}
+  #wordHost section.docx{box-shadow:none!important;margin:0!important;break-after:page}
+}
+
 /* ---------- 相機 ---------- */
 #cam{background:#000;color:#fff}
 #cam .view{position:relative;flex:1;overflow:hidden}
@@ -161,18 +187,23 @@ svg{display:block}
     <button class="ib" id="menuBtn" aria-label="更多選項"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
   </div>
   <main>
+    <div class="quick" role="toolbar" aria-label="快速轉檔">
+      <button data-q="img2pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m21 16-5-5-9 9"/></svg>圖片轉 PDF</button>
+      <button data-q="img2word"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="m8.5 11 1.5 6 2-4.5 2 4.5 1.5-6"/></svg>圖片轉 Word</button>
+      <button data-q="word2pdf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3h8l4 4v14H6z"/><path d="M9 13h6m-2-2 2 2-2 2"/></svg>Word 轉 PDF</button>
+    </div>
     <p class="hint" id="hint" hidden>點一下編輯・長按拖曳可調整順序</p>
     <div class="grid" id="grid"></div>
     <div class="empty" id="empty">
       <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M26 10h32l18 18v58H26z"/><path d="M58 10v18h18"/><path d="M36 46h30M36 56h30M36 66h20"/><path d="M8 26V12a4 4 0 0 1 4-4h8M88 70v14a4 4 0 0 1-4 4h-8" stroke-linecap="round"/></svg>
-      <h2>拍下文件，轉成 PDF</h2>
-      <p>可以連拍多頁，自動找邊緣、拉正，選彩色或黑白，拖曳排序後一次輸出。</p>
+      <h2>拍下文件，轉成 PDF 或 Word</h2>
+      <p>可以連拍多頁，自動找邊緣、拉正，選彩色或黑白，拖曳排序後一次輸出。也可以從相簿選圖片。</p>
     </div>
   </main>
   <div class="dock">
     <button class="btn" id="pickBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>相簿</button>
     <button class="btn pri shoot" id="shootBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>拍照</button>
-    <button class="btn" id="exportBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M12 11v6m-3-3 3 3 3-3" stroke-linecap="round"/></svg>PDF</button>
+    <button class="btn" id="exportBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M12 11v6m-3-3 3 3 3-3" stroke-linecap="round"/></svg>輸出</button>
   </div>
   <input type="file" id="fileIn" accept="image/*" multiple hidden>
   <input type="file" id="sysCamIn" accept="image/*" capture="environment" hidden>
@@ -239,6 +270,30 @@ svg{display:block}
   </div>
 </section>
 
+<!-- Word 轉 PDF -->
+<section class="screen" id="word">
+  <div class="bar">
+    <button class="ib" id="wBack" aria-label="返回"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button>
+    <h1 class="c" id="wTitle">Word 轉 PDF</h1>
+    <button class="ib" id="wOpen" aria-label="選其他檔案"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 6h6l2 2h10v11H3z"/></svg></button>
+  </div>
+  <main>
+    <div class="wpick" id="wPick">
+      <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M22 8h36l18 18v62H22z"/><path d="M58 8v18h18"/><path d="m34 44 6 26 8-18 8 18 6-26" stroke-linecap="round"/></svg>
+      <h2>選一個 Word 檔</h2>
+      <p>支援 .docx。轉換在手機上完成，檔案不會上傳。</p>
+      <button class="btn pri" id="wPickBtn">選擇 Word 檔</button>
+    </div>
+    <div id="wordHost"></div>
+    <div class="spin" id="wSpin" hidden></div>
+  </main>
+  <div class="panel" id="wPanel" hidden>
+    <button class="btn" id="wPrint">列印 / 另存</button>
+    <button class="btn pri" id="wGo">產生 PDF</button>
+  </div>
+  <input type="file" id="wFile" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+</section>
+
 <canvas id="loupe" width="240" height="240" hidden></canvas>
 
 <!-- 底部面板 -->
@@ -246,41 +301,54 @@ svg{display:block}
 <div class="sheet" id="exportSheet" role="dialog" aria-labelledby="exTitle">
   <div class="grab"></div>
   <div id="exForm">
-    <h2 id="exTitle">輸出 PDF</h2>
+    <h2 id="exTitle">輸出</h2>
+    <div class="field">
+      <div class="seg" id="exFmt">
+        <button data-v="pdf">PDF</button><button data-v="word">Word</button>
+      </div>
+    </div>
+    <div class="field" id="exWordF">
+      <div class="lab">Word 內容</div>
+      <div class="seg" id="exWord">
+        <button data-v="text">可編輯文字</button><button data-v="image">原樣圖片</button>
+      </div>
+      <div class="note" id="exWordNote"></div>
+    </div>
     <div class="field">
       <label for="exName">檔名</label>
       <input type="text" id="exName" autocomplete="off">
     </div>
-    <div class="field">
+    <div class="field" id="exColorF">
       <div class="lab">色彩</div>
       <div class="seg" id="exColor">
         <button data-v="page">依各頁</button><button data-v="color">彩色</button><button data-v="gray">灰階</button><button data-v="bw">黑白</button>
       </div>
       <div class="note" id="exColorNote"></div>
     </div>
-    <div class="field">
+    <div class="field" id="exPaperF">
       <div class="lab">紙張</div>
       <div class="seg" id="exPaper">
         <button data-v="a4">A4</button><button data-v="letter">Letter</button><button data-v="fit">照原比例</button>
       </div>
     </div>
-    <div class="field">
+    <div class="field" id="exQualF">
       <div class="lab">畫質</div>
       <div class="seg" id="exQual">
         <button data-v="s">標準（檔案小）</button><button data-v="h">高畫質</button>
       </div>
     </div>
     <button class="btn pri" id="exGo">產生 PDF</button>
+    <p class="note small muted" id="exGoNote" style="text-align:center;margin:8px 0 0" hidden></p>
   </div>
   <div id="exBusy" hidden>
-    <h2>正在產生 PDF…</h2>
+    <h2 id="exBusyT">正在產生 PDF…</h2>
     <div class="prog"><i id="exBar"></i></div>
     <p class="muted small" id="exStep"></p>
   </div>
   <div id="exDone" hidden>
     <h2>完成了</h2>
     <div class="result">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><text x="7.5" y="18" font-size="5.5" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">PDF</text></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><text id="exIcon" x="12.5" y="18" text-anchor="middle" font-size="5.5" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">PDF</text></svg>
       <div><b id="exFile"></b><span class="muted small" id="exInfo"></span></div>
     </div>
     <div class="row" style="margin-bottom:10px">
@@ -292,6 +360,7 @@ svg{display:block}
 </div>
 <div class="sheet menu" id="menuSheet" role="dialog" aria-label="更多選項">
   <div class="grab"></div>
+  <button data-act="word2pdf" data-always><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M6 3h8l4 4v14H6z"/><path d="M9 13h6m-2-2 2 2-2 2"/></svg>Word 轉 PDF</button>
   <button data-act="all-color"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>全部頁面改成彩色</button>
   <button data-act="all-bw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 4h8v16H4z" fill="currentColor"/></svg>全部頁面改成黑白</button>
   <button data-act="reverse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16m-3-3 3 3 3-3M17 20V4m-3 3 3-3 3 3"/></svg>反轉頁面順序</button>
@@ -303,11 +372,11 @@ svg{display:block}
 <script>
 (() => {
 "use strict";
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 const $ = id => document.getElementById(id);
 const FULL = [0, 0, 1, 0, 1, 1, 0, 1];
 const FILTER_NAME = { original: "原圖", color: "彩色", gray: "灰階", bw: "黑白" };
-const prefs = Object.assign({ filter: "color", exColor: "page", exPaper: "a4", exQual: "s" },
+const prefs = Object.assign({ filter: "color", exColor: "page", exPaper: "a4", exQual: "s", exFmt: "pdf", exWord: "text" },
   JSON.parse(localStorage.getItem("scanPrefs") || "{}"));
 const savePrefs = () => localStorage.setItem("scanPrefs", JSON.stringify(prefs));
 $("ver").textContent = "版本 " + VERSION;
@@ -628,13 +697,15 @@ function addPage(src) {
 }
 async function addFiles(files) {
   const list = [...files].filter(f => f.type.startsWith("image/") || /\.(jpe?g|png|heic|heif|webp)$/i.test(f.name));
-  if (!list.length) return;
+  if (!list.length) { afterPick = null; return; }
   toast(`正在加入 ${list.length} 張…`);
   let bad = 0;
   for (const f of list) {
     try { await addPage(await loadImg(f)); } catch { bad++; }
   }
   toast(bad ? `有 ${bad} 張無法讀取（格式不支援）` : `已加入 ${list.length - bad} 頁`);
+  if (afterPick && pages.length) openExport(afterPick);
+  afterPick = null;
 }
 
 /* ================= 首頁清單 + 拖曳排序 ================= */
@@ -663,7 +734,7 @@ function renderGrid() {
   const n = pages.length;
   $("empty").hidden = n > 0; $("hint").hidden = n < 2;
   $("exportBtn").disabled = !n;
-  $("exportBtn").lastChild.textContent = n ? `PDF（${n}）` : "PDF";
+  $("exportBtn").lastChild.textContent = n ? `輸出（${n}）` : "輸出";
 }
 
 let drag = null, suppressClick = false;
@@ -808,7 +879,7 @@ $("torchBtn").onclick = async () => {
   torchOn = !torchOn;
   try { await t.applyConstraints({ advanced: [{ torch: torchOn }] }); $("torchBtn").classList.toggle("act", torchOn); } catch { torchOn = false; }
 };
-$("pickBtn").onclick = () => $("fileIn").click();
+$("pickBtn").onclick = () => { afterPick = null; $("fileIn").click(); };
 $("fileIn").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
 $("sysCamIn").onchange = async e => {
   const files = e.target.files; e.target.value = "";
@@ -999,7 +1070,8 @@ function buildPdf(imgs, paper) {
   imgs.forEach((im, i) => {
     const land = im.w > im.h;
     let PW, PH;
-    if (paper === "fit") { const L = 841.89; if (land) { PW = L; PH = L * im.h / im.w; } else { PH = L; PW = L * im.w / im.h; } }
+    if (im.pw) { PW = im.pw; PH = im.ph; }
+    else if (paper === "fit") { const L = 841.89; if (land) { PW = L; PH = L * im.h / im.w; } else { PH = L; PW = L * im.w / im.h; } }
     else { const [a, b] = paper === "letter" ? [612, 792] : [595.28, 841.89]; [PW, PH] = land ? [b, a] : [a, b]; }
     const s = Math.min(PW / im.w, PH / im.h), dw = im.w * s, dh = im.h * s;
     const pn = 3 + i * 3, cn = pn + 1, xn = pn + 2;
@@ -1018,8 +1090,100 @@ function buildPdf(imgs, paper) {
   return new Blob(parts, { type: "application/pdf" });
 }
 
+/* ---------- 外部函式庫（放在 lib/，用到才載入，離線也能用） ---------- */
+const scriptCache = {};
+function loadScript(src) {
+  return scriptCache[src] || (scriptCache[src] = new Promise((res, rej) => {
+    const el = document.createElement("script"); el.src = src;
+    el.onload = res; el.onerror = () => { delete scriptCache[src]; rej(new Error("無法載入 " + src.split("/").pop() + "，請確認網路")); };
+    document.head.appendChild(el);
+  }));
+}
+const abs = u => new URL(u, location.href).href;
+
+/* ---------- 文字辨識（OCR）：繁中為主，純英文的行再用英文模型重認 ---------- */
+let ocrWorkers = null, ocrLog = null;
+async function getOcr() {
+  if (ocrWorkers) return ocrWorkers;
+  await loadScript("lib/tesseract.min.js");
+  const opt = { workerPath: abs("lib/worker.min.js"), corePath: abs("lib/core"), langPath: abs("lib/lang"), workerBlobURL: false, logger: m => ocrLog && ocrLog(m) };
+  const zh = await Tesseract.createWorker("chi_tra", 1, opt), en = await Tesseract.createWorker("eng", 1, opt);
+  await en.setParameters({ tessedit_pageseg_mode: "7" });   // 單行
+  return (ocrWorkers = { zh, en });
+}
+const CJK = "⺀-鿿豈-﫿＀-￯　-〿";
+const reCJK = new RegExp(`[${CJK}]`), reCJKsp = new RegExp(`([${CJK}])[ \\t]+(?=[${CJK}])`, "g");
+const reMix = new RegExp(`([${CJK}])[ \\t]+(?=[0-9])|([0-9])[ \\t]+(?=[${CJK}])`, "g");
+const reColon = new RegExp(`([${CJK}])\\s*:\\s*`, "g");
+const tidy = t => t.replace(reCJKsp, "$1").replace(reMix, "$1$2").replace(reColon, "$1：").replace(/([，。、：；！？）])\s+/g, "$1").trim();
+const reListStart = /^([一二三四五六七八九十]+、|[(（]?[0-9０-９]{1,2}[.、)）]|[•●◆■□▪\-–]\s)/;
+async function ocrPage(c) {
+  const { zh, en } = await getOcr();
+  const r = await zh.recognize(c, {}, { blocks: true, text: false });
+  const W = c.width, pars = [];
+  for (const blk of r.data.blocks || []) for (const par of blk.paragraphs) {
+    const lines = [];
+    for (const l of par.lines) {
+      let text = l.text.replace(/\n/g, " ").trim(), conf = l.confidence;
+      if (!text) continue;
+      if (!reCJK.test(text) && /[A-Za-z]{2}/.test(text)) {
+        // 這行看起來是英文：裁出來用英文模型再認一次
+        const { x0, y0, x1, y1 } = l.bbox, pad = Math.round((y1 - y0) * 0.25);
+        const lc = mkCanvas(x1 - x0 + pad * 2, y1 - y0 + pad * 2), lx = lc.getContext("2d");
+        lx.fillStyle = "#fff"; lx.fillRect(0, 0, lc.width, lc.height); lx.drawImage(c, x0 - pad, y0 - pad, lc.width, lc.height, 0, 0, lc.width, lc.height);
+        const e = (await en.recognize(lc)).data;
+        if (e.confidence > conf && e.text.trim()) { text = e.text.replace(/\n/g, " ").trim(); conf = e.confidence; }
+      }
+      if (conf < 45) continue;   // 太不確定的多半是圖案、雜訊
+      if (!reCJK.test(text) && text.replace(/[^0-9A-Za-z]/g, "").length < 3 && conf < 80) continue;
+      lines.push({ text: tidy(text), x1: l.bbox.x1 });
+    }
+    if (!lines.length) continue;
+    // 一行寫滿才跟下一行接起來，短行（標題、清單）自成一段
+    const right = Math.max(...lines.map(l => l.x1));
+    let cur = lines[0].text;
+    for (let i = 1; i < lines.length; i++) {
+      const prevFull = lines[i - 1].x1 >= right - W * 0.06, t = lines[i].text;
+      if (!prevFull || reListStart.test(t) || /[:：]$/.test(cur)) { pars.push(cur); cur = t; continue; }
+      if (reCJK.test(cur.slice(-1)) || reCJK.test(t[0])) cur += t;
+      else if (/[A-Za-z]-$/.test(cur)) cur = cur.slice(0, -1) + t;
+      else cur += " " + t;
+    }
+    pars.push(cur);
+  }
+  return pars;
+}
+
+/* ---------- Word（.docx）產生 ---------- */
+const xmlEsc = t => t.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "");
+async function buildDocx(blocks, margin) {
+  // blocks: {type:"p", text} | {type:"img", bytes, ext, w, h} | {type:"break"}
+  await loadScript("lib/jszip.min.js");
+  const zip = new JSZip(), PW = 11906, PH = 16838, M = margin, emu = 635;
+  const maxW = (PW - 2 * M) * emu, maxH = (PH - 2 * M) * emu * 0.96;
+  const rels = [`<Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>`];
+  let body = "", n = 0;
+  for (const b of blocks) {
+    if (b.type === "p") body += `<w:p><w:r><w:t xml:space="preserve">${xmlEsc(b.text)}</w:t></w:r></w:p>`;
+    else if (b.type === "break") body += `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+    else if (b.type === "img") {
+      n++; const name = `image${n}.${b.ext}`; zip.file("word/media/" + name, b.bytes);
+      rels.push(`<Relationship Id="rIdImg${n}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${name}"/>`);
+      const k = Math.min(maxW / b.w, maxH / b.h), cx = Math.round(b.w * k), cy = Math.round(b.h * k);
+      body += `<w:p><w:pPr><w:spacing w:before="0" w:after="0"/><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${n}" name="Picture ${n}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${n}" name="${name}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdImg${n}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+    }
+  }
+  const X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  zip.file("[Content_Types].xml", X + `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`);
+  zip.file("_rels/.rels", X + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  zip.file("word/_rels/document.xml.rels", X + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join("")}</Relationships>`);
+  zip.file("word/styles.xml", X + `<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:eastAsia="Microsoft JhengHei" w:cs="Calibri"/><w:sz w:val="24"/><w:szCs w:val="24"/><w:lang w:val="en-US" w:eastAsia="zh-TW"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="160" w:line="300" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`);
+  zip.file("word/document.xml", X + `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>${body}<w:sectPr><w:pgSz w:w="${PW}" w:h="${PH}"/><w:pgMar w:top="${M}" w:right="${M}" w:bottom="${M}" w:left="${M}" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr></w:body></w:document>`);
+  return zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", compression: "DEFLATE" });
+}
+
 /* ---------- 輸出面板 ---------- */
-let pdfFile = null, pdfUrl = null;
+let outFile = null, outUrl = null;
 function openSheet(id) { $("sheetBg").classList.add("on"); $(id).classList.add("on"); }
 function closeSheets() { if (!$("exBusy").hidden) return; $("sheetBg").classList.remove("on"); document.querySelectorAll(".sheet").forEach(s => s.classList.remove("on")); }
 $("sheetBg").onclick = closeSheets;
@@ -1032,59 +1196,196 @@ function colorNote() {
     : m === "gray" ? "全部轉成灰階，保留鉛筆、印章的深淺。"
     : "全部用彩色（去陰影、提亮紙張）。";
 }
+function updateExUI() {
+  const pdf = prefs.exFmt === "pdf", text = !pdf && prefs.exWord === "text";
+  segSet("exFmt", prefs.exFmt); segSet("exWord", prefs.exWord); segSet("exColor", prefs.exColor); segSet("exPaper", prefs.exPaper); segSet("exQual", prefs.exQual);
+  $("exWordF").hidden = pdf; $("exColorF").hidden = text; $("exPaperF").hidden = !pdf; $("exQualF").hidden = text;
+  $("exWordNote").textContent = text
+    ? "用文字辨識（OCR）把照片裡的字轉成可以修改的文字，支援繁體中文和英文。排版、表格不會保留，辨識結果請再檢查一次。"
+    : "每頁放一張掃描圖，排版和原本完全一樣，但文字不能修改。";
+  $("exGo").textContent = pdf ? "產生 PDF" : "產生 Word";
+  $("exGoNote").hidden = !text; $("exGoNote").textContent = "每頁約需 5～20 秒，第一次會先載入約 8 MB 辨識資料。";
+  colorNote();
+}
 function stamp() { const d = new Date(), z = n => String(n).padStart(2, "0"); return `${d.getFullYear()}${z(d.getMonth() + 1)}${z(d.getDate())}_${z(d.getHours())}${z(d.getMinutes())}`; }
-$("exportBtn").onclick = () => {
+function openExport(fmt) {
   if (!pages.length) return;
+  if (fmt) { prefs.exFmt = fmt; savePrefs(); }
   $("exForm").hidden = false; $("exBusy").hidden = true; $("exDone").hidden = true;
   $("exName").value = "掃描_" + stamp();
-  segSet("exColor", prefs.exColor); segSet("exPaper", prefs.exPaper); segSet("exQual", prefs.exQual); colorNote();
-  openSheet("exportSheet");
-};
-for (const [id, key] of [["exColor", "exColor"], ["exPaper", "exPaper"], ["exQual", "exQual"]])
-  $(id).onclick = e => { const b = e.target.closest("button"); if (!b) return; prefs[key] = b.dataset.v; savePrefs(); segSet(id, b.dataset.v); colorNote(); };
+  updateExUI(); openSheet("exportSheet");
+}
+$("exportBtn").onclick = () => openExport();
+for (const id of ["exFmt", "exWord", "exColor", "exPaper", "exQual"])
+  $(id).onclick = e => { const b = e.target.closest("button"); if (!b) return; prefs[id] = b.dataset.v; savePrefs(); updateExUI(); };
+function busy(title, step, frac) {
+  $("exForm").hidden = true; $("exDone").hidden = true; $("exBusy").hidden = false;
+  $("exBusyT").textContent = title; $("exStep").textContent = step; $("exBar").style.width = Math.round(frac * 100) + "%";
+}
+function done(blob, name, info) {
+  outFile = new File([blob], name, { type: blob.type });
+  if (outUrl) URL.revokeObjectURL(outUrl);
+  outUrl = URL.createObjectURL(outFile);
+  const isPdf = /\.pdf$/i.test(name);
+  $("exIcon").textContent = isPdf ? "PDF" : "DOC";
+  $("exFile").textContent = name;
+  $("exInfo").textContent = `${info}・${(blob.size / 1048576).toFixed(blob.size < 1048576 ? 2 : 1)} MB`;
+  $("exView").hidden = !isPdf;
+  $("exShare").hidden = !(navigator.canShare && navigator.canShare({ files: [outFile] }));
+  $("exBusy").hidden = true; $("exForm").hidden = true; $("exDone").hidden = false;
+}
+const safeName = (v, ext) => (v.trim() || "掃描_" + stamp()).replace(/[\\/:*?"<>|]+/g, "_").replace(/\.(pdf|docx?)$/i, "") + ext;
 $("exGo").onclick = async () => {
-  const name = ($("exName").value.trim() || "掃描_" + stamp()).replace(/[\\/:*?"<>|]+/g, "_").replace(/\.pdf$/i, "") + ".pdf";
-  $("exForm").hidden = true; $("exBusy").hidden = false;
-  const cap = prefs.exQual === "h" ? 3000 : 2000, jq = prefs.exQual === "h" ? 0.88 : 0.72, list = pages.slice(), imgs = [];
+  const pdf = prefs.exFmt === "pdf", text = !pdf && prefs.exWord === "text";
+  const name = safeName($("exName").value, pdf ? ".pdf" : ".docx"), T = pdf ? "正在產生 PDF…" : "正在產生 Word…";
+  const cap = prefs.exQual === "h" ? 3000 : 2000, jq = prefs.exQual === "h" ? 0.88 : 0.72, list = pages.slice(), out = [];
+  busy(T, "準備中…", 0);
   try {
+    if (text) {
+      $("exStep").textContent = "載入文字辨識資料…";
+      ocrLog = m => { if (m.status && /load/.test(m.status) && m.progress) $("exStep").textContent = "載入文字辨識資料… " + Math.round(m.progress * 100) + "%"; };
+      await getOcr();
+    }
     for (let i = 0; i < list.length; i++) {
-      $("exStep").textContent = `處理第 ${i + 1} / ${list.length} 頁`;
-      $("exBar").style.width = (i / list.length * 100) + "%";
-      await tick();
-      const p = list[i], mode = prefs.exColor === "page" ? p.filter : prefs.exColor;
-      const img = await loadImg(p.blob), c = render(p, img, cap, mode);
-      imgs.push(await encodeImage(c, mode, jq));
+      const step = text ? `辨識第 ${i + 1} / ${list.length} 頁的文字` : `處理第 ${i + 1} / ${list.length} 頁`;
+      busy(T, step, i / list.length); await tick();
+      const p = list[i], mode = text ? "gray" : prefs.exColor === "page" ? p.filter : prefs.exColor;
+      const img = await loadImg(p.blob), c = render(p, img, text ? 2200 : cap, mode);
+      if (pdf) out.push(await encodeImage(c, mode, jq));
+      else {
+        if (i) out.push({ type: "break" });
+        let pars = [];
+        if (text) {
+          ocrLog = null;
+          pars = await ocrPage(c);
+          pars.forEach(t => out.push({ type: "p", text: t }));
+        }
+        if (!pars.length) {   // 圖片模式，或這頁辨識不到字 → 放圖
+          const png = mode === "bw", b = await toBlob(c, png ? "image/png" : "image/jpeg", jq);
+          out.push({ type: "img", bytes: new Uint8Array(await b.arrayBuffer()), ext: png ? "png" : "jpeg", w: c.width, h: c.height });
+        }
+      }
       c.width = c.height = 0;
     }
-    $("exBar").style.width = "100%"; $("exStep").textContent = "組合檔案…"; await tick();
-    const blob = buildPdf(imgs, prefs.exPaper);
-    pdfFile = new File([blob], name, { type: "application/pdf" });
-    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-    pdfUrl = URL.createObjectURL(pdfFile);
-    $("exFile").textContent = name;
-    $("exInfo").textContent = `${list.length} 頁・${(blob.size / 1048576).toFixed(blob.size < 1048576 ? 2 : 1)} MB`;
-    $("exShare").hidden = !(navigator.canShare && navigator.canShare({ files: [pdfFile] }));
-    $("exBusy").hidden = true; $("exDone").hidden = false;
+    ocrLog = null;
+    busy(T, "組合檔案…", 1); await tick();
+    const blob = pdf ? buildPdf(out, prefs.exPaper) : await buildDocx(out, text ? 1134 : 567);
+    done(blob, name, `${list.length} 頁`);
   } catch (err) {
+    ocrLog = null;
     $("exBusy").hidden = true; $("exForm").hidden = false;
     toast("產生失敗：" + (err && err.message || err));
   }
 };
-$("exDl").onclick = () => { const a = document.createElement("a"); a.href = pdfUrl; a.download = pdfFile.name; document.body.appendChild(a); a.click(); a.remove(); };
-$("exView").onclick = () => window.open(pdfUrl, "_blank");
+$("exDl").onclick = () => { const a = document.createElement("a"); a.href = outUrl; a.download = outFile.name; document.body.appendChild(a); a.click(); a.remove(); };
+$("exView").onclick = () => window.open(outUrl, "_blank");
 $("exShare").onclick = async () => {
-  try { await navigator.share({ files: [pdfFile], title: pdfFile.name }); }
+  try { await navigator.share({ files: [outFile], title: outFile.name }); }
   catch (e) { if (e && e.name !== "AbortError") $("exDl").onclick(); }
+};
+
+/* ================= Word 轉 PDF ================= */
+let wordName = "", wordReturn = "home";
+const wordHost = $("wordHost");
+function openWord() {
+  show("word");
+  if (!wordName) { $("wPick").hidden = false; $("wPanel").hidden = true; }
+}
+function fitWord() {
+  const w = wordHost.querySelector(".docx-wrapper"); if (!w) return;
+  wordHost.style.zoom = 1;
+  const z = Math.min(1, $("word").querySelector("main").clientWidth / w.scrollWidth);
+  wordHost.style.zoom = z;
+}
+async function loadDocx(file) {
+  if (!/\.docx$/i.test(file.name)) { toast(/\.doc$/i.test(file.name) ? "舊版 .doc 不支援，請先在 Word 另存成 .docx" : "請選 .docx 檔"); return; }
+  $("wPick").hidden = true; $("wSpin").hidden = false; wordHost.innerHTML = "";
+  try {
+    await loadScript("lib/jszip.min.js"); await loadScript("lib/docx-preview.min.js");
+    await docx.renderAsync(file, wordHost, null, { className: "docx", inWrapper: true, breakPages: true, ignoreLastRenderedPageBreak: false, experimental: true, useBase64URL: true, renderHeaders: true, renderFooters: true });
+    wordHost.style.zoom = 1; paginate();
+    wordName = file.name.replace(/\.docx$/i, "");
+    $("wTitle").textContent = wordName; $("wPanel").hidden = false;
+    fitWord();
+  } catch (err) {
+    wordName = ""; $("wPick").hidden = false; $("wPanel").hidden = true;
+    toast("這個 Word 檔打不開：" + (err && err.message || err));
+  }
+  $("wSpin").hidden = true;
+}
+// docx-preview 不會自動分頁：把超出一頁的段落、表格整塊移到新的一頁，避免字被切一半
+function paginate() {
+  const secs = [...wordHost.querySelectorAll("section.docx")];
+  for (let i = 0; i < secs.length && i < 500; i++) {
+    const sec = secs[i], ph = cssLen(sec.style.minHeight), art = sec.querySelector(":scope > article");
+    if (!ph || !art || sec.offsetHeight <= ph + 2) continue;
+    const top = sec.getBoundingClientRect().top, cs = getComputedStyle(sec), foot = sec.querySelector(":scope > footer");
+    const limit = top + ph - parseFloat(cs.paddingBottom) - (foot ? foot.offsetHeight : 0);
+    const kids = [...art.children], k = kids.findIndex(el => el.getBoundingClientRect().bottom > limit + 1);
+    if (k <= 0) continue;   // 第一塊就比一頁高，只能交給切圖處理
+    const next = sec.cloneNode(true), nk = [...next.querySelector(":scope > article").children];
+    nk.slice(0, k).forEach(el => el.remove());
+    kids.slice(k).forEach(el => el.remove());
+    sec.after(next); secs.splice(i + 1, 0, next);
+  }
+}
+function cssLen(v) {   // 轉成 px
+  const m = /^([\d.]+)(pt|px|mm|cm|in)?$/.exec((v || "").trim()); if (!m) return 0;
+  return +m[1] * ({ pt: 96 / 72, px: 1, mm: 96 / 25.4, cm: 96 / 2.54, in: 96 }[m[2] || "px"]);
+}
+async function wordToPdf() {
+  const secs = [...wordHost.querySelectorAll("section.docx")]; if (!secs.length) return;
+  $("exForm").hidden = true; openSheet("exportSheet");
+  busy("正在產生 PDF…", "準備中…", 0);
+  try {
+    await loadScript("lib/html2canvas.min.js");
+    wordHost.style.zoom = 1; await tick();
+    const imgs = [];
+    for (let i = 0; i < secs.length; i++) {
+      busy("正在產生 PDF…", `轉換第 ${i + 1} / ${secs.length} 節`, i / secs.length); await tick();
+      const sec = secs[i], pw = sec.offsetWidth;
+      let ph = cssLen(sec.style.minHeight) || pw * 297 / 210;
+      const S = 2, cv = await html2canvas(sec, { scale: S, backgroundColor: "#ffffff", useCORS: true, logging: false });
+      const total = cv.height / S, n = total <= ph * 1.03 ? 1 : Math.ceil(total / ph);
+      for (let k = 0; k < n; k++) {
+        const pc = mkCanvas(cv.width, Math.round(ph * S)), x = pc.getContext("2d");
+        x.fillStyle = "#fff"; x.fillRect(0, 0, pc.width, pc.height); x.drawImage(cv, 0, -Math.round(k * ph * S));
+        const b = await toBlob(pc, "image/jpeg", 0.88);
+        imgs.push({ w: pc.width, h: pc.height, pw: pw * 0.75, ph: ph * 0.75, bytes: new Uint8Array(await b.arrayBuffer()), dict: `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode` });
+      }
+    }
+    fitWord();
+    done(buildPdf(imgs, "fit"), safeName(wordName, ".pdf"), `${imgs.length} 頁`);
+  } catch (err) {
+    fitWord(); $("exBusy").hidden = true; closeSheets();
+    toast("轉換失敗：" + (err && err.message || err));
+  }
+}
+$("wBack").onclick = () => show("home");
+$("wOpen").onclick = $("wPickBtn").onclick = () => $("wFile").click();
+$("wFile").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (f) loadDocx(f); };
+$("wGo").onclick = wordToPdf;
+$("wPrint").onclick = () => window.print();
+addEventListener("resize", () => { if ($("word").classList.contains("on")) fitWord(); });
+
+/* ---------- 快速轉檔 ---------- */
+let afterPick = null;
+document.querySelector(".quick").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.q === "word2pdf") return openWord();
+  afterPick = b.dataset.q === "img2word" ? "word" : "pdf";
+  $("fileIn").click();
 };
 
 /* ---------- 更多選項 ---------- */
 $("menuBtn").onclick = () => {
-  $("menuSheet").querySelectorAll("button").forEach(b => b.disabled = !pages.length);
+  $("menuSheet").querySelectorAll("button:not([data-always])").forEach(b => b.disabled = !pages.length);
   openSheet("menuSheet");
 };
 $("menuSheet").onclick = async e => {
   const b = e.target.closest("button[data-act]"); if (!b) return;
   const act = b.dataset.act; closeSheets();
+  if (act === "word2pdf") openWord();
   if (act === "reverse") { pages.reverse(); saveOrder(); renderGrid(); toast("已反轉順序"); }
   if (act === "clear") {
     if (!confirm(`確定刪除全部 ${pages.length} 頁？`)) return;
